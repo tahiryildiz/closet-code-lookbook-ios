@@ -1,6 +1,8 @@
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Heart, MoreHorizontal } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface WardrobeItem {
   id: string;
@@ -19,44 +21,80 @@ interface WardrobeGridProps {
   selectedCategory: string;
 }
 
-// Mock data - in real app this would come from state/database
+// Beautiful clothing images from Unsplash
 const mockItems: WardrobeItem[] = [
   {
     id: '1',
-    name: 'Navy Blazer',
-    category: 'outerwear',
-    primaryColor: 'Navy',
-    brand: 'Hugo Boss',
-    tags: ['formal', 'business', 'versatile'],
-    image: '/placeholder.svg',
-    notes: 'Perfect for business meetings'
+    name: 'Classic White Button-Down',
+    category: 'tops',
+    primaryColor: 'White',
+    brand: 'Everlane',
+    tags: ['professional', 'versatile', 'cotton'],
+    image: 'https://images.unsplash.com/photo-1586790170083-2f9ceadc732d?w=400&h=400&fit=crop',
+    notes: 'Perfect for meetings and casual days'
   },
   {
     id: '2',
-    name: 'White Cotton Shirt',
-    category: 'tops',
-    primaryColor: 'White',
-    brand: 'Uniqlo',
-    tags: ['casual', 'basic', 'cotton'],
-    image: '/placeholder.svg'
+    name: 'High-Waisted Denim',
+    category: 'bottoms',
+    primaryColor: 'Blue',
+    brand: 'Levi\'s',
+    tags: ['casual', 'denim', 'high-waist'],
+    image: 'https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=400&h=400&fit=crop'
   },
   {
     id: '3',
-    name: 'Black Slim Jeans',
-    category: 'bottoms',
+    name: 'Silk Slip Dress',
+    category: 'dresses',
     primaryColor: 'Black',
-    brand: 'Levi\'s',
-    tags: ['casual', 'denim', 'slim-fit'],
-    image: '/placeholder.svg'
+    brand: 'Reformation',
+    tags: ['evening', 'silk', 'elegant'],
+    image: 'https://images.unsplash.com/photo-1539008835657-9e8e9680c956?w=400&h=400&fit=crop'
   },
   {
     id: '4',
-    name: 'Red Silk Dress',
-    category: 'dresses',
-    primaryColor: 'Red',
+    name: 'Cashmere Sweater',
+    category: 'tops',
+    primaryColor: 'Beige',
+    brand: 'COS',
+    tags: ['cozy', 'luxury', 'cashmere'],
+    image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=400&fit=crop'
+  },
+  {
+    id: '5',
+    name: 'Tailored Blazer',
+    category: 'outerwear',
+    primaryColor: 'Navy',
+    brand: 'Theory',
+    tags: ['professional', 'structured', 'wool'],
+    image: 'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=400&h=400&fit=crop'
+  },
+  {
+    id: '6',
+    name: 'Midi Skirt',
+    category: 'bottoms',
+    primaryColor: 'Camel',
     brand: 'Zara',
-    tags: ['formal', 'evening', 'silk'],
-    image: '/placeholder.svg'
+    tags: ['midi', 'versatile', 'work'],
+    image: 'https://images.unsplash.com/photo-1583496661160-fb5886a13d14?w=400&h=400&fit=crop'
+  },
+  {
+    id: '7',
+    name: 'Leather Ankle Boots',
+    category: 'shoes',
+    primaryColor: 'Brown',
+    brand: 'Acne Studios',
+    tags: ['leather', 'ankle', 'autumn'],
+    image: 'https://images.unsplash.com/photo-1608256246200-53e635b5b65f?w=400&h=400&fit=crop'
+  },
+  {
+    id: '8',
+    name: 'Structured Handbag',
+    category: 'accessories',
+    primaryColor: 'Black',
+    brand: 'Polene',
+    tags: ['leather', 'structured', 'everyday'],
+    image: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=400&h=400&fit=crop'
   }
 ];
 
@@ -70,45 +108,58 @@ const WardrobeGrid = ({ viewMode, searchQuery, selectedCategory }: WardrobeGridP
 
   if (filteredItems.length === 0) {
     return (
-      <div className="text-center py-12">
-        <div className="text-gray-400 text-lg mb-2">👗</div>
-        <p className="text-gray-500">No items found</p>
-        <p className="text-sm text-gray-400">Try adjusting your search or filters</p>
+      <div className="text-center py-16">
+        <div className="text-6xl mb-4">👗</div>
+        <h3 className="text-xl font-semibold text-gray-900 mb-2">No items found</h3>
+        <p className="text-gray-500">Try adjusting your search or add new items to your closet</p>
       </div>
     );
   }
 
   return (
-    <div className={viewMode === 'grid' ? 'grid grid-cols-2 gap-4' : 'space-y-4'}>
+    <div className="grid grid-cols-2 gap-4">
       {filteredItems.map((item) => (
         <Card
           key={item.id}
-          className="bg-white/80 backdrop-blur-sm border-rose-200 hover:shadow-lg transition-all duration-300 hover:scale-105 cursor-pointer"
+          className="bg-white border-0 shadow-sm hover:shadow-lg transition-all duration-300 rounded-2xl overflow-hidden"
         >
           <CardContent className="p-0">
-            <div className="aspect-square bg-gradient-to-br from-gray-100 to-gray-200 rounded-t-lg relative overflow-hidden">
-              <div className="absolute inset-0 flex items-center justify-center text-4xl">
-                {item.category === 'tops' && '👕'}
-                {item.category === 'bottoms' && '👖'}
-                {item.category === 'dresses' && '👗'}
-                {item.category === 'outerwear' && '🧥'}
-                {item.category === 'shoes' && '👠'}
-                {item.category === 'accessories' && '👜'}
+            <div className="aspect-square relative overflow-hidden">
+              <img
+                src={item.image}
+                alt={item.name}
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute top-3 right-3 flex space-x-2">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-8 w-8 p-0 bg-white/90 hover:bg-white rounded-full shadow-sm"
+                >
+                  <Heart className="h-4 w-4 text-gray-600" />
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-8 w-8 p-0 bg-white/90 hover:bg-white rounded-full shadow-sm"
+                >
+                  <MoreHorizontal className="h-4 w-4 text-gray-600" />
+                </Button>
               </div>
-              <div className="absolute top-2 right-2">
+              <div className="absolute bottom-3 left-3">
                 <Badge
                   variant="secondary"
-                  className="bg-white/90 text-xs"
+                  className="bg-white/95 text-gray-700 text-xs font-medium rounded-full"
                 >
                   {item.primaryColor}
                 </Badge>
               </div>
             </div>
-            <div className="p-3 space-y-2">
+            <div className="p-4 space-y-2">
               <div>
-                <h3 className="font-medium text-gray-900 text-sm">{item.name}</h3>
+                <h3 className="font-semibold text-gray-900 text-base leading-tight">{item.name}</h3>
                 {item.brand && (
-                  <p className="text-xs text-gray-500">{item.brand}</p>
+                  <p className="text-sm text-gray-500 font-medium">{item.brand}</p>
                 )}
               </div>
               <div className="flex flex-wrap gap-1">
@@ -116,11 +167,19 @@ const WardrobeGrid = ({ viewMode, searchQuery, selectedCategory }: WardrobeGridP
                   <Badge
                     key={tag}
                     variant="outline"
-                    className="text-xs border-rose-200 text-rose-600"
+                    className="text-xs border-gray-200 text-gray-600 bg-gray-50 rounded-full"
                   >
                     {tag}
                   </Badge>
                 ))}
+                {item.tags.length > 2 && (
+                  <Badge
+                    variant="outline"
+                    className="text-xs border-gray-200 text-gray-500 bg-gray-50 rounded-full"
+                  >
+                    +{item.tags.length - 2}
+                  </Badge>
+                )}
               </div>
             </div>
           </CardContent>
