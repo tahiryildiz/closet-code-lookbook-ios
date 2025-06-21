@@ -145,8 +145,24 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
     }
   };
 
+  const handleModalClose = () => {
+    onClose();
+    // Reset state when modal closes
+    setStep('upload');
+    setAnalysisResult(null);
+    setIsAnalyzing(false);
+    setFormData({
+      name: '',
+      brand: '',
+      category: '',
+      primaryColor: '',
+      tags: '',
+      notes: ''
+    });
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleModalClose}>
       <DialogContent className="sm:max-w-md bg-white rounded-3xl border-0 shadow-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader className="pb-4">
           <DialogTitle className="flex items-center space-x-3 text-xl font-bold">
@@ -158,7 +174,7 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
         </DialogHeader>
 
         {step === 'upload' && (
-          <UploadStep onFileSelect={handleFileSelect} />
+          <UploadStep onFileSelect={handleFileSelect} autoTrigger={true} />
         )}
 
         {step === 'details' && (
