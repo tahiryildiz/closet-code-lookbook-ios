@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Sparkles, Shirt, Plus, Cloud, Sun, CloudRain, User, MapPin } from "lucide-react";
@@ -15,6 +14,22 @@ const Index = () => {
 
   useEffect(() => {
     if (user && navigator.geolocation) {
+      // Try to get cached temperature first
+      const cachedTemp = localStorage.getItem('cachedTemperature');
+      const cachedLocation = localStorage.getItem('cachedLocation');
+      const cacheTimestamp = localStorage.getItem('cacheTimestamp');
+      
+      // Use cached data if it's less than 30 minutes old
+      const thirtyMinutes = 30 * 60 * 1000;
+      const now = Date.now();
+      
+      if (cachedTemp && cachedLocation && cacheTimestamp && 
+          (now - parseInt(cacheTimestamp)) < thirtyMinutes) {
+        setTemperature(parseInt(cachedTemp));
+        setLocation(cachedLocation);
+        return;
+      }
+
       navigator.geolocation.getCurrentPosition(
         async (position) => {
           const { latitude, longitude } = position.coords;
@@ -25,12 +40,19 @@ const Index = () => {
               `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=tr`
             );
             const data = await response.json();
-            setLocation(data.city || data.locality || "Konumunuz");
+            const locationName = data.city || data.locality || "Konumunuz";
+            setLocation(locationName);
             
             // Mock weather data - in a real app, you'd call a weather API
-            // Using coordinates to simulate different temperatures
-            const mockTemp = Math.round(15 + (latitude / 10) + Math.random() * 10);
+            // Using coordinates to simulate different temperatures but keep it more stable
+            const mockTemp = Math.round(15 + (latitude / 10) + (longitude / 20));
             setTemperature(mockTemp);
+            
+            // Cache the data
+            localStorage.setItem('cachedTemperature', mockTemp.toString());
+            localStorage.setItem('cachedLocation', locationName);
+            localStorage.setItem('cacheTimestamp', now.toString());
+            
           } catch (error) {
             console.log("Location fetch error:", error);
             setLocation("Konumunuz");
@@ -62,8 +84,8 @@ const Index = () => {
         {/* Header */}
         <div className="bg-gradient-to-br from-blue-900 to-blue-800 text-white">
           <div className="px-6 pt-12 pb-8">
-            <div className="text-center">
-              <h1 className="text-2xl font-medium">Ana Sayfa</h1>
+            <div>
+              <h1 className="text-2xl font-medium">KombinAI</h1>
               <p className="text-white/80 text-base mt-1">Hoş geldiniz, {user.email.split('@')[0]}</p>
             </div>
           </div>
