@@ -14,46 +14,26 @@ interface OutfitCardProps {
     styling_tips: string;
     occasion?: string;
     images?: string[];
+    generated_image?: string;
   };
 }
 
 const OutfitCard = ({ outfit }: OutfitCardProps) => {
-  // Display multiple images in a grid layout to show the complete outfit
-  const outfitImages = outfit.images && outfit.images.length > 0 
-    ? outfit.images 
-    : ['https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=500&fit=crop'];
+  // Use generated image if available, otherwise fall back to individual item images
+  const displayImage = outfit.generated_image || 
+    (outfit.images && outfit.images.length > 0 ? outfit.images[0] : 
+     'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=500&fit=crop');
 
   return (
     <Card className="bg-white border-0 shadow-sm hover:shadow-lg transition-all duration-300 rounded-2xl overflow-hidden">
       <CardContent className="p-0">
         {/* Outfit Preview */}
         <div className="aspect-[4/5] relative overflow-hidden">
-          {outfitImages.length === 1 ? (
-            // Single image display
-            <img
-              src={outfitImages[0]}
-              alt={outfit.name}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            // Multiple images in grid layout for complete outfit view
-            <div className="w-full h-full grid grid-cols-2 gap-1 p-2 bg-gray-50">
-              {outfitImages.slice(0, 4).map((image, index) => (
-                <div key={index} className="relative overflow-hidden rounded-lg bg-white">
-                  <img
-                    src={image}
-                    alt={`${outfit.name} - Item ${index + 1}`}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              ))}
-              {outfitImages.length > 4 && (
-                <div className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded-full">
-                  +{outfitImages.length - 4}
-                </div>
-              )}
-            </div>
-          )}
+          <img
+            src={displayImage}
+            alt={outfit.name}
+            className="w-full h-full object-cover"
+          />
           
           <div className="absolute top-4 right-4 flex space-x-2">
             <Button size="sm" variant="ghost" className="h-10 w-10 p-0 bg-white/90 hover:bg-white rounded-full shadow-sm">

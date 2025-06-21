@@ -151,8 +151,8 @@ Return ONLY valid JSON in this exact format (no additional text):
         throw new Error('No outfits generated');
       }
 
-      // Process outfits to add item_ids and images
-      const processedOutfits = parsedOutfits.outfits.map((outfit: any) => {
+      // Generate outfit images using OpenAI DALL-E
+      const processedOutfits = await Promise.all(parsedOutfits.outfits.map(async (outfit: any, index: number) => {
         const itemIds = outfit.items.map((itemName: string) => {
           const foundItem = wardrobeItems.find((item: any) => 
             item.name.toLowerCase().trim() === itemName.toLowerCase().trim() ||
@@ -162,22 +162,50 @@ Return ONLY valid JSON in this exact format (no additional text):
           return foundItem ? foundItem.id : null;
         }).filter(Boolean);
         
-        const itemImages = outfit.items.map((itemName: string) => {
-          const foundItem = wardrobeItems.find((item: any) => 
-            item.name.toLowerCase().trim() === itemName.toLowerCase().trim() ||
-            item.name.toLowerCase().includes(itemName.toLowerCase()) ||
-            itemName.toLowerCase().includes(item.name.toLowerCase())
-          );
-          return foundItem?.image_url || null;
-        }).filter(Boolean);
+        // Create image generation prompt for this outfit
+        const imagePrompt = `Fashion outfit layout on clean white background: ${outfit.items.join(', ')} arranged as a complete stylish outfit for ${occasion}. Professional product photography style, flat lay arrangement, soft lighting, high quality, realistic clothing items`;
+        
+        console.log(`Generating image for outfit ${index + 1}:`, imagePrompt);
+        
+        let generatedImageUrl = null;
+        
+        try {
+          const imageResponse = await fetch('https://api.openai.com/v1/images/generations', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${openAIApiKey}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              model: 'gpt-image-1',
+              prompt: imagePrompt,
+              n: 1,
+              size: '1024x1024',
+              quality: 'standard'
+            }),
+          });
+
+          if (imageResponse.ok) {
+            const imageData = await imageResponse.json();
+            if (imageData.data && imageData.data[0] && imageData.data[0].url) {
+              generatedImageUrl = imageData.data[0].url;
+              console.log(`Generated image URL for outfit ${index + 1}:`, generatedImageUrl);
+            }
+          } else {
+            console.error(`Failed to generate image for outfit ${index + 1}:`, await imageResponse.text());
+          }
+        } catch (imageError) {
+          console.error(`Error generating image for outfit ${index + 1}:`, imageError);
+        }
         
         return {
           ...outfit,
           item_ids: itemIds,
-          images: itemImages.length > 0 ? itemImages : ['https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=500&fit=crop'],
-          occasion: occasion
+          images: generatedImageUrl ? [generatedImageUrl] : ['https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=500&fit=crop'],
+          occasion: occasion,
+          generated_image: generatedImageUrl
         };
-      });
+      }));
 
       console.log('Processed outfits count:', processedOutfits.length);
       console.log('KombinAI generation successful!');
