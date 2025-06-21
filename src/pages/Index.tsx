@@ -68,17 +68,16 @@ const Index = () => {
     try {
       const { error } = await supabase
         .from('clothing_items')
-        .insert([
-          {
-            name: formData.name || 'Yeni Kıyafet',
-            brand: formData.brand,
-            category: formData.category || 'üstler',
-            primary_color: formData.primaryColor || 'Beyaz',
-            style_tags: formData.tags ? formData.tags.split(',').map(tag => tag.trim()) : [],
-            user_notes: formData.notes,
-            image_url: analysisResult?.imageUrl || null
-          }
-        ]);
+        .insert({
+          name: formData.name || 'Yeni Kıyafet',
+          brand: formData.brand,
+          category: formData.category || 'üstler',
+          primary_color: formData.primaryColor || 'Beyaz',
+          style_tags: formData.tags ? formData.tags.split(',').map(tag => tag.trim()) : [],
+          user_notes: formData.notes,
+          image_url: analysisResult?.imageUrl || '',
+          user_id: 'temp-user-id' // Temporary user ID until authentication is implemented
+        });
 
       if (error) throw error;
 
