@@ -1,5 +1,5 @@
 
-import { Heart, Share, Sparkles, ChevronRight } from "lucide-react";
+import { Heart, Share, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -81,12 +81,6 @@ const OutfitCard = ({ outfit }: OutfitCardProps) => {
               </div>
             </div>
           </div>
-
-          {/* Action Button */}
-          <Button className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 rounded-xl text-base">
-            Bu Kombini Dene
-            <ChevronRight className="h-5 w-5 ml-2" />
-          </Button>
         </div>
       </CardContent>
     </Card>

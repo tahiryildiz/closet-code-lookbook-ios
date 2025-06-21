@@ -59,6 +59,8 @@ const OutfitGenerator = () => {
     setIsGenerating(true);
     
     try {
+      console.log('Generating outfits with wardrobe items:', wardrobeItems.length);
+      
       const { data, error } = await supabase.functions.invoke('generate-outfits', {
         body: { 
           occasion, 
@@ -69,14 +71,28 @@ const OutfitGenerator = () => {
             name: item.name,
             category: item.category,
             color: item.primary_color,
-            brand: item.brand
+            brand: item.brand,
+            image_url: item.image_url
           }))
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase function error:', error);
+        throw error;
+      }
+
+      console.log('Generated outfits response:', data);
+
+      if (data.warning) {
+        toast.warning(data.warning);
+      }
 
       setGeneratedOutfits(data.outfits || []);
+      
+      if (data.outfits && data.outfits.length > 0) {
+        toast.success(`${data.outfits.length} kombin önerisi oluşturuldu!`);
+      }
     } catch (error) {
       console.error('Error generating outfits:', error);
       toast.error('Kombin oluşturulurken hata oluştu');
@@ -84,6 +100,10 @@ const OutfitGenerator = () => {
       // Fallback: Generate outfits from user's actual items
       const fallbackOutfits = generateFallbackOutfits();
       setGeneratedOutfits(fallbackOutfits);
+      
+      if (fallbackOutfits.length > 0) {
+        toast.warning('AI servisi kullanılamadı, rastgele kombinler oluşturuldu');
+      }
     } finally {
       setIsGenerating(false);
     }
