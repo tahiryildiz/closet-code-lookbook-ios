@@ -1,6 +1,5 @@
-
 import { useState, useRef, useEffect } from "react";
-import { Heart, Plus, TrendingUp, Sparkles, Cloud } from "lucide-react";
+import { Heart, Plus, TrendingUp, Sparkles, Cloud, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
@@ -15,6 +14,7 @@ const Index = () => {
   const [showAnalysis, setShowAnalysis] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState(null);
+  const [location, setLocation] = useState("İstanbul");
   const [formData, setFormData] = useState({
     name: '',
     brand: '',
@@ -29,7 +29,19 @@ const Index = () => {
   useEffect(() => {
     fetchOutfits();
     fetchRecentItems();
+    fetchUserLocation();
   }, []);
+
+  const fetchUserLocation = async () => {
+    try {
+      // In a real app, you would get this from user's profile or geolocation
+      // For now, we'll keep it as İstanbul as default
+      setLocation("İstanbul");
+    } catch (error) {
+      console.error('Error fetching location:', error);
+      setLocation("İstanbul");
+    }
+  };
 
   const fetchOutfits = async () => {
     try {
@@ -255,7 +267,11 @@ const Index = () => {
                   <span className="text-white/90 text-sm">Bugünün Havası</span>
                 </div>
                 <h3 className="text-2xl font-bold mb-1">22°C</h3>
-                <p className="text-white/80 text-sm">Güneşli ve serin</p>
+                <div className="flex items-center space-x-1">
+                  <MapPin className="h-3 w-3" />
+                  <p className="text-white/80 text-sm">{location}</p>
+                </div>
+                <p className="text-white/80 text-sm mt-1">Güneşli ve serin</p>
               </div>
               <div className="text-right">
                 <p className="text-white/90 text-sm mb-1">Önerilen</p>

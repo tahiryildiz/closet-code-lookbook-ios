@@ -28,6 +28,7 @@ const Wardrobe = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleAddProduct = async () => {
+    console.log('Wardrobe: Add product button clicked');
     try {
       // Try to use Capacitor Camera first (for mobile)
       const image = await Camera.getPhoto({
@@ -36,6 +37,8 @@ const Wardrobe = () => {
         source: CameraSource.Prompt, // This shows the iOS menu with camera/gallery options
         resultType: CameraResultType.DataUrl,
       });
+
+      console.log('Wardrobe: Camera image captured:', image.dataUrl ? 'Success' : 'Failed');
 
       if (image.dataUrl) {
         setSelectedImage(image.dataUrl);
@@ -54,15 +57,19 @@ const Wardrobe = () => {
         }, 2000);
       }
     } catch (error) {
-      console.log('Capacitor camera not available, falling back to file input');
+      console.log('Wardrobe: Capacitor camera not available, falling back to file input:', error);
       // Fallback to file input for web
-      fileInputRef.current?.click();
+      if (fileInputRef.current) {
+        fileInputRef.current.click();
+      }
     }
   };
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    console.log('Wardrobe: File input triggered');
     const file = event.target.files?.[0];
     if (file) {
+      console.log('Wardrobe: File selected:', file.name);
       const reader = new FileReader();
       reader.onload = (e) => {
         const result = e.target?.result as string;
