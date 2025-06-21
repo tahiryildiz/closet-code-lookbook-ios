@@ -17,6 +17,7 @@ export type Database = {
           created_at: string | null
           id: string
           image_url: string
+          is_favorite: boolean | null
           material: string | null
           name: string
           occasions: string[] | null
@@ -40,6 +41,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           image_url: string
+          is_favorite?: boolean | null
           material?: string | null
           name: string
           occasions?: string[] | null
@@ -63,6 +65,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           image_url?: string
+          is_favorite?: boolean | null
           material?: string | null
           name?: string
           occasions?: string[] | null
