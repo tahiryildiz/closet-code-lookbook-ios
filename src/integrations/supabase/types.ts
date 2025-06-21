@@ -14,19 +14,26 @@ export type Database = {
           ai_analysis: Json | null
           brand: string | null
           category: string
+          collar: string | null
+          color_tone: string | null
+          context_tags: string[] | null
           created_at: string | null
+          fit: string | null
           id: string
           image_url: string
           is_favorite: boolean | null
           material: string | null
           name: string
           occasions: string[] | null
+          pattern: string | null
           pattern_type: string | null
           primary_color: string | null
+          prompt_description: string | null
           purchase_price: number | null
           seasons: string[] | null
           secondary_colors: string[] | null
           size_info: string | null
+          sleeve: string | null
           style_tags: string[] | null
           subcategory: string | null
           updated_at: string | null
@@ -38,19 +45,26 @@ export type Database = {
           ai_analysis?: Json | null
           brand?: string | null
           category: string
+          collar?: string | null
+          color_tone?: string | null
+          context_tags?: string[] | null
           created_at?: string | null
+          fit?: string | null
           id?: string
           image_url: string
           is_favorite?: boolean | null
           material?: string | null
           name: string
           occasions?: string[] | null
+          pattern?: string | null
           pattern_type?: string | null
           primary_color?: string | null
+          prompt_description?: string | null
           purchase_price?: number | null
           seasons?: string[] | null
           secondary_colors?: string[] | null
           size_info?: string | null
+          sleeve?: string | null
           style_tags?: string[] | null
           subcategory?: string | null
           updated_at?: string | null
@@ -62,19 +76,26 @@ export type Database = {
           ai_analysis?: Json | null
           brand?: string | null
           category?: string
+          collar?: string | null
+          color_tone?: string | null
+          context_tags?: string[] | null
           created_at?: string | null
+          fit?: string | null
           id?: string
           image_url?: string
           is_favorite?: boolean | null
           material?: string | null
           name?: string
           occasions?: string[] | null
+          pattern?: string | null
           pattern_type?: string | null
           primary_color?: string | null
+          prompt_description?: string | null
           purchase_price?: number | null
           seasons?: string[] | null
           secondary_colors?: string[] | null
           size_info?: string | null
+          sleeve?: string | null
           style_tags?: string[] | null
           subcategory?: string | null
           updated_at?: string | null

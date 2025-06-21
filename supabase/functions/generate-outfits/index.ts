@@ -51,11 +51,14 @@ serve(async (req) => {
       );
     }
 
-    const wardrobeDescription = wardrobeItems.map((item: any) => 
-      `${item.name} (${item.category}, ${item.color || 'renk belirtilmemiş'}${item.brand ? `, ${item.brand}` : ''})`
-    ).join(', ');
+    // Enhanced wardrobe description using rich metadata
+    const wardrobeDescription = wardrobeItems.map((item: any) => {
+      const description = item.prompt_description || 
+        `${item.primary_color || 'colorless'} ${item.fit || ''} ${item.material || ''} ${item.name}`.trim();
+      return `${description} (${item.category}${item.brand ? `, ${item.brand}` : ''})`;
+    }).join(', ');
 
-    console.log('Wardrobe description:', wardrobeDescription);
+    console.log('Enhanced wardrobe description:', wardrobeDescription);
 
     const prompt = `You are KombinAI's styling assistant. Generate outfit recommendations using only items from the user's digital wardrobe.
 
@@ -69,7 +72,7 @@ CONDITIONS:
 
 CORE FUNCTION:
 - Combine wardrobe items into complete outfits
-- Provide 3-4 different outfit options
+- Provide 3 different outfit options (no more than 3)
 - Include brief styling tip for each outfit
 - Consider weather appropriateness
 - Match occasion formality level
@@ -99,7 +102,7 @@ Return ONLY valid JSON in this exact format (no additional text):
   ]
 }`;
 
-    console.log('Sending request to OpenAI with KombinAI prompt...');
+    console.log('Sending request to OpenAI with enhanced KombinAI prompt...');
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -151,15 +154,24 @@ Return ONLY valid JSON in this exact format (no additional text):
         throw new Error('No outfits generated');
       }
 
-      // Helper function to create detailed item descriptions for image generation
-      const createDetailedItemDescription = (itemName: string, wardrobeItem: any) => {
+      // Helper function to create enhanced item descriptions for image generation
+      const createEnhancedItemDescription = (itemName: string, wardrobeItem: any) => {
+        // Use prompt_description if available, otherwise construct from metadata
+        if (wardrobeItem?.prompt_description) {
+          return wardrobeItem.prompt_description;
+        }
+        
         const color = wardrobeItem?.primary_color || wardrobeItem?.color || '';
+        const fit = wardrobeItem?.fit || '';
+        const material = wardrobeItem?.material || '';
+        const collar = wardrobeItem?.collar || '';
+        const sleeve = wardrobeItem?.sleeve || '';
         const category = wardrobeItem?.category || '';
         
         // Map Turkish categories to English descriptors
         const categoryMap: { [key: string]: string } = {
-          'Tişörtler': 'cotton t-shirt',
-          'Gömlek': 'button-up shirt', 
+          'Tişörtler': 't-shirt',
+          'Gömlek': 'shirt', 
           'Pantolonlar': 'trousers',
           'Ceket': 'blazer',
           'Kazak': 'sweater',
@@ -171,17 +183,13 @@ Return ONLY valid JSON in this exact format (no additional text):
 
         const englishType = categoryMap[category] || category.toLowerCase();
         
-        // Add fabric/style hints based on category
-        let fabricHint = '';
-        if (category === 'Ceket') fabricHint = 'cotton ';
-        if (category === 'Tişörtler') fabricHint = 'crewneck ';
-        if (category === 'Pantolonlar') fabricHint = 'slim-fit ';
-        
-        return `${color} ${fabricHint}${englishType}`;
+        // Build description from available metadata
+        const parts = [color, fit, material, collar, sleeve, englishType].filter(Boolean);
+        return parts.join(' ');
       };
 
-      // Generate outfit images with strict anti-hallucination prompts
-      const processedOutfits = await Promise.all(parsedOutfits.outfits.map(async (outfit: any, index: number) => {
+      // Generate outfit images with ultra-strict anti-hallucination prompts
+      const processedOutfits = await Promise.all(parsedOutfits.outfits.slice(0, 3).map(async (outfit: any, index: number) => {
         const itemIds = outfit.items.map((itemName: string) => {
           const foundItem = wardrobeItems.find((item: any) => 
             item.name.toLowerCase().trim() === itemName.toLowerCase().trim() ||
@@ -191,29 +199,24 @@ Return ONLY valid JSON in this exact format (no additional text):
           return foundItem ? foundItem.id : null;
         }).filter(Boolean);
         
-        // Create detailed descriptions for each selected item
-        const detailedItemDescriptions = outfit.items.map((itemName: string) => {
+        // Create enhanced descriptions for each selected item
+        const enhancedItemDescriptions = outfit.items.map((itemName: string) => {
           const wardrobeItem = wardrobeItems.find((item: any) => 
             item.name.toLowerCase().trim() === itemName.toLowerCase().trim() ||
             item.name.toLowerCase().includes(itemName.toLowerCase()) ||
             itemName.toLowerCase().includes(item.name.toLowerCase())
           );
-          return createDetailedItemDescription(itemName, wardrobeItem);
+          return createEnhancedItemDescription(itemName, wardrobeItem);
         });
 
-        // Create strict anti-hallucination prompt
+        // Create ultra-strict anti-hallucination prompt
         const imagePrompt = `Professional flat lay fashion photography of a complete men's outfit on a clean light beige background.
 
 The outfit includes EXACTLY these items and NO OTHER ITEMS:
-${detailedItemDescriptions.map(item => `- ${item}`).join('\n')}
-
-Use bright studio lighting, neutral shadows, and catalog-style layout. 
-No models, mannequins, or added clothing. 
-DO NOT add any items not listed above.
-Only include the listed items below. Do not add any extra items, clothing pieces, colors, or accessories.
+${enhancedItemDescriptions.map((item, i) => `${i + 1}. ${item}`).join('\n')}
 
 STRICT REQUIREMENTS:
-- Use ONLY the ${detailedItemDescriptions.length} items listed above
+- Use ONLY the ${enhancedItemDescriptions.length} items listed above
 - Do NOT add any extra clothing items, accessories, or garments
 - Do NOT change the colors of any items
 - Do NOT include shoes unless specifically listed
@@ -223,9 +226,13 @@ STRICT REQUIREMENTS:
 - Square composition (1024x1024)
 - High-quality fashion catalog style
 
+Only include the listed items below. Do not add any extra items, clothing pieces, colors, or accessories.
+
+Use bright studio lighting, neutral shadows, and catalog-style layout. No models, mannequins, or added clothing.
+
 IMPORTANT: Stay 100% faithful to the provided wardrobe items. Do not hallucinate or add any extra garments.`;
         
-        console.log(`Generating anti-hallucination image ${index + 1}:`, imagePrompt);
+        console.log(`Generating ultra-strict image ${index + 1}:`, imagePrompt);
         
         let generatedImageUrl = null;
         
@@ -252,7 +259,7 @@ IMPORTANT: Stay 100% faithful to the provided wardrobe items. Do not hallucinate
             
             if (imageData.data && imageData.data[0] && imageData.data[0].url) {
               generatedImageUrl = imageData.data[0].url;
-              console.log(`Generated anti-hallucination image for outfit ${index + 1}: success`);
+              console.log(`Generated ultra-strict image for outfit ${index + 1}: success`);
             }
           } else {
             const errorText = await imageResponse.text();
@@ -271,8 +278,8 @@ IMPORTANT: Stay 100% faithful to the provided wardrobe items. Do not hallucinate
         };
       }));
 
-      console.log('Processed outfits count:', processedOutfits.length);
-      console.log('KombinAI generation successful!');
+      console.log('Processed enhanced outfits count:', processedOutfits.length);
+      console.log('KombinAI enhanced generation successful!');
       
       // If only one outfit was generated, show notification
       if (processedOutfits.length === 1) {

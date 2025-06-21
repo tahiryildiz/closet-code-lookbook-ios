@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Wand2, Clock, MapPin, Thermometer, Shuffle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -15,6 +14,14 @@ interface WardrobeItem {
   image_url: string;
   primary_color: string;
   brand?: string;
+  fit?: string;
+  collar?: string;
+  sleeve?: string;
+  pattern?: string;
+  color_tone?: string;
+  context_tags?: string[];
+  prompt_description?: string;
+  material?: string;
 }
 
 const OutfitGenerator = () => {
@@ -25,7 +32,7 @@ const OutfitGenerator = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [wardrobeItems, setWardrobeItems] = useState<WardrobeItem[]>([]);
 
-  // Fetch user's wardrobe items
+  // Fetch user's wardrobe items with enhanced metadata
   useEffect(() => {
     fetchWardrobeItems();
   }, []);
@@ -34,7 +41,11 @@ const OutfitGenerator = () => {
     try {
       const { data, error } = await supabase
         .from('clothing_items')
-        .select('id, name, category, image_url, primary_color, brand')
+        .select(`
+          id, name, category, image_url, primary_color, brand,
+          fit, collar, sleeve, pattern, color_tone, context_tags,
+          prompt_description, material
+        `)
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -59,7 +70,7 @@ const OutfitGenerator = () => {
     setIsGenerating(true);
     
     try {
-      console.log('Generating outfits with wardrobe items:', wardrobeItems.length);
+      console.log('Generating outfits with enhanced wardrobe metadata:', wardrobeItems.length);
       
       const { data, error } = await supabase.functions.invoke('generate-outfits', {
         body: { 
@@ -72,7 +83,15 @@ const OutfitGenerator = () => {
             category: item.category,
             color: item.primary_color,
             brand: item.brand,
-            image_url: item.image_url
+            image_url: item.image_url,
+            fit: item.fit,
+            collar: item.collar,
+            sleeve: item.sleeve,
+            pattern: item.pattern,
+            color_tone: item.color_tone,
+            context_tags: item.context_tags,
+            prompt_description: item.prompt_description,
+            material: item.material
           }))
         }
       });
