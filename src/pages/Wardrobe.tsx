@@ -71,7 +71,13 @@ const Wardrobe = () => {
         // Mock analysis for now
         setIsAnalyzing(true);
         setTimeout(() => {
-          setAnalysisResult({ confidence: 85 });
+          setAnalysisResult({ 
+            name: "Yeni Kıyafet",
+            category: "üstler",
+            primaryColor: "Beyaz",
+            tags: ["rahat", "günlük"],
+            confidence: 85 
+          });
           setIsAnalyzing(false);
         }, 2000);
       };
