@@ -45,6 +45,19 @@ const AnalysisStep = ({
 
   return (
     <div className="space-y-6">
+      {/* Display the analyzed product image */}
+      {analysisResult.imageUrl && (
+        <div className="text-center">
+          <div className="aspect-square w-48 mx-auto bg-gray-100 rounded-2xl overflow-hidden shadow-md">
+            <img
+              src={analysisResult.imageUrl}
+              alt="Analyzed product"
+              className="w-full h-full object-cover"
+            />
+          </div>
+        </div>
+      )}
+
       <div className="bg-green-50 border border-green-200 rounded-2xl p-4">
         <div className="flex items-center space-x-3 mb-3">
           <div className="bg-green-100 rounded-full p-2">
