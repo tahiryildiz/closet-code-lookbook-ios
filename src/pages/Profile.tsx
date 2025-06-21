@@ -39,9 +39,6 @@ const Profile = () => {
       <div className="bg-gradient-to-br from-blue-900 to-blue-800 text-white">
         <div className="px-6 pt-12 pb-8">
           <div className="text-center">
-            <div className="bg-white/20 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4">
-              <User className="h-10 w-10 text-white" />
-            </div>
             <h1 className="text-2xl font-medium">Profil</h1>
             <p className="text-white/80 text-base mt-1">{user?.email}</p>
           </div>

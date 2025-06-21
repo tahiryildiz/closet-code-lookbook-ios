@@ -58,14 +58,13 @@ const Index = () => {
   // Show authenticated user's home page with weather card and add products section
   if (user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 pb-20">
+      <div className="min-h-screen bg-gray-50 pb-20">
         {/* Header */}
         <div className="bg-gradient-to-br from-blue-900 to-blue-800 text-white">
           <div className="px-6 pt-12 pb-8">
             <div className="text-center">
-              <h1 className="text-3xl font-bold text-white mb-2">
-                Hoş geldiniz, {user.email.split('@')[0]}
-              </h1>
+              <h1 className="text-2xl font-medium">Ana Sayfa</h1>
+              <p className="text-white/80 text-base mt-1">Hoş geldiniz, {user.email.split('@')[0]}</p>
             </div>
           </div>
         </div>
@@ -73,20 +72,22 @@ const Index = () => {
         {/* Content */}
         <div className="px-4 py-6 space-y-6">
           {/* Weather Card */}
-          <Card className="bg-white border-0 shadow-lg rounded-2xl overflow-hidden">
+          <Card className="bg-white border-0 shadow-sm rounded-2xl overflow-hidden">
             <CardContent className="p-0">
               <div className="bg-gradient-to-r from-blue-400 to-blue-600 p-6 text-white">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <MapPin className="h-5 w-5 text-white/80" />
-                    <span className="text-white/90 text-lg font-medium">{location}</span>
-                  </div>
-                  <div className="text-right">
-                    <div className="flex items-center space-x-2 justify-end">
-                      <span className="text-3xl font-bold">{temperature}°C</span>
-                      <Sun className="h-8 w-8 text-yellow-300" />
+                  <div className="flex items-center space-x-4">
+                    <div className="text-left">
+                      <span className="text-4xl font-bold">{temperature}°C</span>
+                      <div className="flex items-center space-x-2 mt-1">
+                        <Sun className="h-5 w-5 text-yellow-300" />
+                        <span className="text-white/90 text-sm">{weatherCondition}</span>
+                      </div>
                     </div>
-                    <p className="text-white/90 text-sm mt-1">{weatherCondition}</p>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <MapPin className="h-4 w-4 text-white/80" />
+                    <span className="text-white/90 text-sm">{location}</span>
                   </div>
                 </div>
               </div>
