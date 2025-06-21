@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Sparkles } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -37,6 +36,8 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
   });
   const { toast } = useToast();
 
+  console.log('AddItemModal render - step:', step, 'isAnalyzing:', isAnalyzing, 'analysisResults:', analysisResults.length);
+
   const handleFileSelect = (files: File[]) => {
     console.log('Files received in modal:', files.length);
     setSelectedFiles(files);
@@ -56,6 +57,7 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
       return;
     }
 
+    console.log('Starting file processing...');
     setIsAnalyzing(true);
     const results: any[] = [];
 
@@ -69,6 +71,7 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
         const fileName = `${Math.random()}.${fileExt}`;
         const filePath = `clothing/${fileName}`;
 
+        console.log('Uploading to storage:', filePath);
         const { error: uploadError } = await supabase.storage
           .from('clothing-images')
           .upload(filePath, file);
@@ -141,13 +144,23 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
         }
       }
 
+      console.log('Processing complete. Results:', results);
+
       if (results.length > 0) {
         setAnalysisResults(results);
         setCurrentItemIndex(0);
+        console.log('Moving to details step with results:', results[0]);
         setStep('details');
         toast({
           title: "Başarılı!",
           description: `${results.length} ürün analiz edildi`,
+        });
+      } else {
+        console.log('No results to display');
+        toast({
+          title: "Hata",
+          description: "Hiçbir ürün başarıyla analiz edilemedi",
+          variant: "destructive"
         });
       }
     } catch (error) {
@@ -281,6 +294,9 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
     }
   };
 
+  const currentAnalysisResult = analysisResults[currentItemIndex];
+  console.log('Current analysis result for step:', step, currentAnalysisResult);
+
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md bg-white rounded-3xl border-0 shadow-2xl max-h-[90vh] overflow-y-auto">
@@ -318,10 +334,10 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
           </div>
         )}
 
-        {step === 'details' && analysisResults[currentItemIndex] && (
+        {step === 'details' && (
           <AnalysisStep
             isAnalyzing={isAnalyzing}
-            analysisResult={analysisResults[currentItemIndex]}
+            analysisResult={currentAnalysisResult}
             formData={formData}
             onFormDataChange={handleFormDataChange}
             onSave={handleSave}

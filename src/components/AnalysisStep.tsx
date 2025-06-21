@@ -1,3 +1,4 @@
+
 import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -29,6 +30,9 @@ const AnalysisStep = ({
   onSave,
   onBack
 }: AnalysisStepProps) => {
+  console.log('AnalysisStep - isAnalyzing:', isAnalyzing);
+  console.log('AnalysisStep - analysisResult:', analysisResult);
+
   if (isAnalyzing) {
     return (
       <div className="text-center py-12 space-y-6">
@@ -61,7 +65,23 @@ const AnalysisStep = ({
   }
 
   if (!analysisResult) {
-    return null;
+    console.log('No analysis result available');
+    return (
+      <div className="text-center py-12 space-y-6">
+        <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+          <h3 className="font-bold text-red-800 text-lg mb-2">Analiz Hatası</h3>
+          <p className="text-red-600">
+            Ürün analizi tamamlanamadı. Lütfen tekrar deneyin.
+          </p>
+          <Button
+            onClick={onBack}
+            className="mt-4 bg-red-600 hover:bg-red-700 text-white"
+          >
+            Geri Dön
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -74,6 +94,10 @@ const AnalysisStep = ({
               src={analysisResult.imageUrl}
               alt="Analyzed product"
               className="w-full h-full object-cover"
+              onError={(e) => {
+                console.error('Image failed to load:', analysisResult.imageUrl);
+                e.currentTarget.style.display = 'none';
+              }}
             />
           </div>
         </div>
@@ -85,7 +109,7 @@ const AnalysisStep = ({
             <Check className="h-4 w-4 text-green-600" />
           </div>
           <span className="text-sm font-semibold text-green-800">
-            AI Analizi Tamamlandı (%{analysisResult.confidence} güven)
+            AI Analizi Tamamlandı ({analysisResult.confidence || 50}% güven)
           </span>
         </div>
         <p className="text-sm text-green-700 leading-relaxed">
