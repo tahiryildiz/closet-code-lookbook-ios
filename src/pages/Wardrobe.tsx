@@ -1,185 +1,18 @@
-import { useState, useRef } from "react";
+
+import { useState } from "react";
 import { Plus, Search, Filter } from "lucide-react";
-import { Camera, CameraResultType, CameraSource } from "@capacitor/camera";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import WardrobeGrid from "@/components/WardrobeGrid";
 import CategoryFilter from "@/components/CategoryFilter";
-import AnalysisStep from "@/components/AnalysisStep";
+import AddItemModal from "@/components/AddItemModal";
 
 const Wardrobe = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [showFilters, setShowFilters] = useState(false);
-  const [showAnalysisStep, setShowAnalysisStep] = useState(false);
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [analysisResult, setAnalysisResult] = useState<any>(null);
-  const [formData, setFormData] = useState({
-    name: '',
-    brand: '',
-    category: '',
-    primaryColor: '',
-    tags: '',
-    notes: ''
-  });
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const handleAddProduct = async () => {
-    console.log('Wardrobe: Add product button clicked');
-    
-    // Check if we're in a mobile environment that supports Capacitor
-    const isCapacitorAvailable = typeof window !== 'undefined' && (window as any).Capacitor;
-    
-    if (isCapacitorAvailable) {
-      try {
-        console.log('Wardrobe: Attempting to use Capacitor camera');
-        const image = await Camera.getPhoto({
-          quality: 90,
-          allowEditing: false,
-          source: CameraSource.Prompt,
-          resultType: CameraResultType.DataUrl,
-        });
-
-        console.log('Wardrobe: Camera image captured successfully');
-
-        if (image.dataUrl) {
-          setSelectedImage(image.dataUrl);
-          setShowAnalysisStep(true);
-          setIsAnalyzing(true);
-          
-          setTimeout(() => {
-            setAnalysisResult({ 
-              name: "Yeni Kıyafet",
-              category: "üstler",
-              primaryColor: "Beyaz",
-              tags: ["rahat", "günlük"],
-              confidence: 85 
-            });
-            setIsAnalyzing(false);
-          }, 2000);
-        }
-      } catch (error) {
-        console.log('Wardrobe: Capacitor camera failed, using file input:', error);
-        triggerFileInput();
-      }
-    } else {
-      console.log('Wardrobe: Capacitor not available, using file input');
-      triggerFileInput();
-    }
-  };
-
-  const triggerFileInput = () => {
-    if (fileInputRef.current) {
-      console.log('Wardrobe: Triggering file input');
-      fileInputRef.current.click();
-    } else {
-      console.error('Wardrobe: File input ref not available');
-    }
-  };
-
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    console.log('Wardrobe: File input change event triggered');
-    const file = event.target.files?.[0];
-    if (file) {
-      console.log('Wardrobe: File selected:', file.name, 'Size:', file.size, 'Type:', file.type);
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const result = e.target?.result as string;
-        console.log('Wardrobe: File read successfully');
-        setSelectedImage(result);
-        setShowAnalysisStep(true);
-        setIsAnalyzing(true);
-        
-        setTimeout(() => {
-          setAnalysisResult({ 
-            name: "Yeni Kıyafet",
-            category: "üstler",
-            primaryColor: "Beyaz",
-            tags: ["rahat", "günlük"],
-            confidence: 85 
-          });
-          setIsAnalyzing(false);
-        }, 2000);
-      };
-      reader.onerror = (error) => {
-        console.error('Wardrobe: File read error:', error);
-      };
-      reader.readAsDataURL(file);
-    } else {
-      console.log('Wardrobe: No file selected');
-    }
-    
-    // Reset the input value so the same file can be selected again
-    event.target.value = '';
-  };
-
-  const handleFormDataChange = (data: Partial<typeof formData>) => {
-    setFormData(prev => ({ ...prev, ...data }));
-  };
-
-  const handleSave = () => {
-    console.log('Saving item:', formData);
-    // Reset state
-    setShowAnalysisStep(false);
-    setSelectedImage(null);
-    setAnalysisResult(null);
-    setFormData({
-      name: '',
-      brand: '',
-      category: '',
-      primaryColor: '',
-      tags: '',
-      notes: ''
-    });
-  };
-
-  const handleBack = () => {
-    setShowAnalysisStep(false);
-    setSelectedImage(null);
-    setAnalysisResult(null);
-    setFormData({
-      name: '',
-      brand: '',
-      category: '',
-      primaryColor: '',
-      tags: '',
-      notes: ''
-    });
-  };
-
-  if (showAnalysisStep && selectedImage) {
-    return (
-      <div className="min-h-screen bg-gray-50 pb-20">
-        <div className="bg-gradient-to-br from-blue-900 to-blue-800 text-white">
-          <div className="px-6 pt-12 pb-8">
-            <h1 className="text-2xl font-medium">Ürün Ekle</h1>
-            <p className="text-white/80 text-base mt-1">AI ile otomatik analiz</p>
-          </div>
-        </div>
-        
-        <div className="px-4 py-6">
-          <div className="mb-6">
-            <img
-              src={selectedImage}
-              alt="Selected item"
-              className="w-full h-64 object-cover rounded-2xl shadow-lg"
-            />
-          </div>
-          
-          <AnalysisStep
-            isAnalyzing={isAnalyzing}
-            analysisResult={analysisResult}
-            formData={formData}
-            onFormDataChange={handleFormDataChange}
-            onSave={handleSave}
-            onBack={handleBack}
-          />
-        </div>
-      </div>
-    );
-  }
+  const [showAddModal, setShowAddModal] = useState(false);
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
@@ -192,7 +25,7 @@ const Wardrobe = () => {
               <p className="text-white/80 text-base mt-1">Gardırobunu düzenle ve yönet</p>
             </div>
             <Button
-              onClick={handleAddProduct}
+              onClick={() => setShowAddModal(true)}
               className="bg-white/20 hover:bg-white/30 rounded-full h-12 w-12 p-0 backdrop-blur-sm border border-white/20"
             >
               <Plus className="h-6 w-6 text-white" />
@@ -245,15 +78,8 @@ const Wardrobe = () => {
         />
       </div>
 
-      {/* Hidden file input for fallback */}
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        capture="environment"
-        onChange={handleFileSelect}
-        className="hidden"
-      />
+      {/* Add Item Modal */}
+      <AddItemModal isOpen={showAddModal} onClose={() => setShowAddModal(false)} />
     </div>
   );
 };
