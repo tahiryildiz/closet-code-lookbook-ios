@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -90,16 +89,16 @@ const ItemDetailsModal = ({ isOpen, onClose, item, onUpdate }: ItemDetailsModalP
 
       if (error) {
         console.error('Error updating item:', error);
-        toast.error('Ürün güncellenirken hata oluştu');
+        toast.error('Ürün güncellenirken hata oluştu', { duration: 3000 });
         return;
       }
 
-      toast.success('Ürün başarıyla güncellendi');
+      toast.success('Ürün başarıyla güncellendi', { duration: 2000 });
       onUpdate();
       onClose();
     } catch (error) {
       console.error('Error updating item:', error);
-      toast.error('Ürün güncellenirken hata oluştu');
+      toast.error('Ürün güncellenirken hata oluştu', { duration: 3000 });
     } finally {
       setIsLoading(false);
     }
@@ -119,16 +118,16 @@ const ItemDetailsModal = ({ isOpen, onClose, item, onUpdate }: ItemDetailsModalP
 
       if (error) {
         console.error('Error deleting item:', error);
-        toast.error('Ürün silinirken hata oluştu');
+        toast.error('Ürün silinirken hata oluştu', { duration: 3000 });
         return;
       }
 
-      toast.success('Ürün başarıyla silindi');
+      toast.success('Ürün başarıyla silindi', { duration: 2000 });
       onUpdate();
       onClose();
     } catch (error) {
       console.error('Error deleting item:', error);
-      toast.error('Ürün silinirken hata oluştu');
+      toast.error('Ürün silinirken hata oluştu', { duration: 3000 });
     } finally {
       setIsLoading(false);
     }
