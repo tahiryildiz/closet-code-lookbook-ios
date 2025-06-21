@@ -227,7 +227,7 @@ const Index = () => {
               </div>
             </div>
           </CardContent>
-        </div>
+        </Card>
 
         {/* Son Eklenenler */}
         <div className="space-y-4">
@@ -340,36 +340,38 @@ const Index = () => {
           )}
         </div>
 
-        {/* Quick Stats */}
-        <div className="grid grid-cols-2 gap-4">
-          <Card className="bg-white border-0 shadow-sm rounded-2xl">
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-3">
-                <div className="bg-purple-100 p-3 rounded-full">
-                  <TrendingUp className="h-6 w-6 text-purple-600" />
+        {/* Quick Stats - Only show if there's actual data */}
+        {(stats.totalOutfits > 0) && (
+          <div className="grid grid-cols-2 gap-4">
+            <Card className="bg-white border-0 shadow-sm rounded-2xl">
+              <CardContent className="p-4">
+                <div className="flex items-center space-x-3">
+                  <div className="bg-purple-100 p-3 rounded-full">
+                    <TrendingUp className="h-6 w-6 text-purple-600" />
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold text-gray-900">{stats.totalOutfits}</div>
+                    <div className="text-sm text-gray-600">Kombin Oluşturuldu</div>
+                  </div>
                 </div>
-                <div>
-                  <div className="text-2xl font-bold text-gray-900">{stats.totalOutfits}</div>
-                  <div className="text-sm text-gray-600">Kombin Oluşturuldu</div>
+              </CardContent>
+            </Card>
+            
+            <Card className="bg-white border-0 shadow-sm rounded-2xl">
+              <CardContent className="p-4">
+                <div className="flex items-center space-x-3">
+                  <div className="bg-green-100 p-3 rounded-full">
+                    <Calendar className="h-6 w-6 text-green-600" />
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold text-gray-900">{stats.streakDays}</div>
+                    <div className="text-sm text-gray-600">Gün Üst Üste</div>
+                  </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-white border-0 shadow-sm rounded-2xl">
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-3">
-                <div className="bg-green-100 p-3 rounded-full">
-                  <Calendar className="h-6 w-6 text-green-600" />
-                </div>
-                <div>
-                  <div className="text-2xl font-bold text-gray-900">{stats.streakDays}</div>
-                  <div className="text-sm text-gray-600">Gün Üst Üste</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
       </div>
     </div>
   );
