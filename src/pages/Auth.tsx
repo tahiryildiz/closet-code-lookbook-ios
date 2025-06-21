@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Eye, EyeOff, Mail, Lock, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -66,11 +65,20 @@ const Auth = () => {
             });
           }
         } else {
-          toast({
-            title: "Kayıt başarılı!",
-            description: "Hesabınız oluşturuldu, giriş yapabilirsiniz",
-          });
-          setIsLogin(true);
+          const loginResult = await signIn(formData.email, formData.password);
+          if (loginResult.error) {
+            toast({
+              title: "Hesap oluşturuldu!",
+              description: "Hesabınız başarıyla oluşturuldu. Lütfen giriş yapın.",
+            });
+            setIsLogin(true);
+          } else {
+            toast({
+              title: "Hesap oluşturuldu!",
+              description: "Hesabınız başarıyla oluşturuldu ve giriş yaptınız",
+            });
+            navigate('/wardrobe');
+          }
         }
       }
     } catch (error) {
