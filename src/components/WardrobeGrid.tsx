@@ -3,15 +3,17 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Heart, MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface WardrobeItem {
   id: string;
   name: string;
   category: string;
-  primaryColor: string;
+  primary_color: string;
   brand?: string;
   tags: string[];
-  image: string;
+  image_url: string;
   notes?: string;
 }
 
@@ -21,97 +23,78 @@ interface WardrobeGridProps {
   selectedCategory: string;
 }
 
-// Beautiful clothing images from Unsplash
-const mockItems: WardrobeItem[] = [
-  {
-    id: '1',
-    name: 'Classic White Button-Down',
-    category: 'tops',
-    primaryColor: 'White',
-    brand: 'Everlane',
-    tags: ['professional', 'versatile', 'cotton'],
-    image: 'https://images.unsplash.com/photo-1586790170083-2f9ceadc732d?w=400&h=400&fit=crop',
-    notes: 'Perfect for meetings and casual days'
-  },
-  {
-    id: '2',
-    name: 'High-Waisted Denim',
-    category: 'bottoms',
-    primaryColor: 'Blue',
-    brand: 'Levi\'s',
-    tags: ['casual', 'denim', 'high-waist'],
-    image: 'https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=400&h=400&fit=crop'
-  },
-  {
-    id: '3',
-    name: 'Silk Slip Dress',
-    category: 'dresses',
-    primaryColor: 'Black',
-    brand: 'Reformation',
-    tags: ['evening', 'silk', 'elegant'],
-    image: 'https://images.unsplash.com/photo-1539008835657-9e8e9680c956?w=400&h=400&fit=crop'
-  },
-  {
-    id: '4',
-    name: 'Cashmere Sweater',
-    category: 'tops',
-    primaryColor: 'Beige',
-    brand: 'COS',
-    tags: ['cozy', 'luxury', 'cashmere'],
-    image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=400&fit=crop'
-  },
-  {
-    id: '5',
-    name: 'Tailored Blazer',
-    category: 'outerwear',
-    primaryColor: 'Navy',
-    brand: 'Theory',
-    tags: ['professional', 'structured', 'wool'],
-    image: 'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=400&h=400&fit=crop'
-  },
-  {
-    id: '6',
-    name: 'Midi Skirt',
-    category: 'bottoms',
-    primaryColor: 'Camel',
-    brand: 'Zara',
-    tags: ['midi', 'versatile', 'work'],
-    image: 'https://images.unsplash.com/photo-1583496661160-fb5886a13d14?w=400&h=400&fit=crop'
-  },
-  {
-    id: '7',
-    name: 'Leather Ankle Boots',
-    category: 'shoes',
-    primaryColor: 'Brown',
-    brand: 'Acne Studios',
-    tags: ['leather', 'ankle', 'autumn'],
-    image: 'https://images.unsplash.com/photo-1608256246200-53e635b5b65f?w=400&h=400&fit=crop'
-  },
-  {
-    id: '8',
-    name: 'Structured Handbag',
-    category: 'accessories',
-    primaryColor: 'Black',
-    brand: 'Polene',
-    tags: ['leather', 'structured', 'everyday'],
-    image: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=400&h=400&fit=crop'
-  }
-];
-
 const WardrobeGrid = ({ viewMode, searchQuery, selectedCategory }: WardrobeGridProps) => {
-  const filteredItems = mockItems.filter(item => {
+  const [items, setItems] = useState<WardrobeItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchItems();
+  }, []);
+
+  const fetchItems = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('clothing_items')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      const formattedItems = data?.map(item => ({
+        id: item.id,
+        name: item.name,
+        category: item.category,
+        primary_color: item.primary_color,
+        brand: item.brand,
+        tags: item.tags || [],
+        image_url: item.image_url,
+        notes: item.notes
+      })) || [];
+
+      setItems(formattedItems);
+    } catch (error) {
+      console.error('Error fetching items:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredItems = items.filter(item => {
     const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          item.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
     const matchesCategory = selectedCategory === 'all' || item.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
 
+  if (loading) {
+    return (
+      <div className="grid grid-cols-2 gap-4">
+        {[...Array(6)].map((_, i) => (
+          <Card key={i} className="bg-white border-0 shadow-sm rounded-2xl overflow-hidden">
+            <div className="aspect-square bg-gray-200 animate-pulse"></div>
+            <div className="p-4 space-y-2">
+              <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+              <div className="h-3 bg-gray-200 rounded animate-pulse w-3/4"></div>
+            </div>
+          </Card>
+        ))}
+      </div>
+    );
+  }
+
   if (filteredItems.length === 0) {
     return (
       <div className="text-center py-16">
         <div className="text-6xl mb-4">👗</div>
-        <h3 className="text-xl font-semibold text-gray-900 mb-2">Ürün bulunamadı</h3>
-        <p className="text-gray-500">Arama kriterlerinizi değiştirin veya yeni ürünler ekleyin</p>
+        <h3 className="text-xl font-semibold text-gray-900 mb-2">
+          {items.length === 0 ? "Gardırobunuz boş" : "Ürün bulunamadı"}
+        </h3>
+        <p className="text-gray-500">
+          {items.length === 0 
+            ? "İlk ürününüzü eklemek için + butonuna tıklayın" 
+            : "Arama kriterlerinizi değiştirin veya yeni ürünler ekleyin"
+          }
+        </p>
       </div>
     );
   }
@@ -125,11 +108,20 @@ const WardrobeGrid = ({ viewMode, searchQuery, selectedCategory }: WardrobeGridP
         >
           <CardContent className="p-0">
             <div className="aspect-square relative overflow-hidden">
-              <img
-                src={item.image}
-                alt={item.name}
-                className="w-full h-full object-cover"
-              />
+              {item.image_url ? (
+                <img
+                  src={item.image_url}
+                  alt={item.name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+                  <div className="text-center text-gray-400">
+                    <div className="text-4xl mb-2">👕</div>
+                    <div className="text-sm">Resim yok</div>
+                  </div>
+                </div>
+              )}
               <div className="absolute top-3 right-3 flex space-x-2">
                 <Button
                   size="sm"

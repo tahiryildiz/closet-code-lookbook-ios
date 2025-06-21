@@ -1,51 +1,121 @@
 
-import { useState } from "react";
-import { Plus, TrendingUp, Calendar, Sun, CloudRain, ChevronRight, Zap, Lightbulb } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Plus, TrendingUp, Calendar, Sun, CloudRain, ChevronRight, Zap, Lightbulb, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const Index = () => {
-  // Mock data for carousels
-  const recentItems = [
-    { id: 1, name: "Beyaz Gömlek", image: "https://images.unsplash.com/photo-1586790170083-2f9ceadc732d?w=400&h=400&fit=crop", category: "Üstler" },
-    { id: 2, name: "Siyah Pantolon", image: "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=400&h=400&fit=crop", category: "Altlar" },
-    { id: 3, name: "Mavi Ceket", image: "https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=400&h=400&fit=crop", category: "Dış Giyim" },
-    { id: 4, name: "Kahve Ayakkabı", image: "https://images.unsplash.com/photo-1608256246200-53e635b5b65f?w=400&h=400&fit=crop", category: "Ayakkabılar" },
-  ];
+  const [location, setLocation] = useState<{lat: number, lon: number} | null>(null);
+  const [weather, setWeather] = useState<any>(null);
+  const [recentItems, setRecentItems] = useState<any[]>([]);
+  const [mostWornItems, setMostWornItems] = useState<any[]>([]);
+  const [weatherOutfits, setWeatherOutfits] = useState<any[]>([]);
+  const [stats, setStats] = useState({ totalOutfits: 0, streakDays: 0 });
+  const { toast } = useToast();
 
-  const mostWornItems = [
-    { id: 1, name: "Beyaz Spor Ayakkabı", image: "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=400&h=400&fit=crop", wearCount: "23×", category: "Ayakkabılar" },
-    { id: 2, name: "Siyah Tişört", image: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400&h=400&fit=crop", wearCount: "18×", category: "Üstler" },
-    { id: 3, name: "Mavi Kot", image: "https://images.unsplash.com/photo-1542272604-787c3835535d?w=400&h=400&fit=crop", wearCount: "15×", category: "Altlar" },
-  ];
+  useEffect(() => {
+    requestLocationPermission();
+    fetchUserData();
+  }, []);
 
-  const weatherOutfits = [
-    { 
-      id: 1, 
-      name: "Hafif Sweater", 
-      category: "Üstler",
-      image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=400&fit=crop"
-    },
-    { 
-      id: 2, 
-      name: "Chino Pantolon", 
-      category: "Altlar",
-      image: "https://images.unsplash.com/photo-1473966968600-fa801b869a1a?w=400&h=400&fit=crop"
-    },
-    { 
-      id: 3, 
-      name: "Hafif Ceket", 
-      category: "Dış Giyim",
-      image: "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=400&h=400&fit=crop"
-    },
-    { 
-      id: 4, 
-      name: "Loafer", 
-      category: "Ayakkabılar",
-      image: "https://images.unsplash.com/photo-1549298916-b41d501d3772?w=400&h=400&fit=crop"
-    },
-  ];
+  const requestLocationPermission = async () => {
+    if ("geolocation" in navigator) {
+      try {
+        const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 300000 // 5 minutes
+          });
+        });
+        
+        const { latitude, longitude } = position.coords;
+        setLocation({ lat: latitude, lon: longitude });
+        fetchWeatherData(latitude, longitude);
+        
+        toast({
+          title: "Konum erişimi sağlandı",
+          description: "Hava durumuna göre kıyafet önerileri alabiliriz",
+        });
+      } catch (error) {
+        console.error("Location error:", error);
+        toast({
+          title: "Konum erişimi",
+          description: "Konum izni verilmedi. Hava durumu önerileri sınırlı olacak.",
+          variant: "destructive"
+        });
+      }
+    }
+  };
+
+  const fetchWeatherData = async (lat: number, lon: number) => {
+    try {
+      // You can integrate with a weather API here
+      // For now, setting mock weather based on location
+      setWeather({
+        location: "Mevcut Konum",
+        condition: "Güneşli",
+        temperature: 22,
+        icon: "☀️"
+      });
+    } catch (error) {
+      console.error("Weather fetch error:", error);
+    }
+  };
+
+  const fetchUserData = async () => {
+    try {
+      // Fetch recent items from clothing_items table
+      const { data: items } = await supabase
+        .from('clothing_items')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(4);
+
+      setRecentItems(items || []);
+
+      // Fetch most worn items (items with highest wear_count)
+      const { data: mostWorn } = await supabase
+        .from('clothing_items')
+        .select('*')
+        .order('wear_count', { ascending: false })
+        .limit(3);
+
+      setMostWornItems(mostWorn || []);
+
+      // Fetch weather-appropriate items based on current season/weather
+      const { data: weatherItems } = await supabase
+        .from('clothing_items')
+        .select('*')
+        .limit(4);
+
+      setWeatherOutfits(weatherItems || []);
+
+      // Calculate stats from outfits table
+      const { data: outfits } = await supabase
+        .from('outfits')
+        .select('*');
+
+      setStats({
+        totalOutfits: outfits?.length || 0,
+        streakDays: 0 // Calculate streak based on outfit creation dates
+      });
+
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+    }
+  };
+
+  const EmptyCarousel = ({ title, description }: { title: string, description: string }) => (
+    <div className="text-center py-8">
+      <div className="text-4xl mb-2">👗</div>
+      <h4 className="font-medium text-gray-900 mb-1">{title}</h4>
+      <p className="text-sm text-gray-500">{description}</p>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
@@ -53,7 +123,16 @@ const Index = () => {
       <div className="bg-gradient-to-br from-blue-900 to-blue-800 text-white">
         <div className="px-6 pt-12 pb-8">
           <div className="flex items-center justify-between mb-6">
-            <h1 className="text-2xl font-medium">Günaydın Ahmet</h1>
+            <h1 className="text-2xl font-medium">Günaydın</h1>
+            <Button
+              onClick={requestLocationPermission}
+              variant="ghost"
+              size="sm"
+              className="text-white/80 hover:text-white hover:bg-white/10"
+            >
+              <MapPin className="h-4 w-4 mr-1" />
+              Konum
+            </Button>
           </div>
           
           <p className="text-white/80 text-base mb-6">Bugün ne giymek istiyorsun?</p>
@@ -63,14 +142,14 @@ const Index = () => {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <Sun className="h-8 w-8 text-yellow-300" />
+                  <div className="text-2xl">{weather?.icon || "🌤️"}</div>
                   <div>
-                    <div className="text-sm text-white/80">İstanbul</div>
-                    <div className="font-medium">Güneşli</div>
+                    <div className="text-sm text-white/80">{weather?.location || "Konum bekleniyor"}</div>
+                    <div className="font-medium">{weather?.condition || "Bilinmiyor"}</div>
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-3xl font-light">22°C</div>
+                  <div className="text-3xl font-light">{weather?.temperature || "--"}°C</div>
                 </div>
               </div>
             </CardContent>
@@ -83,31 +162,47 @@ const Index = () => {
         {/* Bugünün havası için şahane gider */}
         <div className="space-y-4">
           <h2 className="text-xl font-semibold text-gray-900">Bugünün havası için şahane gider</h2>
-          <Carousel className="w-full">
-            <CarouselContent>
-              {weatherOutfits.map((item) => (
-                <CarouselItem key={item.id} className="basis-[35%]">
-                  <Card className="bg-white border-0 shadow-sm rounded-2xl overflow-hidden">
-                    <CardContent className="p-0">
-                      <div className="aspect-square bg-gray-100">
-                        <img
-                          src={item.image}
-                          alt={item.name}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      <div className="p-3">
-                        <h4 className="font-medium text-gray-900 text-sm truncate">{item.name}</h4>
-                        <p className="text-xs text-gray-500 mt-1">{item.category}</p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            <CarouselPrevious />
-            <CarouselNext />
-          </Carousel>
+          {weatherOutfits.length > 0 ? (
+            <Carousel className="w-full">
+              <CarouselContent>
+                {weatherOutfits.map((item) => (
+                  <CarouselItem key={item.id} className="basis-[35%]">
+                    <Card className="bg-white border-0 shadow-sm rounded-2xl overflow-hidden">
+                      <CardContent className="p-0">
+                        <div className="aspect-square bg-gray-100">
+                          {item.image_url ? (
+                            <img
+                              src={item.image_url}
+                              alt={item.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-gray-400">
+                              <div className="text-center">
+                                <div className="text-2xl mb-1">👕</div>
+                                <div className="text-xs">Resim yok</div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                        <div className="p-3">
+                          <h4 className="font-medium text-gray-900 text-sm truncate">{item.name}</h4>
+                          <p className="text-xs text-gray-500 mt-1">{item.category}</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious />
+              <CarouselNext />
+            </Carousel>
+          ) : (
+            <EmptyCarousel 
+              title="Henüz ürün yok" 
+              description="Gardırobunuza ürün ekleyerek hava durumuna uygun öneriler alın"
+            />
+          )}
         </div>
 
         {/* Generate AI Outfit Button */}
@@ -132,7 +227,7 @@ const Index = () => {
               </div>
             </div>
           </CardContent>
-        </Card>
+        </div>
 
         {/* Son Eklenenler */}
         <div className="space-y-4">
@@ -143,31 +238,47 @@ const Index = () => {
               <ChevronRight className="h-4 w-4 ml-1" />
             </Button>
           </div>
-          <Carousel className="w-full">
-            <CarouselContent>
-              {recentItems.map((item) => (
-                <CarouselItem key={item.id} className="basis-[35%]">
-                  <Card className="bg-white border-0 shadow-sm rounded-2xl overflow-hidden">
-                    <CardContent className="p-0">
-                      <div className="aspect-square bg-gray-100">
-                        <img
-                          src={item.image}
-                          alt={item.name}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      <div className="p-3">
-                        <h4 className="font-medium text-gray-900 text-sm truncate">{item.name}</h4>
-                        <p className="text-xs text-gray-500 mt-1">{item.category}</p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            <CarouselPrevious />
-            <CarouselNext />
-          </Carousel>
+          {recentItems.length > 0 ? (
+            <Carousel className="w-full">
+              <CarouselContent>
+                {recentItems.map((item) => (
+                  <CarouselItem key={item.id} className="basis-[35%]">
+                    <Card className="bg-white border-0 shadow-sm rounded-2xl overflow-hidden">
+                      <CardContent className="p-0">
+                        <div className="aspect-square bg-gray-100">
+                          {item.image_url ? (
+                            <img
+                              src={item.image_url}
+                              alt={item.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-gray-400">
+                              <div className="text-center">
+                                <div className="text-2xl mb-1">👕</div>
+                                <div className="text-xs">Resim yok</div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                        <div className="p-3">
+                          <h4 className="font-medium text-gray-900 text-sm truncate">{item.name}</h4>
+                          <p className="text-xs text-gray-500 mt-1">{item.category}</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious />
+              <CarouselNext />
+            </Carousel>
+          ) : (
+            <EmptyCarousel 
+              title="Henüz eklenen ürün yok" 
+              description="Gardırobunuza ilk ürününüzü ekleyin"
+            />
+          )}
         </div>
 
         {/* En Çok Giydiklerin */}
@@ -179,36 +290,54 @@ const Index = () => {
               <ChevronRight className="h-4 w-4 ml-1" />
             </Button>
           </div>
-          <Carousel className="w-full">
-            <CarouselContent>
-              {mostWornItems.map((item) => (
-                <CarouselItem key={item.id} className="basis-[35%]">
-                  <Card className="bg-white border-0 shadow-sm rounded-2xl overflow-hidden relative">
-                    <CardContent className="p-0">
-                      <div className="aspect-square bg-gray-100 relative">
-                        <img
-                          src={item.image}
-                          alt={item.name}
-                          className="w-full h-full object-cover"
-                        />
-                        <div className="absolute top-2 right-2">
-                          <div className="bg-blue-900 text-white text-xs font-medium px-2 py-1 rounded-full">
-                            {item.wearCount}
-                          </div>
+          {mostWornItems.length > 0 ? (
+            <Carousel className="w-full">
+              <CarouselContent>
+                {mostWornItems.map((item) => (
+                  <CarouselItem key={item.id} className="basis-[35%]">
+                    <Card className="bg-white border-0 shadow-sm rounded-2xl overflow-hidden relative">
+                      <CardContent className="p-0">
+                        <div className="aspect-square bg-gray-100 relative">
+                          {item.image_url ? (
+                            <img
+                              src={item.image_url}
+                              alt={item.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-gray-400">
+                              <div className="text-center">
+                                <div className="text-2xl mb-1">👕</div>
+                                <div className="text-xs">Resim yok</div>
+                              </div>
+                            </div>
+                          )}
+                          {item.wear_count > 0 && (
+                            <div className="absolute top-2 right-2">
+                              <div className="bg-blue-900 text-white text-xs font-medium px-2 py-1 rounded-full">
+                                {item.wear_count}×
+                              </div>
+                            </div>
+                          )}
                         </div>
-                      </div>
-                      <div className="p-3">
-                        <h4 className="font-medium text-gray-900 text-sm truncate">{item.name}</h4>
-                        <p className="text-xs text-gray-500 mt-1">{item.category}</p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            <CarouselPrevious />
-            <CarouselNext />
-          </Carousel>
+                        <div className="p-3">
+                          <h4 className="font-medium text-gray-900 text-sm truncate">{item.name}</h4>
+                          <p className="text-xs text-gray-500 mt-1">{item.category}</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious />
+              <CarouselNext />
+            </Carousel>
+          ) : (
+            <EmptyCarousel 
+              title="Henüz kullanım verisi yok" 
+              description="Ürünlerinizi kullandıkça istatistikler burada görünecek"
+            />
+          )}
         </div>
 
         {/* Quick Stats */}
@@ -220,7 +349,7 @@ const Index = () => {
                   <TrendingUp className="h-6 w-6 text-purple-600" />
                 </div>
                 <div>
-                  <div className="text-2xl font-bold text-gray-900">23</div>
+                  <div className="text-2xl font-bold text-gray-900">{stats.totalOutfits}</div>
                   <div className="text-sm text-gray-600">Kombin Oluşturuldu</div>
                 </div>
               </div>
@@ -234,7 +363,7 @@ const Index = () => {
                   <Calendar className="h-6 w-6 text-green-600" />
                 </div>
                 <div>
-                  <div className="text-2xl font-bold text-gray-900">7</div>
+                  <div className="text-2xl font-bold text-gray-900">{stats.streakDays}</div>
                   <div className="text-sm text-gray-600">Gün Üst Üste</div>
                 </div>
               </div>
