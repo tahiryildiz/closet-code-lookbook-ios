@@ -1,3 +1,4 @@
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
@@ -150,16 +151,16 @@ Return ONLY valid JSON in this exact format (no additional text):
         throw new Error('No outfits generated');
       }
 
-      // Helper function to create exact item descriptions without hallucination
-      const createExactItemDescription = (itemName: string, wardrobeItem: any) => {
+      // Helper function to create detailed item descriptions for image generation
+      const createDetailedItemDescription = (itemName: string, wardrobeItem: any) => {
         const color = wardrobeItem?.primary_color || wardrobeItem?.color || '';
         const category = wardrobeItem?.category || '';
         
-        // Map Turkish categories to English with basic descriptors
+        // Map Turkish categories to English descriptors
         const categoryMap: { [key: string]: string } = {
-          'Tişörtler': 't-shirt',
-          'Gömlek': 'shirt', 
-          'Pantolonlar': 'pants',
+          'Tişörtler': 'cotton t-shirt',
+          'Gömlek': 'button-up shirt', 
+          'Pantolonlar': 'trousers',
           'Ceket': 'blazer',
           'Kazak': 'sweater',
           'Etek': 'skirt',
@@ -169,10 +170,17 @@ Return ONLY valid JSON in this exact format (no additional text):
         };
 
         const englishType = categoryMap[category] || category.toLowerCase();
-        return `${color} ${englishType}`;
+        
+        // Add fabric/style hints based on category
+        let fabricHint = '';
+        if (category === 'Ceket') fabricHint = 'cotton ';
+        if (category === 'Tişörtler') fabricHint = 'crewneck ';
+        if (category === 'Pantolonlar') fabricHint = 'slim-fit ';
+        
+        return `${color} ${fabricHint}${englishType}`;
       };
 
-      // Generate outfit images using OpenAI DALL-E with strict adherence to provided items
+      // Generate outfit images with strict anti-hallucination prompts
       const processedOutfits = await Promise.all(parsedOutfits.outfits.map(async (outfit: any, index: number) => {
         const itemIds = outfit.items.map((itemName: string) => {
           const foundItem = wardrobeItems.find((item: any) => 
@@ -183,37 +191,41 @@ Return ONLY valid JSON in this exact format (no additional text):
           return foundItem ? foundItem.id : null;
         }).filter(Boolean);
         
-        // Create exact descriptions for each selected item only
-        const exactItemDescriptions = outfit.items.map((itemName: string) => {
+        // Create detailed descriptions for each selected item
+        const detailedItemDescriptions = outfit.items.map((itemName: string) => {
           const wardrobeItem = wardrobeItems.find((item: any) => 
             item.name.toLowerCase().trim() === itemName.toLowerCase().trim() ||
             item.name.toLowerCase().includes(itemName.toLowerCase()) ||
             itemName.toLowerCase().includes(item.name.toLowerCase())
           );
-          return createExactItemDescription(itemName, wardrobeItem);
+          return createDetailedItemDescription(itemName, wardrobeItem);
         });
 
-        // Create a strict flat lay prompt that prevents hallucination
-        const imagePrompt = `Professional flat lay fashion photography of a complete men's outfit arranged vertically as if worn on a person, on a clean light beige background.
+        // Create strict anti-hallucination prompt
+        const imagePrompt = `Professional flat lay fashion photography of a complete men's outfit on a clean light beige background.
 
 The outfit includes EXACTLY these items and NO OTHER ITEMS:
-${exactItemDescriptions.map(item => `- a ${item}`).join('\n')}
+${detailedItemDescriptions.map(item => `- ${item}`).join('\n')}
+
+Use bright studio lighting, neutral shadows, and catalog-style layout. 
+No models, mannequins, or added clothing. 
+DO NOT add any items not listed above.
+Only include the listed items below. Do not add any extra items, clothing pieces, colors, or accessories.
 
 STRICT REQUIREMENTS:
-- Use ONLY the items listed above
+- Use ONLY the ${detailedItemDescriptions.length} items listed above
 - Do NOT add any extra clothing items, accessories, or garments
 - Do NOT change the colors of any items
 - Do NOT include shoes unless specifically listed
 - Do NOT include belts, watches, or accessories unless specifically listed
 - Do NOT include mannequins, models, or hangers
-- Use soft studio lighting with natural shadows
-- Clean light beige background
-- High-quality fashion catalog style
+- Arrange items as they would be worn by a person
 - Square composition (1024x1024)
+- High-quality fashion catalog style
 
 IMPORTANT: Stay 100% faithful to the provided wardrobe items. Do not hallucinate or add any extra garments.`;
         
-        console.log(`Generating strict flat lay image ${index + 1}:`, imagePrompt);
+        console.log(`Generating anti-hallucination image ${index + 1}:`, imagePrompt);
         
         let generatedImageUrl = null;
         
@@ -240,7 +252,7 @@ IMPORTANT: Stay 100% faithful to the provided wardrobe items. Do not hallucinate
             
             if (imageData.data && imageData.data[0] && imageData.data[0].url) {
               generatedImageUrl = imageData.data[0].url;
-              console.log(`Generated strict flat lay image for outfit ${index + 1}: success`);
+              console.log(`Generated anti-hallucination image for outfit ${index + 1}: success`);
             }
           } else {
             const errorText = await imageResponse.text();
