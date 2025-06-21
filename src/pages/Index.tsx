@@ -14,10 +14,20 @@ const Index = () => {
   const [mostWornItems, setMostWornItems] = useState<any[]>([]);
   const [weatherOutfits, setWeatherOutfits] = useState<any[]>([]);
   const [stats, setStats] = useState({ totalOutfits: 0, streakDays: 0 });
+  const [locationToastShown, setLocationToastShown] = useState(false);
+  const [totalItems, setTotalItems] = useState(0);
   const { toast } = useToast();
 
   useEffect(() => {
-    requestLocationPermission();
+    // Only request location if we don't have it stored
+    const storedLocation = localStorage.getItem('userLocation');
+    if (storedLocation) {
+      const parsedLocation = JSON.parse(storedLocation);
+      setLocation(parsedLocation);
+      fetchWeatherData(parsedLocation.lat, parsedLocation.lon, parsedLocation.name);
+    } else {
+      requestLocationPermission();
+    }
     fetchUserData();
   }, []);
 
@@ -40,25 +50,35 @@ const Index = () => {
           const locationData = await response.json();
           const locationName = locationData.city || locationData.locality || locationData.countryName || "Bilinmeyen Konum";
           
-          setLocation({ lat: latitude, lon: longitude, name: locationName });
+          const locationInfo = { lat: latitude, lon: longitude, name: locationName };
+          setLocation(locationInfo);
+          localStorage.setItem('userLocation', JSON.stringify(locationInfo));
           fetchWeatherData(latitude, longitude, locationName);
         } catch (error) {
           console.error("Reverse geocoding error:", error);
-          setLocation({ lat: latitude, lon: longitude, name: "Konum Alındı" });
+          const locationInfo = { lat: latitude, lon: longitude, name: "Konum Alındı" };
+          setLocation(locationInfo);
+          localStorage.setItem('userLocation', JSON.stringify(locationInfo));
           fetchWeatherData(latitude, longitude, "Konum Alındı");
         }
         
-        toast({
-          title: "Konum erişimi sağlandı",
-          description: "Hava durumuna göre kıyafet önerileri alabiliriz",
-        });
+        if (!locationToastShown) {
+          toast({
+            title: "Konum erişimi sağlandı",
+            description: "Hava durumuna göre kıyafet önerileri alabiliriz",
+          });
+          setLocationToastShown(true);
+        }
       } catch (error) {
         console.error("Location error:", error);
-        toast({
-          title: "Konum erişimi",
-          description: "Konum izni verilmedi. Hava durumu önerileri sınırlı olacak.",
-          variant: "destructive"
-        });
+        if (!locationToastShown) {
+          toast({
+            title: "Konum erişimi",
+            description: "Konum izni verilmedi. Hava durumu önerileri sınırlı olacak.",
+            variant: "destructive"
+          });
+          setLocationToastShown(true);
+        }
       }
     }
   };
@@ -87,6 +107,7 @@ const Index = () => {
         .limit(4);
 
       setRecentItems(items || []);
+      setTotalItems(items?.length || 0);
 
       // Fetch most worn items (items with highest wear_count)
       const { data: mostWorn } = await supabase
@@ -139,7 +160,7 @@ const Index = () => {
               onClick={requestLocationPermission}
               variant="ghost"
               size="sm"
-              className="text-white/80 hover:text-white hover:bg-white/10"
+              className="text-white/80 hover:text-white hover:bg-white/10 rounded-2xl"
             >
               <MapPin className="h-4 w-4 mr-1" />
               Konum
@@ -149,13 +170,13 @@ const Index = () => {
           <p className="text-white/80 text-base mb-6">Bugün ne giymek istiyorsun?</p>
           
           {/* Weather Card */}
-          <Card className="bg-white/15 backdrop-blur-sm border-white/20 text-white">
+          <Card className="bg-white/15 backdrop-blur-sm border-white/20 text-white rounded-2xl">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   <div className="text-2xl">{weather?.icon || "🌤️"}</div>
                   <div>
-                    <div className="text-sm text-white/80">{weather?.location || "Konum bekleniyor"}</div>
+                    <div className="text-sm text-white/80">{weather?.location || location?.name || "Konum bekleniyor"}</div>
                     <div className="font-medium">{weather?.condition || "Bilinmiyor"}</div>
                   </div>
                 </div>
@@ -217,7 +238,10 @@ const Index = () => {
         </div>
 
         {/* Generate AI Outfit Button */}
-        <Button className="w-full bg-blue-900 hover:bg-blue-800 text-white font-semibold py-4 rounded-2xl text-base">
+        <Button 
+          disabled={totalItems === 0}
+          className="w-full bg-blue-900 hover:bg-blue-800 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-4 rounded-2xl text-base"
+        >
           <Zap className="h-5 w-5 mr-2" />
           AI Kombin Oluştur
         </Button>
@@ -244,7 +268,7 @@ const Index = () => {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold text-gray-900">Son Eklenenler</h2>
-            <Button variant="ghost" className="text-blue-600 hover:text-blue-700 p-0 text-sm">
+            <Button variant="ghost" className="text-blue-600 hover:text-blue-700 p-0 text-sm rounded-2xl">
               Hepsini Gör
               <ChevronRight className="h-4 w-4 ml-1" />
             </Button>
@@ -296,7 +320,7 @@ const Index = () => {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold text-gray-900">En Çok Giydiklerin</h2>
-            <Button variant="ghost" className="text-blue-600 hover:text-blue-700 p-0 text-sm">
+            <Button variant="ghost" className="text-blue-600 hover:text-blue-700 p-0 text-sm rounded-2xl">
               Hepsini Gör
               <ChevronRight className="h-4 w-4 ml-1" />
             </Button>

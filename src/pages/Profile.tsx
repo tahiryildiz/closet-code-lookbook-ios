@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { Settings, Camera, Heart, Share, Bell, HelpCircle, LogOut, User, TrendingUp } from "lucide-react";
+import { Settings, Camera, Heart, Share, Bell, HelpCircle, LogOut, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -50,7 +50,7 @@ const Profile = () => {
               <h1 className="text-2xl font-medium">Profil</h1>
               <p className="text-white/80 text-base mt-1">Hesap ayarları ve bilgiler</p>
             </div>
-            <div className="bg-white/20 backdrop-blur-sm rounded-full p-3 border border-white/20">
+            <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-3 border border-white/20">
               <User className="h-6 w-6 text-white" />
             </div>
           </div>
@@ -69,7 +69,7 @@ const Profile = () => {
                 </Avatar>
                 <Button
                   size="sm"
-                  className="absolute -bottom-1 -right-1 h-8 w-8 rounded-full bg-blue-500 hover:bg-blue-600 p-0"
+                  className="absolute -bottom-1 -right-1 h-8 w-8 rounded-2xl bg-blue-500 hover:bg-blue-600 p-0"
                 >
                   <Camera className="h-4 w-4 text-white" />
                 </Button>
@@ -86,39 +86,6 @@ const Profile = () => {
             </div>
           </CardContent>
         </Card>
-
-        {/* Quick Stats - Only show if there's data */}
-        {(stats.totalItems > 0 || stats.totalOutfits > 0) && (
-          <div className="grid grid-cols-2 gap-4">
-            <Card className="bg-white border-0 shadow-sm rounded-2xl">
-              <CardContent className="p-4">
-                <div className="flex items-center space-x-3">
-                  <div className="bg-blue-100 p-3 rounded-full">
-                    <TrendingUp className="h-6 w-6 text-blue-600" />
-                  </div>
-                  <div>
-                    <div className="text-2xl font-bold text-gray-900">{stats.totalItems}</div>
-                    <div className="text-sm text-gray-600">Gardırop Ürünü</div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card className="bg-white border-0 shadow-sm rounded-2xl">
-              <CardContent className="p-4">
-                <div className="flex items-center space-x-3">
-                  <div className="bg-purple-100 p-3 rounded-full">
-                    <Heart className="h-6 w-6 text-purple-600" />
-                  </div>
-                  <div>
-                    <div className="text-2xl font-bold text-gray-900">{stats.totalOutfits}</div>
-                    <div className="text-sm text-gray-600">Kayıtlı Kombin</div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
 
         {/* Settings */}
         <Card className="bg-white border-0 shadow-sm rounded-2xl">
@@ -148,22 +115,22 @@ const Profile = () => {
         {/* Menu Items */}
         <Card className="bg-white border-0 shadow-sm rounded-2xl">
           <CardContent className="p-6 space-y-4">
-            <Button variant="ghost" className="w-full justify-start text-left p-3 h-auto rounded-xl hover:bg-gray-50">
+            <Button variant="ghost" className="w-full justify-start text-left p-3 h-auto rounded-2xl hover:bg-gray-50">
               <Heart className="h-5 w-5 text-gray-600 mr-3" />
               <span className="text-gray-900">Favori Ürünler</span>
             </Button>
             
-            <Button variant="ghost" className="w-full justify-start text-left p-3 h-auto rounded-xl hover:bg-gray-50">
+            <Button variant="ghost" className="w-full justify-start text-left p-3 h-auto rounded-2xl hover:bg-gray-50">
               <Settings className="h-5 w-5 text-gray-600 mr-3" />
               <span className="text-gray-900">Uygulama Ayarları</span>
             </Button>
             
-            <Button variant="ghost" className="w-full justify-start text-left p-3 h-auto rounded-xl hover:bg-gray-50">
+            <Button variant="ghost" className="w-full justify-start text-left p-3 h-auto rounded-2xl hover:bg-gray-50">
               <HelpCircle className="h-5 w-5 text-gray-600 mr-3" />
               <span className="text-gray-900">Yardım & Destek</span>
             </Button>
             
-            <Button variant="ghost" className="w-full justify-start text-left p-3 h-auto text-red-600 rounded-xl hover:bg-red-50">
+            <Button variant="ghost" className="w-full justify-start text-left p-3 h-auto text-red-600 rounded-2xl hover:bg-red-50">
               <LogOut className="h-5 w-5 text-red-600 mr-3" />
               <span>Çıkış Yap</span>
             </Button>
