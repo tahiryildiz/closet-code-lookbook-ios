@@ -16,7 +16,7 @@ serve(async (req) => {
   }
 
   try {
-    const { occasion, timeOfDay, weather } = await req.json();
+    const { occasion, timeOfDay, weather, wardrobeItems } = await req.json();
 
     if (!occasion || !timeOfDay || !weather) {
       return new Response(
@@ -28,29 +28,47 @@ serve(async (req) => {
       );
     }
 
-    const prompt = `Generate 3 outfit recommendations in Turkish for the following criteria:
-    - Occasion: ${occasion}
-    - Time of day: ${timeOfDay}
-    - Weather: ${weather}
-
-    Please provide exactly 3 outfit suggestions. For each outfit, include:
-    1. A creative Turkish name for the outfit
-    2. A list of 3-4 clothing items that make up the outfit
-    3. A confidence score (80-100)
-    4. Brief styling tips in Turkish
-
-    Return the response as a JSON object with this exact structure:
-    {
-      "outfits": [
-        {
-          "id": 1,
-          "name": "Outfit name in Turkish",
-          "items": ["item1", "item2", "item3"],
-          "confidence": 95,
-          "styling_tips": "styling tip in Turkish"
+    if (!wardrobeItems || wardrobeItems.length === 0) {
+      return new Response(
+        JSON.stringify({ error: 'No wardrobe items provided' }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
-      ]
-    }`;
+      );
+    }
+
+    const wardrobeDescription = wardrobeItems.map((item: any) => 
+      `${item.name} (${item.category}, ${item.color || 'renk belirtilmemiş'}${item.brand ? `, ${item.brand}` : ''})`
+    ).join(', ');
+
+    const prompt = `Kullanıcının gardırobundaki şu ürünlerden 3 farklı kombin önerisi oluştur:
+${wardrobeDescription}
+
+Kriterler:
+- Durum: ${occasion}
+- Zaman: ${timeOfDay}
+- Hava durumu: ${weather}
+
+Sadece yukarıda listelenen ürünleri kullan. Her kombin için:
+1. Türkçe yaratıcı bir isim ver
+2. Kombinde yer alan 2-4 ürünü listele (sadece yukarıdaki listeden)
+3. Uyum skoru (80-100 arası)
+4. Türkçe kısa stil ipucu
+
+JSON formatında şu yapıda döndür:
+{
+  "outfits": [
+    {
+      "id": 1,
+      "name": "Kombin ismi",
+      "items": ["ürün1", "ürün2", "ürün3"],
+      "item_ids": ["id1", "id2", "id3"],
+      "confidence": 95,
+      "styling_tips": "Türkçe stil ipucu"
+    }
+  ]
+}`;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -63,12 +81,12 @@ serve(async (req) => {
         messages: [
           { 
             role: 'system', 
-            content: 'You are a professional fashion stylist who creates outfit recommendations. Always respond with valid JSON only, no additional text.' 
+            content: 'Sen profesyonel bir moda stilistisin. Sadece geçerli JSON formatında yanıt ver, başka bir metin ekleme.' 
           },
           { role: 'user', content: prompt }
         ],
         temperature: 0.7,
-        max_tokens: 1000,
+        max_tokens: 1500,
       }),
     });
 
@@ -81,36 +99,58 @@ serve(async (req) => {
 
     try {
       const parsedOutfits = JSON.parse(generatedContent);
+      
+      // Add item_ids to outfits based on item names
+      if (parsedOutfits.outfits) {
+        parsedOutfits.outfits = parsedOutfits.outfits.map((outfit: any) => {
+          const itemIds = outfit.items.map((itemName: string) => {
+            const foundItem = wardrobeItems.find((item: any) => 
+              item.name.toLowerCase().includes(itemName.toLowerCase()) ||
+              itemName.toLowerCase().includes(item.name.toLowerCase())
+            );
+            return foundItem ? foundItem.id : null;
+          }).filter(Boolean);
+          
+          return {
+            ...outfit,
+            item_ids: itemIds
+          };
+        });
+      }
+      
       return new Response(JSON.stringify(parsedOutfits), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     } catch (parseError) {
       console.error('Failed to parse OpenAI response:', parseError);
       
-      // Fallback response
+      // Fallback response using actual wardrobe items
+      const shuffleArray = (array: any[]) => {
+        const shuffled = [...array];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+        return shuffled;
+      };
+
+      const createFallbackOutfit = (items: any[], index: number) => {
+        const selectedItems = shuffleArray(items).slice(0, Math.min(3, items.length));
+        return {
+          id: index + 1,
+          name: `Stil Önerisi ${index + 1}`,
+          items: selectedItems.map((item: any) => item.name),
+          item_ids: selectedItems.map((item: any) => item.id),
+          confidence: Math.floor(Math.random() * 20) + 80,
+          styling_tips: "Bu kombinasyon gardırobunuzdaki ürünlerden oluşturuldu"
+        };
+      };
+
       const fallbackOutfits = {
         outfits: [
-          {
-            id: 1,
-            name: "Klasik Profesyonel",
-            items: ["Lacivert Blazer", "Beyaz Gömlek", "Siyah Pantolon", "Deri Ayakkabı"],
-            confidence: 90,
-            styling_tips: "Temiz ve profesyonel bir görünüm için mükemmel"
-          },
-          {
-            id: 2,
-            name: "Rahat Şık",
-            items: ["Kazak", "Kot Pantolon", "Beyaz Sneaker", "Denim Ceket"],
-            confidence: 85,
-            styling_tips: "Günlük aktiviteler için ideal bir kombinasyon"
-          },
-          {
-            id: 3,
-            name: "Akşam Zarafeti",
-            items: ["Elbise", "Topuklu Ayakkabı", "Küçük Çanta", "Şık Aksesuar"],
-            confidence: 88,
-            styling_tips: "Özel günler ve akşam etkinlikleri için"
-          }
+          createFallbackOutfit(wardrobeItems, 0),
+          createFallbackOutfit(wardrobeItems, 1),
+          createFallbackOutfit(wardrobeItems, 2)
         ]
       };
 

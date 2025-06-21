@@ -1,11 +1,21 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Wand2, Clock, MapPin, Thermometer, Shuffle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import OutfitCard from "./OutfitCard";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+
+interface WardrobeItem {
+  id: string;
+  name: string;
+  category: string;
+  image_url: string;
+  primary_color: string;
+  brand?: string;
+}
 
 const OutfitGenerator = () => {
   const [occasion, setOccasion] = useState('');
@@ -13,15 +23,55 @@ const OutfitGenerator = () => {
   const [weather, setWeather] = useState('');
   const [generatedOutfits, setGeneratedOutfits] = useState<any[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [wardrobeItems, setWardrobeItems] = useState<WardrobeItem[]>([]);
+
+  // Fetch user's wardrobe items
+  useEffect(() => {
+    fetchWardrobeItems();
+  }, []);
+
+  const fetchWardrobeItems = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('clothing_items')
+        .select('id, name, category, image_url, primary_color, brand')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching wardrobe items:', error);
+        return;
+      }
+
+      setWardrobeItems(data || []);
+    } catch (error) {
+      console.error('Error fetching wardrobe items:', error);
+    }
+  };
 
   const generateOutfits = async () => {
     if (!occasion || !timeOfDay || !weather) return;
+    
+    if (wardrobeItems.length === 0) {
+      toast.error('Kombinler oluşturmak için önce gardırobunuza ürün ekleyin');
+      return;
+    }
     
     setIsGenerating(true);
     
     try {
       const { data, error } = await supabase.functions.invoke('generate-outfits', {
-        body: { occasion, timeOfDay, weather }
+        body: { 
+          occasion, 
+          timeOfDay, 
+          weather,
+          wardrobeItems: wardrobeItems.map(item => ({
+            id: item.id,
+            name: item.name,
+            category: item.category,
+            color: item.primary_color,
+            brand: item.brand
+          }))
+        }
       });
 
       if (error) throw error;
@@ -29,34 +79,47 @@ const OutfitGenerator = () => {
       setGeneratedOutfits(data.outfits || []);
     } catch (error) {
       console.error('Error generating outfits:', error);
-      // Fallback to mock data if API fails
-      const mockOutfits = [
-        {
-          id: 1,
-          name: "Profesyonel Şık",
-          items: ["Lacivert Blazer", "Beyaz Pamuklu Gömlek", "Siyah Dar Pantolon"],
-          confidence: 95,
-          styling_tips: "Daha rahat bir profesyonel görünüm için kolları kıvırın"
-        },
-        {
-          id: 2,
-          name: "Akıllı Günlük",
-          items: ["Beyaz Pamuklu Gömlek", "Siyah Dar Pantolon", "Kahverengi Deri Ayakkabı"],
-          confidence: 88,
-          styling_tips: "Gömleği pantolona sok ve kemer ekle"
-        },
-        {
-          id: 3,
-          name: "Akşam Zarafeti",
-          items: ["Kırmızı İpek Elbise", "Siyah Topuklu", "Altın Aksesuarlar"],
-          confidence: 92,
-          styling_tips: "Akşam yemekleri ve özel etkinlikler için mükemmel"
-        }
-      ];
-      setGeneratedOutfits(mockOutfits);
+      toast.error('Kombin oluşturulurken hata oluştu');
+      
+      // Fallback: Generate outfits from user's actual items
+      const fallbackOutfits = generateFallbackOutfits();
+      setGeneratedOutfits(fallbackOutfits);
     } finally {
       setIsGenerating(false);
     }
+  };
+
+  const generateFallbackOutfits = () => {
+    if (wardrobeItems.length < 2) return [];
+
+    const shuffleArray = (array: any[]) => {
+      const shuffled = [...array];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      return shuffled;
+    };
+
+    const createOutfit = (items: WardrobeItem[], outfitNumber: number) => {
+      const selectedItems = shuffleArray(items).slice(0, Math.min(3, items.length));
+      return {
+        id: outfitNumber,
+        name: `Kombin ${outfitNumber}`,
+        items: selectedItems.map(item => item.name),
+        item_ids: selectedItems.map(item => item.id),
+        confidence: Math.floor(Math.random() * 20) + 80,
+        styling_tips: "Bu kombinasyon gardırobunuzdaki ürünlerden oluşturuldu",
+        occasion: occasion,
+        images: selectedItems.map(item => item.image_url).filter(Boolean)
+      };
+    };
+
+    return [
+      createOutfit(wardrobeItems, 1),
+      createOutfit(wardrobeItems, 2),
+      createOutfit(wardrobeItems, 3)
+    ];
   };
 
   return (
@@ -132,7 +195,7 @@ const OutfitGenerator = () => {
 
           <Button
             onClick={generateOutfits}
-            disabled={!occasion || !timeOfDay || !weather || isGenerating}
+            disabled={!occasion || !timeOfDay || !weather || isGenerating || wardrobeItems.length === 0}
             className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white"
           >
             {isGenerating ? (
@@ -140,6 +203,8 @@ const OutfitGenerator = () => {
                 <Shuffle className="h-4 w-4 mr-2 animate-spin" />
                 Kombinler Oluşturuluyor...
               </>
+            ) : wardrobeItems.length === 0 ? (
+              "Önce gardırobunuza ürün ekleyin"
             ) : (
               <>
                 <Wand2 className="h-4 w-4 mr-2" />
@@ -147,6 +212,12 @@ const OutfitGenerator = () => {
               </>
             )}
           </Button>
+
+          {wardrobeItems.length === 0 && (
+            <p className="text-sm text-gray-500 text-center">
+              Kombin önerileri oluşturmak için gardırobunuzda en az 2 ürün olmalı
+            </p>
+          )}
         </CardContent>
       </Card>
 
