@@ -32,7 +32,13 @@ interface ItemDetailsModalProps {
 }
 
 const categories = [
-  'Üst Giyim', 'Alt Giyim', 'Elbise', 'Ayakkabı', 'Aksesuar', 'İç Giyim', 'Dış Giyim'
+  'Üst Giyim', 'Alt Giyim', 'Elbise', 'Ayakkabı', 'Aksesuar', 'İç Giyim', 'Dış Giyim',
+  'Bluz', 'Gömlek', 'T-shirt', 'Sweatshirt', 'Kazak', 'Hırka', 'Ceket', 'Mont',
+  'Pantolon', 'Jean', 'Şort', 'Etek', 'Tayt', 'Eşofman',
+  'Elbise Casual', 'Elbise Şık', 'Tulum', 'Gecelik',
+  'Spor Ayakkabı', 'Günlük Ayakkabı', 'Topuklu', 'Bot', 'Sandalet', 'Terlik',
+  'Çanta', 'Kemer', 'Şapka', 'Gözlük', 'Takı', 'Saat', 'Fular', 'Eldiven',
+  'İç Çamaşırı', 'Pijama', 'Çorap', 'Külot', 'Sütyen'
 ];
 
 const colors = [
@@ -45,8 +51,6 @@ const ItemDetailsModal = ({ isOpen, onClose, item, onUpdate }: ItemDetailsModalP
     category: '',
     primary_color: '',
     brand: '',
-    material: '',
-    size_info: '',
     user_notes: ''
   });
   const [styleTags, setStyleTags] = useState<string[]>([]);
@@ -60,8 +64,6 @@ const ItemDetailsModal = ({ isOpen, onClose, item, onUpdate }: ItemDetailsModalP
         category: item.category || '',
         primary_color: item.primary_color || '',
         brand: item.brand || '',
-        material: item.material || '',
-        size_info: item.size_info || '',
         user_notes: item.user_notes || ''
       });
       setStyleTags(item.style_tags || []);
@@ -80,8 +82,6 @@ const ItemDetailsModal = ({ isOpen, onClose, item, onUpdate }: ItemDetailsModalP
           category: formData.category,
           primary_color: formData.primary_color,
           brand: formData.brand || null,
-          material: formData.material || null,
-          size_info: formData.size_info || null,
           user_notes: formData.user_notes || null,
           style_tags: styleTags,
           updated_at: new Date().toISOString()
@@ -215,26 +215,6 @@ const ItemDetailsModal = ({ isOpen, onClose, item, onUpdate }: ItemDetailsModalP
                 value={formData.brand}
                 onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
                 placeholder="Marka adını girin"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="material">Malzeme</Label>
-              <Input
-                id="material"
-                value={formData.material}
-                onChange={(e) => setFormData({ ...formData, material: e.target.value })}
-                placeholder="Malzeme bilgisi"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="size">Beden</Label>
-              <Input
-                id="size"
-                value={formData.size_info}
-                onChange={(e) => setFormData({ ...formData, size_info: e.target.value })}
-                placeholder="Beden bilgisi"
               />
             </div>
 
