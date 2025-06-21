@@ -12,9 +12,9 @@ interface WardrobeItem {
   category: string;
   primary_color: string;
   brand?: string;
-  tags: string[];
+  style_tags: string[];
   image_url: string;
-  notes?: string;
+  user_notes?: string;
 }
 
 interface WardrobeGridProps {
@@ -46,9 +46,9 @@ const WardrobeGrid = ({ viewMode, searchQuery, selectedCategory }: WardrobeGridP
         category: item.category,
         primary_color: item.primary_color,
         brand: item.brand,
-        tags: item.tags || [],
+        style_tags: item.style_tags || [],
         image_url: item.image_url,
-        notes: item.notes
+        user_notes: item.user_notes
       })) || [];
 
       setItems(formattedItems);
@@ -61,7 +61,7 @@ const WardrobeGrid = ({ viewMode, searchQuery, selectedCategory }: WardrobeGridP
 
   const filteredItems = items.filter(item => {
     const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         item.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
+                         item.style_tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
     const matchesCategory = selectedCategory === 'all' || item.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
@@ -147,7 +147,7 @@ const WardrobeGrid = ({ viewMode, searchQuery, selectedCategory }: WardrobeGridP
                 )}
               </div>
               <div className="flex flex-wrap gap-1">
-                {item.tags.slice(0, 2).map((tag) => (
+                {item.style_tags.slice(0, 2).map((tag) => (
                   <Badge
                     key={tag}
                     variant="outline"
@@ -156,12 +156,12 @@ const WardrobeGrid = ({ viewMode, searchQuery, selectedCategory }: WardrobeGridP
                     {tag}
                   </Badge>
                 ))}
-                {item.tags.length > 2 && (
+                {item.style_tags.length > 2 && (
                   <Badge
                     variant="outline"
                     className="text-xs border-gray-200 text-gray-500 bg-gray-50 rounded-full"
                   >
-                    +{item.tags.length - 2}
+                    +{item.style_tags.length - 2}
                   </Badge>
                 )}
               </div>
