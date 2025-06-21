@@ -1,138 +1,127 @@
 
-import { useState, useEffect } from "react";
-import { Settings, Camera, Heart, Share, Bell, HelpCircle, LogOut, User } from "lucide-react";
+import { useState } from "react";
+import { User, LogOut, Settings, Heart, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Switch } from "@/components/ui/switch";
-import { supabase } from "@/integrations/supabase/client";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
 
 const Profile = () => {
-  const [notifications, setNotifications] = useState(true);
-  const [sharing, setSharing] = useState(false);
-  const [stats, setStats] = useState({
-    totalItems: 0,
-    totalOutfits: 0
-  });
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    fetchUserStats();
-  }, []);
-
-  const fetchUserStats = async () => {
+  const handleLogout = async () => {
+    setLoading(true);
     try {
-      // Get clothing items count
-      const { data: items } = await supabase
-        .from('clothing_items')
-        .select('id');
-
-      // Get outfits count  
-      const { data: outfits } = await supabase
-        .from('outfits')
-        .select('id');
-
-      setStats({
-        totalItems: items?.length || 0,
-        totalOutfits: outfits?.length || 0
+      await signOut();
+      toast({
+        title: "Çıkış yapıldı",
+        description: "Başarıyla çıkış yaptınız",
       });
+      navigate('/');
     } catch (error) {
-      console.error('Error fetching stats:', error);
+      toast({
+        title: "Hata",
+        description: "Çıkış yaparken bir hata oluştu",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
-      {/* Header with professional design */}
+      {/* Header */}
       <div className="bg-gradient-to-br from-blue-900 to-blue-800 text-white">
         <div className="px-6 pt-12 pb-8">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h1 className="text-2xl font-medium">Profil</h1>
-              <p className="text-white/80 text-base mt-1">Hesap ayarları ve bilgiler</p>
+          <div className="text-center">
+            <div className="bg-white/20 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4">
+              <User className="h-10 w-10 text-white" />
             </div>
-            <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-3 border border-white/20">
-              <User className="h-6 w-6 text-white" />
-            </div>
+            <h1 className="text-2xl font-medium">Profil</h1>
+            <p className="text-white/80 text-base mt-1">{user?.email}</p>
           </div>
         </div>
       </div>
 
+      {/* Profile Content */}
       <div className="px-4 py-6 space-y-6">
-        {/* Profile Info */}
-        <Card className="bg-white border-0 shadow-sm rounded-2xl">
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-4">
-              <div className="relative">
-                <Avatar className="h-20 w-20">
-                  <AvatarImage src="https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face" />
-                  <AvatarFallback>KU</AvatarFallback>
-                </Avatar>
-                <Button
-                  size="sm"
-                  className="absolute -bottom-1 -right-1 h-8 w-8 rounded-2xl bg-blue-500 hover:bg-blue-600 p-0"
-                >
-                  <Camera className="h-4 w-4 text-white" />
-                </Button>
-              </div>
-              <div className="flex-1">
-                <h2 className="text-xl font-semibold text-gray-900">Kullanıcı</h2>
-                <p className="text-gray-600">Moda Tutkunu</p>
-                <div className="flex items-center space-x-4 mt-2 text-sm text-gray-500">
-                  <span>{stats.totalItems} Ürün</span>
-                  <span>•</span>
-                  <span>{stats.totalOutfits} Kombin</span>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Settings */}
-        <Card className="bg-white border-0 shadow-sm rounded-2xl">
-          <CardContent className="p-6 space-y-4">
-            <h3 className="text-lg font-semibold text-gray-900">Ayarlar</h3>
-            
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <Bell className="h-5 w-5 text-gray-600" />
-                  <span className="text-gray-900">Bildirimler</span>
-                </div>
-                <Switch checked={notifications} onCheckedChange={setNotifications} />
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <Share className="h-5 w-5 text-gray-600" />
-                  <span className="text-gray-900">Analitik Paylaşımı</span>
-                </div>
-                <Switch checked={sharing} onCheckedChange={setSharing} />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Stats Cards */}
+        <div className="grid grid-cols-2 gap-4">
+          <Card className="bg-white border-0 shadow-sm rounded-2xl">
+            <CardContent className="p-4 text-center">
+              <div className="text-2xl font-bold text-blue-600 mb-1">0</div>
+              <div className="text-sm text-gray-600">Toplam Ürün</div>
+            </CardContent>
+          </Card>
+          <Card className="bg-white border-0 shadow-sm rounded-2xl">
+            <CardContent className="p-4 text-center">
+              <div className="text-2xl font-bold text-indigo-600 mb-1">0</div>
+              <div className="text-sm text-gray-600">Kombinler</div>
+            </CardContent>
+          </Card>
+        </div>
 
         {/* Menu Items */}
+        <div className="space-y-3">
+          <Card className="bg-white border-0 shadow-sm rounded-2xl">
+            <CardContent className="p-0">
+              <button className="w-full p-4 flex items-center justify-between hover:bg-gray-50 rounded-2xl transition-colors">
+                <div className="flex items-center space-x-3">
+                  <div className="bg-gray-100 rounded-full p-2">
+                    <Settings className="h-5 w-5 text-gray-600" />
+                  </div>
+                  <span className="font-medium text-gray-900">Ayarlar</span>
+                </div>
+                <div className="text-gray-400">›</div>
+              </button>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white border-0 shadow-sm rounded-2xl">
+            <CardContent className="p-0">
+              <button className="w-full p-4 flex items-center justify-between hover:bg-gray-50 rounded-2xl transition-colors">
+                <div className="flex items-center space-x-3">
+                  <div className="bg-red-100 rounded-full p-2">
+                    <Heart className="h-5 w-5 text-red-600" />
+                  </div>
+                  <span className="font-medium text-gray-900">Favoriler</span>
+                </div>
+                <div className="text-gray-400">›</div>
+              </button>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white border-0 shadow-sm rounded-2xl">
+            <CardContent className="p-0">
+              <button className="w-full p-4 flex items-center justify-between hover:bg-gray-50 rounded-2xl transition-colors">
+                <div className="flex items-center space-x-3">
+                  <div className="bg-yellow-100 rounded-full p-2">
+                    <Star className="h-5 w-5 text-yellow-600" />
+                  </div>
+                  <span className="font-medium text-gray-900">Uygulamayı Değerlendir</span>
+                </div>
+                <div className="text-gray-400">›</div>
+              </button>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Logout Button */}
         <Card className="bg-white border-0 shadow-sm rounded-2xl">
-          <CardContent className="p-6 space-y-4">
-            <Button variant="ghost" className="w-full justify-start text-left p-3 h-auto rounded-2xl hover:bg-gray-50">
-              <Heart className="h-5 w-5 text-gray-600 mr-3" />
-              <span className="text-gray-900">Favori Ürünler</span>
-            </Button>
-            
-            <Button variant="ghost" className="w-full justify-start text-left p-3 h-auto rounded-2xl hover:bg-gray-50">
-              <Settings className="h-5 w-5 text-gray-600 mr-3" />
-              <span className="text-gray-900">Uygulama Ayarları</span>
-            </Button>
-            
-            <Button variant="ghost" className="w-full justify-start text-left p-3 h-auto rounded-2xl hover:bg-gray-50">
-              <HelpCircle className="h-5 w-5 text-gray-600 mr-3" />
-              <span className="text-gray-900">Yardım & Destek</span>
-            </Button>
-            
-            <Button variant="ghost" className="w-full justify-start text-left p-3 h-auto text-red-600 rounded-2xl hover:bg-red-50">
-              <LogOut className="h-5 w-5 text-red-600 mr-3" />
-              <span>Çıkış Yap</span>
+          <CardContent className="p-4">
+            <Button
+              onClick={handleLogout}
+              disabled={loading}
+              variant="outline"
+              className="w-full border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 rounded-xl py-3 font-semibold"
+            >
+              <LogOut className="h-4 w-4 mr-2" />
+              {loading ? 'Çıkış yapılıyor...' : 'Çıkış Yap'}
             </Button>
           </CardContent>
         </Card>
