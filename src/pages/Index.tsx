@@ -1,5 +1,6 @@
+
 import { useState, useRef, useEffect } from "react";
-import { Heart, Plus, TrendingUp, Sparkles } from "lucide-react";
+import { Heart, Plus, TrendingUp, Sparkles, Cloud } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
@@ -124,6 +125,7 @@ const Index = () => {
   };
 
   const handleAddProduct = async () => {
+    console.log('Add product button clicked');
     try {
       // Try to use Capacitor Camera first (for mobile)
       const image = await Camera.getPhoto({
@@ -132,6 +134,8 @@ const Index = () => {
         source: CameraSource.Prompt, // This shows the iOS menu with camera/gallery options
         resultType: CameraResultType.DataUrl,
       });
+
+      console.log('Camera image captured:', image.dataUrl ? 'Success' : 'Failed');
 
       if (image.dataUrl) {
         setIsAnalyzing(true);
@@ -151,9 +155,11 @@ const Index = () => {
         }, 2000);
       }
     } catch (error) {
-      console.log('Capacitor camera not available, falling back to file input');
+      console.log('Capacitor camera not available, falling back to file input:', error);
       // Fallback to file input for web
-      fileInputRef.current?.click();
+      if (fileInputRef.current) {
+        fileInputRef.current.click();
+      }
     }
   };
 
@@ -239,6 +245,26 @@ const Index = () => {
 
       {/* Content */}
       <div className="px-4 py-6 space-y-8">
+        {/* Weather Card */}
+        <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white border-0 shadow-lg">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="flex items-center space-x-2 mb-2">
+                  <Cloud className="h-5 w-5" />
+                  <span className="text-white/90 text-sm">Bugünün Havası</span>
+                </div>
+                <h3 className="text-2xl font-bold mb-1">22°C</h3>
+                <p className="text-white/80 text-sm">Güneşli ve serin</p>
+              </div>
+              <div className="text-right">
+                <p className="text-white/90 text-sm mb-1">Önerilen</p>
+                <p className="text-white font-medium">Hafif kıyafetler</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Today's Outfit Suggestions */}
         {outfits.length > 0 ? (
           <div>
