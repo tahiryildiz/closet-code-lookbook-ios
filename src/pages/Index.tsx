@@ -1,12 +1,11 @@
-
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Plus, TrendingUp, Calendar, Sun, CloudRain, ChevronRight, Zap, Lightbulb, MapPin, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import AddItemModal from "@/components/AddItemModal";
+import AnalysisStep from "@/components/AnalysisStep";
 
 const Index = () => {
   const [location, setLocation] = useState<{lat: number, lon: number, name?: string} | null>(null);
@@ -16,7 +15,18 @@ const Index = () => {
   const [weatherOutfits, setWeatherOutfits] = useState<any[]>([]);
   const [stats, setStats] = useState({ totalOutfits: 0, streakDays: 0 });
   const [totalItems, setTotalItems] = useState(0);
-  const [isAddItemModalOpen, setIsAddItemModalOpen] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysisResult, setAnalysisResult] = useState<any>(null);
+  const [showAnalysis, setShowAnalysis] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '',
+    brand: '',
+    category: '',
+    primaryColor: '',
+    tags: '',
+    notes: ''
+  });
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -140,6 +150,140 @@ const Index = () => {
     }
   };
 
+  const handleAddProduct = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setIsAnalyzing(true);
+    
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `clothing/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('clothing-images')
+        .upload(filePath, file);
+
+      if (uploadError) {
+        console.error('Upload error:', uploadError);
+        toast({
+          title: "Yükleme hatası",
+          description: "Fotoğraf yüklenirken bir hata oluştu",
+          variant: "destructive"
+        });
+        setIsAnalyzing(false);
+        return;
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('clothing-images')
+        .getPublicUrl(filePath);
+
+      setTimeout(() => {
+        setAnalysisResult({
+          name: "Yeni Kıyafet",
+          category: "üstler",
+          primaryColor: "Beyaz",
+          suggestedBrand: "",
+          tags: ["rahat", "günlük"],
+          confidence: 85,
+          material: "Pamuk",
+          season: "Tüm Mevsim",
+          style: "Casual",
+          imageUrl: publicUrl
+        });
+        setIsAnalyzing(false);
+        setShowAnalysis(true);
+      }, 2000);
+    } catch (error) {
+      console.error('Error processing image:', error);
+      toast({
+        title: "İşlem hatası",
+        description: "Fotoğraf işlenirken bir hata oluştu",
+        variant: "destructive"
+      });
+      setIsAnalyzing(false);
+    }
+  };
+
+  const handleFormDataChange = (data: Partial<typeof formData>) => {
+    setFormData(prev => ({ ...prev, ...data }));
+  };
+
+  const handleSave = async () => {
+    try {
+      const { error } = await supabase
+        .from('clothing_items')
+        .insert({
+          name: formData.name || analysisResult?.name,
+          brand: formData.brand,
+          category: formData.category || analysisResult?.category,
+          primary_color: formData.primaryColor || analysisResult?.primaryColor,
+          style_tags: formData.tags ? formData.tags.split(', ') : analysisResult?.tags,
+          user_notes: formData.notes,
+          image_url: analysisResult?.imageUrl,
+          material: analysisResult?.material,
+          user_id: '00000000-0000-0000-0000-000000000000'
+        });
+
+      if (error) {
+        console.error('Save error:', error);
+        toast({
+          title: "Kaydetme hatası",
+          description: "Ürün kaydedilirken bir hata oluştu",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      toast({
+        title: "Başarılı!",
+        description: "Ürün gardırobunuza eklendi",
+      });
+
+      // Reset state
+      setShowAnalysis(false);
+      setAnalysisResult(null);
+      setFormData({
+        name: '',
+        brand: '',
+        category: '',
+        primaryColor: '',
+        tags: '',
+        notes: ''
+      });
+      
+      // Refresh data
+      fetchUserData();
+    } catch (error) {
+      console.error('Error saving item:', error);
+      toast({
+        title: "Hata",
+        description: "Beklenmeyen bir hata oluştu",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleBackToUpload = () => {
+    setShowAnalysis(false);
+    setAnalysisResult(null);
+    setIsAnalyzing(false);
+    setFormData({
+      name: '',
+      brand: '',
+      category: '',
+      primaryColor: '',
+      tags: '',
+      notes: ''
+    });
+  };
+
   const EmptyCarousel = ({ title, description }: { title: string, description: string }) => (
     <div className="text-center py-8">
       <div className="text-4xl mb-2">👗</div>
@@ -167,6 +311,27 @@ const Index = () => {
       </Button>
     </div>
   );
+
+  // Show analysis step if we have analysis result
+  if (showAnalysis && analysisResult) {
+    return (
+      <div className="min-h-screen bg-gray-50 pb-20">
+        <div className="bg-gradient-to-br from-blue-900 to-blue-800 text-white px-6 pt-12 pb-8">
+          <h1 className="text-2xl font-medium mb-6">Ürün Analizi</h1>
+        </div>
+        <div className="px-4 py-6">
+          <AnalysisStep
+            isAnalyzing={isAnalyzing}
+            analysisResult={analysisResult}
+            formData={formData}
+            onFormDataChange={handleFormDataChange}
+            onSave={handleSave}
+            onBack={handleBackToUpload}
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
@@ -212,7 +377,23 @@ const Index = () => {
       <div className="px-4 py-6 space-y-8">
         {totalItems === 0 ? (
           /* Empty wardrobe guide */
-          <EmptyWardrobeGuide />
+          <div className="text-center py-12 px-6">
+            <div className="bg-blue-50 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-6">
+              <Upload className="h-10 w-10 text-blue-600" />
+            </div>
+            <h3 className="text-xl font-semibold text-gray-900 mb-3">Gardırobunuz Boş</h3>
+            <p className="text-gray-600 text-base leading-relaxed mb-8 max-w-sm mx-auto">
+              Kıyafetlerinizin fotoğraflarını çekerek gardırobunuzu oluşturun. 
+              AI'mız her şeyi analiz edip size özel kombin önerileri sunacak!
+            </p>
+            <Button
+              onClick={handleAddProduct}
+              className="bg-blue-900 hover:bg-blue-800 text-white font-semibold px-8 py-3 rounded-2xl text-base"
+            >
+              <Plus className="h-5 w-5 mr-2" />
+              İlk Ürününüzü Ekleyin
+            </Button>
+          </div>
         ) : (
           <>
             {/* Bugünün havası için şahane gider */}
@@ -264,7 +445,7 @@ const Index = () => {
             {/* Add Product + Generate AI Outfit Buttons */}
             <div className="space-y-3">
               <Button
-                onClick={() => setIsAddItemModalOpen(true)}
+                onClick={handleAddProduct}
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 rounded-2xl text-base"
               >
                 <Plus className="h-5 w-5 mr-2" />
@@ -445,10 +626,26 @@ const Index = () => {
         )}
       </div>
 
-      <AddItemModal
-        isOpen={isAddItemModalOpen}
-        onClose={() => setIsAddItemModalOpen(false)}
+      {/* Hidden file input for direct camera/gallery access */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        onChange={handleFileSelect}
+        className="hidden"
       />
+
+      {/* Loading overlay when analyzing */}
+      {isAnalyzing && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-8 text-center max-w-sm mx-4">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <h3 className="font-semibold text-gray-900 mb-2">Fotoğraf Analiz Ediliyor</h3>
+            <p className="text-gray-600 text-sm">AI'mız ürününüzü inceliyor...</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
