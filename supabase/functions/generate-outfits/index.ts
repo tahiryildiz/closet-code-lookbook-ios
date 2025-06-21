@@ -1,4 +1,3 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
@@ -151,7 +150,56 @@ Return ONLY valid JSON in this exact format (no additional text):
         throw new Error('No outfits generated');
       }
 
-      // Generate outfit images using OpenAI DALL-E
+      // Helper function to enhance item descriptions for better image generation
+      const enhanceItemDescription = (itemName: string, wardrobeItem: any) => {
+        const category = wardrobeItem?.category || '';
+        const color = wardrobeItem?.primary_color || wardrobeItem?.color || '';
+        const brand = wardrobeItem?.brand || '';
+        
+        // Map Turkish categories to English descriptive terms
+        const categoryMap: { [key: string]: string } = {
+          'Tişörtler': 'cotton crewneck t-shirt',
+          'Gömlek': 'button-up shirt',
+          'Pantolonlar': 'trousers',
+          'Ceket': 'blazer jacket',
+          'Kazak': 'sweater',
+          'Etek': 'skirt',
+          'Şort': 'shorts',
+          'Mont': 'jacket coat',
+          'Hırka': 'cardigan'
+        };
+
+        const enhancedType = categoryMap[category] || category.toLowerCase();
+        const fit = itemName.toLowerCase().includes('slim') ? 'slim-fit' : 
+                   itemName.toLowerCase().includes('oversize') ? 'oversized' : 'regular-fit';
+        
+        return `${color} ${fit} ${enhancedType}`;
+      };
+
+      // Translate context to English for better image generation
+      const translateContext = (context: string) => {
+        const translations: { [key: string]: string } = {
+          'office': 'business office',
+          'meeting': 'business meeting',
+          'casual': 'casual everyday',
+          'date': 'dinner date',
+          'party': 'social party',
+          'workout': 'gym workout',
+          'travel': 'travel comfort',
+          'morning': 'morning',
+          'afternoon': 'afternoon',
+          'evening': 'evening',
+          'night': 'night',
+          'sunny': 'sunny and warm',
+          'cool': 'cool and mild',
+          'cold': 'cold weather',
+          'rainy': 'rainy weather',
+          'windy': 'windy conditions'
+        };
+        return translations[context] || context;
+      };
+
+      // Generate outfit images using OpenAI DALL-E with enhanced prompts
       const processedOutfits = await Promise.all(parsedOutfits.outfits.map(async (outfit: any, index: number) => {
         const itemIds = outfit.items.map((itemName: string) => {
           const foundItem = wardrobeItems.find((item: any) => 
@@ -162,10 +210,44 @@ Return ONLY valid JSON in this exact format (no additional text):
           return foundItem ? foundItem.id : null;
         }).filter(Boolean);
         
-        // Create a more specific image generation prompt for outfit combinations
-        const imagePrompt = `A complete fashion outfit styled flat lay on a clean white background. The outfit consists of: ${outfit.items.join(', ')}. Show these clothing items arranged together as they would be worn - a ${outfit.items.join(' with ')} combination for ${occasion}. Professional fashion photography style, all items visible and neatly arranged as a complete look, bright clean lighting, high quality, realistic clothing pieces combined into one cohesive outfit.`;
+        // Create detailed descriptions for each item
+        const enhancedItems = outfit.items.map((itemName: string) => {
+          const wardrobeItem = wardrobeItems.find((item: any) => 
+            item.name.toLowerCase().trim() === itemName.toLowerCase().trim() ||
+            item.name.toLowerCase().includes(itemName.toLowerCase()) ||
+            itemName.toLowerCase().includes(item.name.toLowerCase())
+          );
+          return enhanceItemDescription(itemName, wardrobeItem);
+        });
+
+        // Create a highly detailed flat lay prompt
+        const translatedOccasion = translateContext(occasion);
+        const translatedWeather = translateContext(weather);
+        const translatedTime = translateContext(timeOfDay);
+
+        const imagePrompt = `Professional flat lay fashion photography of a complete men's outfit on a clean light beige background.
+
+Context:
+- Occasion: ${translatedOccasion}
+- Weather: ${translatedWeather}
+- Time of day: ${translatedTime}
+- Style: Smart casual
+
+The outfit includes:
+${enhancedItems.map(item => `- a ${item}`).join('\n')}
+
+Visual Requirements:
+- All clothing items arranged neatly as a complete outfit flat lay
+- No model or mannequin, just the clothes
+- Clean light beige or white background
+- Professional studio lighting with soft shadows
+- High-end fashion catalog photography style
+- All items visible and properly arranged
+- Realistic fabric textures and colors
+- Square composition (1024x1024)
+- Fashion lookbook aesthetic`;
         
-        console.log(`Generating outfit image ${index + 1}:`, imagePrompt);
+        console.log(`Generating detailed flat lay image ${index + 1}:`, imagePrompt);
         
         let generatedImageUrl = null;
         
@@ -177,26 +259,22 @@ Return ONLY valid JSON in this exact format (no additional text):
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              model: 'gpt-image-1',
+              model: 'dall-e-3',
               prompt: imagePrompt,
               n: 1,
               size: '1024x1024',
-              quality: 'high'
+              quality: 'hd',
+              style: 'natural'
             }),
           });
 
           if (imageResponse.ok) {
             const imageData = await imageResponse.json();
-            console.log('Image generation response:', imageData);
+            console.log('Image generation response status: success');
             
-            // For gpt-image-1, the response includes base64 data
-            if (imageData.data && imageData.data[0]) {
-              if (imageData.data[0].b64_json) {
-                generatedImageUrl = `data:image/png;base64,${imageData.data[0].b64_json}`;
-              } else if (imageData.data[0].url) {
-                generatedImageUrl = imageData.data[0].url;
-              }
-              console.log(`Generated image for outfit ${index + 1}: success`);
+            if (imageData.data && imageData.data[0] && imageData.data[0].url) {
+              generatedImageUrl = imageData.data[0].url;
+              console.log(`Generated flat lay image for outfit ${index + 1}: success`);
             }
           } else {
             const errorText = await imageResponse.text();
