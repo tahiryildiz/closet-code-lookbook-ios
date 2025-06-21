@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 const Index = () => {
-  const [location, setLocation] = useState<{lat: number, lon: number} | null>(null);
+  const [location, setLocation] = useState<{lat: number, lon: number, name?: string} | null>(null);
   const [weather, setWeather] = useState<any>(null);
   const [recentItems, setRecentItems] = useState<any[]>([]);
   const [mostWornItems, setMostWornItems] = useState<any[]>([]);
@@ -33,8 +33,20 @@ const Index = () => {
         });
         
         const { latitude, longitude } = position.coords;
-        setLocation({ lat: latitude, lon: longitude });
-        fetchWeatherData(latitude, longitude);
+        
+        // Get location name using reverse geocoding
+        try {
+          const response = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=tr`);
+          const locationData = await response.json();
+          const locationName = locationData.city || locationData.locality || locationData.countryName || "Bilinmeyen Konum";
+          
+          setLocation({ lat: latitude, lon: longitude, name: locationName });
+          fetchWeatherData(latitude, longitude, locationName);
+        } catch (error) {
+          console.error("Reverse geocoding error:", error);
+          setLocation({ lat: latitude, lon: longitude, name: "Konum Alındı" });
+          fetchWeatherData(latitude, longitude, "Konum Alındı");
+        }
         
         toast({
           title: "Konum erişimi sağlandı",
@@ -51,12 +63,11 @@ const Index = () => {
     }
   };
 
-  const fetchWeatherData = async (lat: number, lon: number) => {
+  const fetchWeatherData = async (lat: number, lon: number, locationName: string) => {
     try {
-      // You can integrate with a weather API here
-      // For now, setting mock weather based on location
+      // Mock weather data - you can integrate with a real weather API
       setWeather({
-        location: "Mevcut Konum",
+        location: locationName,
         condition: "Güneşli",
         temperature: 22,
         icon: "☀️"

@@ -1,11 +1,13 @@
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { X, Camera, Upload, Sparkles, Check } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface AddItemModalProps {
   isOpen: boolean;
@@ -16,33 +18,140 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
   const [step, setStep] = useState<'upload' | 'details'>('upload');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<any>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [formData, setFormData] = useState({
+    name: '',
+    brand: '',
+    category: '',
+    primaryColor: '',
+    tags: '',
+    notes: ''
+  });
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
 
-  const handleImageUpload = async () => {
-    setIsAnalyzing(true);
-    
-    // Simulate AI analysis with enhanced details
-    setTimeout(() => {
-      setAnalysisResult({
-        name: "Oversize Kaşmir Süveter",
-        category: "üstler",
-        primaryColor: "Krem",
-        suggestedBrand: "Everlane",
-        tags: ["rahat", "lüks", "oversize", "kaşmir", "sonbahar"],
-        confidence: 96,
-        material: "%100 Kaşmir",
-        season: "Sonbahar/Kış",
-        style: "Minimalist"
-      });
-      setIsAnalyzing(false);
-      setStep('details');
-    }, 3000);
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+      handleImageUpload(file);
+    }
   };
 
-  const handleSave = () => {
-    // Save item logic here
-    onClose();
-    setStep('upload');
-    setAnalysisResult(null);
+  const handleCameraCapture = () => {
+    // For now, trigger file input - in a real app you'd use camera API
+    fileInputRef.current?.click();
+  };
+
+  const handleImageUpload = async (file: File) => {
+    setIsAnalyzing(true);
+    
+    try {
+      // Upload image to Supabase storage first
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `clothing/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('clothing-images')
+        .upload(filePath, file);
+
+      if (uploadError) {
+        console.error('Upload error:', uploadError);
+        toast({
+          title: "Yükleme hatası",
+          description: "Fotoğraf yüklenirken bir hata oluştu",
+          variant: "destructive"
+        });
+        setIsAnalyzing(false);
+        return;
+      }
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('clothing-images')
+        .getPublicUrl(filePath);
+
+      // Simulate AI analysis with enhanced details
+      setTimeout(() => {
+        setAnalysisResult({
+          name: "Yeni Kıyafet",
+          category: "üstler",
+          primaryColor: "Beyaz",
+          suggestedBrand: "",
+          tags: ["rahat", "günlük"],
+          confidence: 85,
+          material: "Pamuk",
+          season: "Tüm Mevsim",
+          style: "Casual",
+          imageUrl: publicUrl
+        });
+        setIsAnalyzing(false);
+        setStep('details');
+      }, 2000);
+    } catch (error) {
+      console.error('Error processing image:', error);
+      toast({
+        title: "İşlem hatası",
+        description: "Fotoğraf işlenirken bir hata oluştu",
+        variant: "destructive"
+      });
+      setIsAnalyzing(false);
+    }
+  };
+
+  const handleSave = async () => {
+    try {
+      const { error } = await supabase
+        .from('clothing_items')
+        .insert({
+          name: formData.name || analysisResult?.name,
+          brand: formData.brand,
+          category: formData.category || analysisResult?.category,
+          primary_color: formData.primaryColor || analysisResult?.primaryColor,
+          style_tags: formData.tags ? formData.tags.split(', ') : analysisResult?.tags,
+          user_notes: formData.notes,
+          image_url: analysisResult?.imageUrl,
+          material: analysisResult?.material,
+          user_id: '00000000-0000-0000-0000-000000000000' // This should be actual user ID in production
+        });
+
+      if (error) {
+        console.error('Save error:', error);
+        toast({
+          title: "Kaydetme hatası",
+          description: "Ürün kaydedilirken bir hata oluştu",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      toast({
+        title: "Başarılı!",
+        description: "Ürün gardırobunuza eklendi",
+      });
+
+      // Reset form
+      onClose();
+      setStep('upload');
+      setAnalysisResult(null);
+      setSelectedFile(null);
+      setFormData({
+        name: '',
+        brand: '',
+        category: '',
+        primaryColor: '',
+        tags: '',
+        notes: ''
+      });
+    } catch (error) {
+      console.error('Error saving item:', error);
+      toast({
+        title: "Hata",
+        description: "Beklenmeyen bir hata oluştu",
+        variant: "destructive"
+      });
+    }
   };
 
   return (
@@ -67,7 +176,10 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
             </div>
 
             <div className="space-y-4">
-              <Card className="border-2 border-dashed border-blue-200 hover:border-blue-300 transition-colors cursor-pointer rounded-2xl">
+              <Card 
+                className="border-2 border-dashed border-blue-200 hover:border-blue-300 transition-colors cursor-pointer rounded-2xl"
+                onClick={handleCameraCapture}
+              >
                 <CardContent className="p-8 text-center">
                   <div className="bg-blue-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
                     <Camera className="h-8 w-8 text-blue-600" />
@@ -77,23 +189,27 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
                 </CardContent>
               </Card>
 
-              <Card className="border-2 border-dashed border-blue-200 hover:border-blue-300 transition-colors cursor-pointer rounded-2xl">
+              <Card 
+                className="border-2 border-dashed border-blue-200 hover:border-blue-300 transition-colors cursor-pointer rounded-2xl"
+                onClick={() => fileInputRef.current?.click()}
+              >
                 <CardContent className="p-8 text-center">
                   <div className="bg-blue-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
                     <Upload className="h-8 w-8 text-blue-600" />
                   </div>
                   <h3 className="font-semibold text-gray-900 mb-2 text-lg">Görsel Yükle</h3>
-                  <p className="text-gray-500">Fotoğraf galerinден seç</p>
+                  <p className="text-gray-500">Fotoğraf galerinizden seç</p>
                 </CardContent>
               </Card>
             </div>
 
-            <Button 
-              onClick={handleImageUpload}
-              className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-4 rounded-xl text-base"
-            >
-              Demo Görsel ile Devam Et
-            </Button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleFileSelect}
+              className="hidden"
+            />
           </div>
         )}
 
@@ -125,7 +241,8 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
                   <div>
                     <label className="block text-sm font-semibold text-gray-900 mb-2">Ürün Adı</label>
                     <Input
-                      defaultValue={analysisResult.name}
+                      value={formData.name || analysisResult.name}
+                      onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                       className="bg-gray-50 border-gray-200 focus:border-blue-400 rounded-xl text-base py-3"
                     />
                   </div>
@@ -133,7 +250,9 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
                   <div>
                     <label className="block text-sm font-semibold text-gray-900 mb-2">Marka</label>
                     <Input
-                      placeholder={`Önerilen: ${analysisResult.suggestedBrand}`}
+                      value={formData.brand}
+                      onChange={(e) => setFormData(prev => ({ ...prev, brand: e.target.value }))}
+                      placeholder={analysisResult.suggestedBrand ? `Önerilen: ${analysisResult.suggestedBrand}` : "Marka girin"}
                       className="bg-gray-50 border-gray-200 focus:border-blue-400 rounded-xl text-base py-3"
                     />
                   </div>
@@ -142,17 +261,17 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
                     <div>
                       <label className="block text-sm font-semibold text-gray-900 mb-2">Kategori</label>
                       <Input
-                        defaultValue={analysisResult.category}
+                        value={formData.category || analysisResult.category}
+                        onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
                         className="bg-gray-50 border-gray-200 rounded-xl text-base py-3"
-                        readOnly
                       />
                     </div>
                     <div>
                       <label className="block text-sm font-semibold text-gray-900 mb-2">Renk</label>
                       <Input
-                        defaultValue={analysisResult.primaryColor}
+                        value={formData.primaryColor || analysisResult.primaryColor}
+                        onChange={(e) => setFormData(prev => ({ ...prev, primaryColor: e.target.value }))}
                         className="bg-gray-50 border-gray-200 rounded-xl text-base py-3"
-                        readOnly
                       />
                     </div>
                   </div>
@@ -160,15 +279,17 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
                   <div>
                     <label className="block text-sm font-semibold text-gray-900 mb-2">Stil Etiketleri</label>
                     <Input
-                      defaultValue={analysisResult.tags.join(', ')}
+                      value={formData.tags || analysisResult.tags.join(', ')}
+                      onChange={(e) => setFormData(prev => ({ ...prev, tags: e.target.value }))}
                       className="bg-gray-50 border-gray-200 rounded-xl text-base py-3"
-                      readOnly
                     />
                   </div>
 
                   <div>
                     <label className="block text-sm font-semibold text-gray-900 mb-2">Kişisel Notlar (İsteğe Bağlı)</label>
                     <Textarea
+                      value={formData.notes}
+                      onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
                       placeholder="Bu ürün hakkında kişisel notlarınızı ekleyin..."
                       className="bg-gray-50 border-gray-200 focus:border-blue-400 rounded-xl text-base resize-none"
                       rows={3}
