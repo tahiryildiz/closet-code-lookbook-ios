@@ -77,7 +77,7 @@ const Auth = () => {
               title: "Hesap oluşturuldu!",
               description: "Hesabınız başarıyla oluşturuldu ve giriş yaptınız",
             });
-            navigate('/wardrobe');
+            navigate('/');
           }
         }
       }
