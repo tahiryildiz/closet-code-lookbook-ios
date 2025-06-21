@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Sparkles } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -181,6 +182,12 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
         return false;
       }
 
+      console.log('Saving item to database:', {
+        name: formData.name || currentResult?.name,
+        category: formData.category || currentResult?.category,
+        image_url: currentResult?.imageUrl
+      });
+
       const { error } = await supabase
         .from('clothing_items')
         .insert({
@@ -205,6 +212,7 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
         return false;
       }
 
+      console.log('Item saved successfully!');
       return true;
     } catch (error) {
       console.error('Error saving item:', error);

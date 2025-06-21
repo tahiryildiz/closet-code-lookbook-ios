@@ -21,24 +21,27 @@ interface WardrobeGridProps {
   viewMode: 'grid' | 'list';
   searchQuery: string;
   selectedCategory: string;
+  refreshTrigger?: number; // Add this to trigger refreshes
 }
 
-const WardrobeGrid = ({ viewMode, searchQuery, selectedCategory }: WardrobeGridProps) => {
+const WardrobeGrid = ({ viewMode, searchQuery, selectedCategory, refreshTrigger }: WardrobeGridProps) => {
   const [items, setItems] = useState<WardrobeItem[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchItems();
-  }, []);
-
   const fetchItems = async () => {
     try {
+      console.log('Fetching wardrobe items...');
       const { data, error } = await supabase
         .from('clothing_items')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching items:', error);
+        throw error;
+      }
+
+      console.log('Fetched items:', data?.length || 0);
 
       const formattedItems = data?.map(item => ({
         id: item.id,
@@ -58,6 +61,47 @@ const WardrobeGrid = ({ viewMode, searchQuery, selectedCategory }: WardrobeGridP
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchItems();
+  }, [refreshTrigger]); // Re-fetch when refreshTrigger changes
+
+  // Set up real-time subscription for new items
+  useEffect(() => {
+    console.log('Setting up real-time subscription for clothing_items...');
+    
+    const channel = supabase
+      .channel('wardrobe-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'clothing_items'
+        },
+        (payload) => {
+          console.log('New item added:', payload.new);
+          // Add the new item to the existing items
+          const newItem = {
+            id: payload.new.id,
+            name: payload.new.name,
+            category: payload.new.category,
+            primary_color: payload.new.primary_color,
+            brand: payload.new.brand,
+            style_tags: payload.new.style_tags || [],
+            image_url: payload.new.image_url,
+            user_notes: payload.new.user_notes
+          };
+          setItems(prev => [newItem, ...prev]);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      console.log('Cleaning up real-time subscription');
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   const filteredItems = items.filter(item => {
     const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||

@@ -13,6 +13,13 @@ const Wardrobe = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [showFilters, setShowFilters] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  const handleModalClose = () => {
+    setShowAddModal(false);
+    // Trigger a refresh of the wardrobe grid
+    setRefreshTrigger(prev => prev + 1);
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
@@ -75,11 +82,12 @@ const Wardrobe = () => {
           viewMode="grid"
           searchQuery={searchQuery}
           selectedCategory={selectedCategory}
+          refreshTrigger={refreshTrigger}
         />
       </div>
 
       {/* Add Item Modal */}
-      <AddItemModal isOpen={showAddModal} onClose={() => setShowAddModal(false)} />
+      <AddItemModal isOpen={showAddModal} onClose={handleModalClose} />
     </div>
   );
 };
