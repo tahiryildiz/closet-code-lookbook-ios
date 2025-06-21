@@ -1,4 +1,3 @@
-
 import { useState, useRef } from "react";
 import { Plus, Search, Filter } from "lucide-react";
 import { Camera, CameraResultType, CameraSource } from "@capacitor/camera";
@@ -29,54 +28,70 @@ const Wardrobe = () => {
 
   const handleAddProduct = async () => {
     console.log('Wardrobe: Add product button clicked');
-    try {
-      // Try to use Capacitor Camera first (for mobile)
-      const image = await Camera.getPhoto({
-        quality: 90,
-        allowEditing: false,
-        source: CameraSource.Prompt, // This shows the iOS menu with camera/gallery options
-        resultType: CameraResultType.DataUrl,
-      });
+    
+    // Check if we're in a mobile environment that supports Capacitor
+    const isCapacitorAvailable = typeof window !== 'undefined' && (window as any).Capacitor;
+    
+    if (isCapacitorAvailable) {
+      try {
+        console.log('Wardrobe: Attempting to use Capacitor camera');
+        const image = await Camera.getPhoto({
+          quality: 90,
+          allowEditing: false,
+          source: CameraSource.Prompt,
+          resultType: CameraResultType.DataUrl,
+        });
 
-      console.log('Wardrobe: Camera image captured:', image.dataUrl ? 'Success' : 'Failed');
+        console.log('Wardrobe: Camera image captured successfully');
 
-      if (image.dataUrl) {
-        setSelectedImage(image.dataUrl);
-        setShowAnalysisStep(true);
-        // Mock analysis for now
-        setIsAnalyzing(true);
-        setTimeout(() => {
-          setAnalysisResult({ 
-            name: "Yeni Kıyafet",
-            category: "üstler",
-            primaryColor: "Beyaz",
-            tags: ["rahat", "günlük"],
-            confidence: 85 
-          });
-          setIsAnalyzing(false);
-        }, 2000);
+        if (image.dataUrl) {
+          setSelectedImage(image.dataUrl);
+          setShowAnalysisStep(true);
+          setIsAnalyzing(true);
+          
+          setTimeout(() => {
+            setAnalysisResult({ 
+              name: "Yeni Kıyafet",
+              category: "üstler",
+              primaryColor: "Beyaz",
+              tags: ["rahat", "günlük"],
+              confidence: 85 
+            });
+            setIsAnalyzing(false);
+          }, 2000);
+        }
+      } catch (error) {
+        console.log('Wardrobe: Capacitor camera failed, using file input:', error);
+        triggerFileInput();
       }
-    } catch (error) {
-      console.log('Wardrobe: Capacitor camera not available, falling back to file input:', error);
-      // Fallback to file input for web
-      if (fileInputRef.current) {
-        fileInputRef.current.click();
-      }
+    } else {
+      console.log('Wardrobe: Capacitor not available, using file input');
+      triggerFileInput();
+    }
+  };
+
+  const triggerFileInput = () => {
+    if (fileInputRef.current) {
+      console.log('Wardrobe: Triggering file input');
+      fileInputRef.current.click();
+    } else {
+      console.error('Wardrobe: File input ref not available');
     }
   };
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    console.log('Wardrobe: File input triggered');
+    console.log('Wardrobe: File input change event triggered');
     const file = event.target.files?.[0];
     if (file) {
-      console.log('Wardrobe: File selected:', file.name);
+      console.log('Wardrobe: File selected:', file.name, 'Size:', file.size, 'Type:', file.type);
       const reader = new FileReader();
       reader.onload = (e) => {
         const result = e.target?.result as string;
+        console.log('Wardrobe: File read successfully');
         setSelectedImage(result);
         setShowAnalysisStep(true);
-        // Mock analysis for now
         setIsAnalyzing(true);
+        
         setTimeout(() => {
           setAnalysisResult({ 
             name: "Yeni Kıyafet",
@@ -88,8 +103,16 @@ const Wardrobe = () => {
           setIsAnalyzing(false);
         }, 2000);
       };
+      reader.onerror = (error) => {
+        console.error('Wardrobe: File read error:', error);
+      };
       reader.readAsDataURL(file);
+    } else {
+      console.log('Wardrobe: No file selected');
     }
+    
+    // Reset the input value so the same file can be selected again
+    event.target.value = '';
   };
 
   const handleFormDataChange = (data: Partial<typeof formData>) => {

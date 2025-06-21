@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from "react";
 import { Heart, Plus, TrendingUp, Sparkles, Cloud, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -137,53 +138,69 @@ const Index = () => {
   };
 
   const handleAddProduct = async () => {
-    console.log('Add product button clicked');
-    try {
-      // Try to use Capacitor Camera first (for mobile)
-      const image = await Camera.getPhoto({
-        quality: 90,
-        allowEditing: false,
-        source: CameraSource.Prompt, // This shows the iOS menu with camera/gallery options
-        resultType: CameraResultType.DataUrl,
-      });
+    console.log('Index: Add product button clicked');
+    
+    // Check if we're in a mobile environment that supports Capacitor
+    const isCapacitorAvailable = typeof window !== 'undefined' && (window as any).Capacitor;
+    
+    if (isCapacitorAvailable) {
+      try {
+        console.log('Index: Attempting to use Capacitor camera');
+        const image = await Camera.getPhoto({
+          quality: 90,
+          allowEditing: false,
+          source: CameraSource.Prompt,
+          resultType: CameraResultType.DataUrl,
+        });
 
-      console.log('Camera image captured:', image.dataUrl ? 'Success' : 'Failed');
+        console.log('Index: Camera image captured successfully');
 
-      if (image.dataUrl) {
-        setIsAnalyzing(true);
-        
-        // Mock analysis for now - in real app this would call AI service
-        setTimeout(() => {
-          setAnalysisResult({
-            name: "Yeni Kıyafet",
-            category: "üstler",
-            primaryColor: "Beyaz",
-            tags: ["rahat", "günlük", "casual"],
-            confidence: 85,
-            imageUrl: image.dataUrl
-          });
-          setIsAnalyzing(false);
-          setShowAnalysis(true);
-        }, 2000);
+        if (image.dataUrl) {
+          setIsAnalyzing(true);
+          
+          setTimeout(() => {
+            setAnalysisResult({
+              name: "Yeni Kıyafet",
+              category: "üstler",
+              primaryColor: "Beyaz",
+              tags: ["rahat", "günlük", "casual"],
+              confidence: 85,
+              imageUrl: image.dataUrl
+            });
+            setIsAnalyzing(false);
+            setShowAnalysis(true);
+          }, 2000);
+        }
+      } catch (error) {
+        console.log('Index: Capacitor camera failed, using file input:', error);
+        triggerFileInput();
       }
-    } catch (error) {
-      console.log('Capacitor camera not available, falling back to file input:', error);
-      // Fallback to file input for web
-      if (fileInputRef.current) {
-        fileInputRef.current.click();
-      }
+    } else {
+      console.log('Index: Capacitor not available, using file input');
+      triggerFileInput();
+    }
+  };
+
+  const triggerFileInput = () => {
+    if (fileInputRef.current) {
+      console.log('Index: Triggering file input');
+      fileInputRef.current.click();
+    } else {
+      console.error('Index: File input ref not available');
     }
   };
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    console.log('Index: File input change event triggered');
     const file = event.target.files?.[0];
     if (file) {
+      console.log('Index: File selected:', file.name, 'Size:', file.size, 'Type:', file.type);
       const reader = new FileReader();
       reader.onload = (e) => {
         const result = e.target?.result as string;
+        console.log('Index: File read successfully');
         setIsAnalyzing(true);
         
-        // Mock analysis for now
         setTimeout(() => {
           setAnalysisResult({
             name: "Yeni Kıyafet",
@@ -197,8 +214,16 @@ const Index = () => {
           setShowAnalysis(true);
         }, 2000);
       };
+      reader.onerror = (error) => {
+        console.error('Index: File read error:', error);
+      };
       reader.readAsDataURL(file);
+    } else {
+      console.log('Index: No file selected');
     }
+    
+    // Reset the input value so the same file can be selected again
+    event.target.value = '';
   };
 
   if (showAnalysis) {
