@@ -1,10 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Sparkles, Shirt, Plus, Cloud, Sun, CloudRain, User, MapPin } from "lucide-react";
+import { Sparkles, Shirt, Plus, Sun, User, MapPin } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import RecentItemsCarousel from "@/components/RecentItemsCarousel";
 
 interface WardrobeItem {
   id: string;
@@ -108,7 +109,7 @@ const Index = () => {
         .from('clothing_items')
         .select('id, name, category, primary_color, brand, image_url, created_at')
         .order('created_at', { ascending: false })
-        .limit(4);
+        .limit(6); // Increased to 6 to show more items in carousel
 
       if (error) {
         console.error('Error fetching recent items:', error);
@@ -136,7 +137,7 @@ const Index = () => {
   // Show authenticated user's home page with weather card and add products section
   if (user) {
     return (
-      <div className="min-h-screen bg-gray-50 pb-20">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 pb-20">
         {/* Header */}
         <div className="bg-gradient-to-br from-blue-900 to-blue-800 text-white">
           <div className="px-6 pt-12 pb-8">
@@ -150,7 +151,7 @@ const Index = () => {
         {/* Content */}
         <div className="px-4 py-6 space-y-6">
           {/* Weather Card */}
-          <Card className="bg-white border-0 shadow-sm rounded-2xl overflow-hidden">
+          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-sm rounded-2xl overflow-hidden">
             <CardContent className="p-0">
               <div className="bg-gradient-to-r from-blue-400 to-blue-600 p-6 text-white">
                 <div className="flex items-center justify-between">
@@ -174,8 +175,8 @@ const Index = () => {
 
           {/* Conditional Content Based on Items */}
           {hasItems ? (
-            // Show Recent Items
-            <Card className="bg-white border-0 shadow-sm rounded-2xl">
+            // Show Recent Items with Carousel
+            <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-sm rounded-2xl">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-xl font-semibold text-gray-900">Son Eklenenler</h3>
@@ -187,36 +188,12 @@ const Index = () => {
                     Tümünü Gör
                   </Button>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  {recentItems.map((item) => (
-                    <div
-                      key={item.id}
-                      className="bg-gray-50 rounded-xl p-3 cursor-pointer hover:bg-gray-100 transition-colors"
-                      onClick={() => navigate('/wardrobe')}
-                    >
-                      <div className="aspect-square bg-white rounded-lg mb-2 overflow-hidden">
-                        {item.image_url ? (
-                          <img
-                            src={item.image_url}
-                            alt={item.name}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full bg-gray-100 flex items-center justify-center">
-                            <Shirt className="h-8 w-8 text-gray-400" />
-                          </div>
-                        )}
-                      </div>
-                      <p className="font-medium text-sm text-gray-900 truncate">{item.name}</p>
-                      <p className="text-xs text-gray-500">{item.category}</p>
-                    </div>
-                  ))}
-                </div>
+                <RecentItemsCarousel items={recentItems} />
               </CardContent>
             </Card>
           ) : (
             // Show Add Products Section
-            <Card className="bg-white border-0 shadow-sm rounded-2xl">
+            <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-sm rounded-2xl">
               <CardContent className="p-6 text-center">
                 <div className="bg-blue-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
                   <Plus className="h-8 w-8 text-blue-600" />
@@ -239,7 +216,7 @@ const Index = () => {
           {/* Quick Access Cards */}
           <div className="grid grid-cols-2 gap-4">
             <Card 
-              className="bg-white border-0 shadow-sm rounded-2xl cursor-pointer hover:shadow-md transition-shadow"
+              className="bg-white/80 backdrop-blur-sm border-0 shadow-sm rounded-2xl cursor-pointer hover:shadow-md transition-shadow"
               onClick={() => navigate('/outfits')}
             >
               <CardContent className="p-6 text-center">
@@ -252,7 +229,7 @@ const Index = () => {
             </Card>
 
             <Card 
-              className="bg-white border-0 shadow-sm rounded-2xl cursor-pointer hover:shadow-md transition-shadow"
+              className="bg-white/80 backdrop-blur-sm border-0 shadow-sm rounded-2xl cursor-pointer hover:shadow-md transition-shadow"
               onClick={() => navigate('/profile')}
             >
               <CardContent className="p-6 text-center">

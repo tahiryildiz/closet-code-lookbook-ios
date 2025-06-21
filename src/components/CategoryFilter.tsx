@@ -1,22 +1,65 @@
 
 import { Button } from "@/components/ui/button";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface CategoryFilterProps {
   selectedCategory: string;
   onCategoryChange: (category: string) => void;
 }
 
-const categories = [
-  { id: 'all', name: 'Tümü', icon: '👕' },
-  { id: 'tops', name: 'Üstler', icon: '👔' },
-  { id: 'bottoms', name: 'Altlar', icon: '👖' },
-  { id: 'dresses', name: 'Elbiseler', icon: '👗' },
-  { id: 'outerwear', name: 'Dış Giyim', icon: '🧥' },
-  { id: 'shoes', name: 'Ayakkabılar', icon: '👟' },
-  { id: 'accessories', name: 'Çantalar', icon: '👜' }
-];
+const categoryIcons: Record<string, string> = {
+  'all': '👕',
+  'tops': '👔',
+  'bottoms': '👖',
+  'dresses': '👗',
+  'outerwear': '🧥',
+  'shoes': '👟',
+  'accessories': '👜',
+  'ceket': '🧥',
+  'tshirt': '👔',
+  'pantolon': '👖',
+  'etek': '👗',
+  'ayakkabi': '👟',
+  'canta': '👜'
+};
 
 const CategoryFilter = ({ selectedCategory, onCategoryChange }: CategoryFilterProps) => {
+  const [availableCategories, setAvailableCategories] = useState<string[]>([]);
+
+  useEffect(() => {
+    fetchAvailableCategories();
+  }, []);
+
+  const fetchAvailableCategories = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('clothing_items')
+        .select('category');
+
+      if (error) {
+        console.error('Error fetching categories:', error);
+        return;
+      }
+
+      // Get unique categories from the data
+      const uniqueCategories = [...new Set(data?.map(item => item.category) || [])];
+      setAvailableCategories(uniqueCategories);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+    }
+  };
+
+  // Create category objects with names and icons
+  const categories = [
+    { id: 'all', name: 'Tümü', icon: '👕' },
+    ...availableCategories.map(category => ({
+      id: category,
+      name: category.charAt(0).toUpperCase() + category.slice(1),
+      icon: categoryIcons[category.toLowerCase()] || '👕'
+    }))
+  ];
+
   return (
     <div className="w-full">
       <div className="flex overflow-x-auto scrollbar-hide space-x-3 px-1 py-2" style={{ scrollBehavior: 'smooth' }}>
