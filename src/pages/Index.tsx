@@ -53,7 +53,7 @@ const Index = () => {
       <div className="bg-gradient-to-br from-blue-900 to-blue-800 text-white">
         <div className="px-6 pt-12 pb-8">
           <div className="flex items-center justify-between mb-6">
-            <h1 className="text-2xl font-medium">Günaydın</h1>
+            <h1 className="text-2xl font-medium">Günaydın Ahmet</h1>
           </div>
           
           <p className="text-white/80 text-base mb-6">Bugün ne giymek istiyorsun?</p>
@@ -65,7 +65,7 @@ const Index = () => {
                 <div className="flex items-center space-x-3">
                   <Sun className="h-8 w-8 text-yellow-300" />
                   <div>
-                    <div className="text-sm text-white/80">Bugün</div>
+                    <div className="text-sm text-white/80">İstanbul</div>
                     <div className="font-medium">Güneşli</div>
                   </div>
                 </div>

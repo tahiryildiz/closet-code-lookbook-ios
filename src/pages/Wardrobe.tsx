@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Plus, Search, Filter, Grid, List, ChevronRight } from "lucide-react";
+import { Plus, Search, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -9,7 +9,6 @@ import CategoryFilter from "@/components/CategoryFilter";
 import AddItemModal from "@/components/AddItemModal";
 
 const Wardrobe = () => {
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [showFilters, setShowFilters] = useState(false);
@@ -37,9 +36,9 @@ const Wardrobe = () => {
 
       {/* Content */}
       <div className="px-4 py-6 space-y-6">
-        {/* Search and Controls */}
-        <div className="space-y-4">
-          <div className="relative">
+        {/* Search and Filters in same line */}
+        <div className="flex items-center space-x-3">
+          <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
               placeholder="Gardırobunu ara..."
@@ -49,35 +48,14 @@ const Wardrobe = () => {
             />
           </div>
           
-          <div className="flex items-center justify-between">
-            <Button
-              variant="outline"
-              onClick={() => setShowFilters(!showFilters)}
-              className="bg-white border-gray-200 hover:bg-gray-50 rounded-2xl py-3 px-4 font-semibold"
-            >
-              <Filter className="h-4 w-4 mr-2" />
-              Filtreler
-            </Button>
-            
-            <div className="flex space-x-1 bg-white rounded-2xl p-1 border border-gray-200">
-              <Button
-                variant={viewMode === 'grid' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setViewMode('grid')}
-                className={`rounded-xl ${viewMode === 'grid' ? 'bg-blue-900 hover:bg-blue-800 text-white' : 'hover:bg-gray-100'}`}
-              >
-                <Grid className="h-4 w-4" />
-              </Button>
-              <Button
-                variant={viewMode === 'list' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setViewMode('list')}
-                className={`rounded-xl ${viewMode === 'list' ? 'bg-blue-900 hover:bg-blue-800 text-white' : 'hover:bg-gray-100'}`}
-              >
-                <List className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
+          <Button
+            variant="outline"
+            onClick={() => setShowFilters(!showFilters)}
+            className="bg-white border-gray-200 hover:bg-gray-50 rounded-2xl py-3 px-4 font-semibold"
+          >
+            <Filter className="h-4 w-4 mr-2" />
+            Filtreler
+          </Button>
         </div>
 
         {/* Category Filter */}
@@ -92,31 +70,9 @@ const Wardrobe = () => {
           </Card>
         )}
 
-        {/* Quick Stats */}
-        <div className="grid grid-cols-3 gap-4">
-          <Card className="bg-white border-0 shadow-sm rounded-2xl">
-            <CardContent className="p-4 text-center">
-              <div className="text-xl font-bold text-blue-600">127</div>
-              <div className="text-xs text-gray-600">Toplam Ürün</div>
-            </CardContent>
-          </Card>
-          <Card className="bg-white border-0 shadow-sm rounded-2xl">
-            <CardContent className="p-4 text-center">
-              <div className="text-xl font-bold text-purple-600">8</div>
-              <div className="text-xs text-gray-600">Kategori</div>
-            </CardContent>
-          </Card>
-          <Card className="bg-white border-0 shadow-sm rounded-2xl">
-            <CardContent className="p-4 text-center">
-              <div className="text-xl font-bold text-green-600">45</div>
-              <div className="text-xs text-gray-600">Bu Ay Giyilen</div>
-            </CardContent>
-          </Card>
-        </div>
-
         {/* Wardrobe Grid */}
         <WardrobeGrid
-          viewMode={viewMode}
+          viewMode="grid"
           searchQuery={searchQuery}
           selectedCategory={selectedCategory}
         />

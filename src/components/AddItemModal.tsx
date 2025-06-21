@@ -23,14 +23,14 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
     // Simulate AI analysis with enhanced details
     setTimeout(() => {
       setAnalysisResult({
-        name: "Oversized Cashmere Sweater",
-        category: "tops",
-        primaryColor: "Cream",
+        name: "Oversize Kaşmir Süveter",
+        category: "üstler",
+        primaryColor: "Krem",
         suggestedBrand: "Everlane",
-        tags: ["cozy", "luxury", "oversized", "cashmere", "autumn"],
+        tags: ["rahat", "lüks", "oversize", "kaşmir", "sonbahar"],
         confidence: 96,
-        material: "100% Cashmere",
-        season: "Fall/Winter",
+        material: "%100 Kaşmir",
+        season: "Sonbahar/Kış",
         style: "Minimalist"
       });
       setIsAnalyzing(false);
@@ -53,7 +53,7 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
             <div className="bg-blue-100 rounded-full p-2">
               <Sparkles className="h-5 w-5 text-blue-600" />
             </div>
-            <span>Add New Item</span>
+            <span>Yeni Ürün Ekle</span>
           </DialogTitle>
         </DialogHeader>
 
@@ -61,8 +61,8 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
           <div className="space-y-6">
             <div className="text-center">
               <p className="text-gray-600 text-base leading-relaxed">
-                Snap a photo or upload an image of your clothing item. 
-                Our AI will automatically analyze and categorize everything for you!
+                Kıyafet ürününün fotoğrafını çek veya yükle. 
+                AI'mız otomatik olarak her şeyi analiz edip kategorize edecek!
               </p>
             </div>
 
@@ -72,8 +72,8 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
                   <div className="bg-blue-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
                     <Camera className="h-8 w-8 text-blue-600" />
                   </div>
-                  <h3 className="font-semibold text-gray-900 mb-2 text-lg">Take Photo</h3>
-                  <p className="text-gray-500">Use your camera to capture the item</p>
+                  <h3 className="font-semibold text-gray-900 mb-2 text-lg">Fotoğraf Çek</h3>
+                  <p className="text-gray-500">Kameranı kullanarak ürünü yakala</p>
                 </CardContent>
               </Card>
 
@@ -82,8 +82,8 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
                   <div className="bg-blue-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
                     <Upload className="h-8 w-8 text-blue-600" />
                   </div>
-                  <h3 className="font-semibold text-gray-900 mb-2 text-lg">Upload Image</h3>
-                  <p className="text-gray-500">Choose from your photo library</p>
+                  <h3 className="font-semibold text-gray-900 mb-2 text-lg">Görsel Yükle</h3>
+                  <p className="text-gray-500">Fotoğraf galerinден seç</p>
                 </CardContent>
               </Card>
             </div>
@@ -92,7 +92,7 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
               onClick={handleImageUpload}
               className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-4 rounded-xl text-base"
             >
-              Continue with Demo Image
+              Demo Görsel ile Devam Et
             </Button>
           </div>
         )}
@@ -102,8 +102,8 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
             {isAnalyzing ? (
               <div className="text-center py-12">
                 <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-500 border-t-transparent mx-auto mb-6"></div>
-                <h3 className="font-semibold text-gray-900 mb-3 text-lg">Analyzing your item...</h3>
-                <p className="text-gray-500 text-base">Our AI is identifying category, color, material, and style</p>
+                <h3 className="font-semibold text-gray-900 mb-3 text-lg">Ürününüz analiz ediliyor...</h3>
+                <p className="text-gray-500 text-base">AI'mız kategori, renk, malzeme ve stili tanımlıyor</p>
               </div>
             ) : analysisResult && (
               <>
@@ -113,17 +113,17 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
                       <Check className="h-4 w-4 text-green-600" />
                     </div>
                     <span className="text-sm font-semibold text-green-800">
-                      AI Analysis Complete ({analysisResult.confidence}% confidence)
+                      AI Analizi Tamamlandı (%{analysisResult.confidence} güven)
                     </span>
                   </div>
                   <p className="text-sm text-green-700 leading-relaxed">
-                    We've automatically filled in the details below. Feel free to make any adjustments!
+                    Aşağıdaki detayları otomatik olarak doldurduk. İstediğiniz değişiklikleri yapabilirsiniz!
                   </p>
                 </div>
 
                 <div className="space-y-5">
                   <div>
-                    <label className="block text-sm font-semibold text-gray-900 mb-2">Item Name</label>
+                    <label className="block text-sm font-semibold text-gray-900 mb-2">Ürün Adı</label>
                     <Input
                       defaultValue={analysisResult.name}
                       className="bg-gray-50 border-gray-200 focus:border-blue-400 rounded-xl text-base py-3"
@@ -131,16 +131,16 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-gray-900 mb-2">Brand</label>
+                    <label className="block text-sm font-semibold text-gray-900 mb-2">Marka</label>
                     <Input
-                      placeholder={`Suggested: ${analysisResult.suggestedBrand}`}
+                      placeholder={`Önerilen: ${analysisResult.suggestedBrand}`}
                       className="bg-gray-50 border-gray-200 focus:border-blue-400 rounded-xl text-base py-3"
                     />
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-semibold text-gray-900 mb-2">Category</label>
+                      <label className="block text-sm font-semibold text-gray-900 mb-2">Kategori</label>
                       <Input
                         defaultValue={analysisResult.category}
                         className="bg-gray-50 border-gray-200 rounded-xl text-base py-3"
@@ -148,7 +148,7 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-semibold text-gray-900 mb-2">Color</label>
+                      <label className="block text-sm font-semibold text-gray-900 mb-2">Renk</label>
                       <Input
                         defaultValue={analysisResult.primaryColor}
                         className="bg-gray-50 border-gray-200 rounded-xl text-base py-3"
@@ -158,7 +158,7 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-gray-900 mb-2">Style Tags</label>
+                    <label className="block text-sm font-semibold text-gray-900 mb-2">Stil Etiketleri</label>
                     <Input
                       defaultValue={analysisResult.tags.join(', ')}
                       className="bg-gray-50 border-gray-200 rounded-xl text-base py-3"
@@ -167,9 +167,9 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-gray-900 mb-2">Personal Notes (Optional)</label>
+                    <label className="block text-sm font-semibold text-gray-900 mb-2">Kişisel Notlar (İsteğe Bağlı)</label>
                     <Textarea
-                      placeholder="Add any personal notes about this item..."
+                      placeholder="Bu ürün hakkında kişisel notlarınızı ekleyin..."
                       className="bg-gray-50 border-gray-200 focus:border-blue-400 rounded-xl text-base resize-none"
                       rows={3}
                     />
@@ -182,13 +182,13 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
                     onClick={() => setStep('upload')}
                     className="flex-1 border-gray-200 hover:bg-gray-50 rounded-xl py-3 text-base font-semibold"
                   >
-                    Back
+                    Geri
                   </Button>
                   <Button
                     onClick={handleSave}
                     className="flex-1 bg-blue-500 hover:bg-blue-600 text-white rounded-xl py-3 text-base font-semibold"
                   >
-                    Save to Closet
+                    Gardiroba Kaydet
                   </Button>
                 </div>
               </>

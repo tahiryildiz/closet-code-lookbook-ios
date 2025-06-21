@@ -29,7 +29,10 @@ const BottomNavigation = () => {
                   : 'text-gray-600 hover:text-gray-900'
               }`}
             >
-              <Icon className={`h-6 w-6 mb-1 ${isActive ? 'text-blue-600' : 'text-gray-600'}`} />
+              <Icon 
+                className={`h-6 w-6 mb-1 ${isActive ? 'text-blue-600' : 'text-gray-600'}`} 
+                fill={isActive ? 'currentColor' : 'none'}
+              />
               <span className={`text-xs font-medium ${isActive ? 'text-blue-600' : 'text-gray-600'}`}>
                 {item.label}
               </span>
