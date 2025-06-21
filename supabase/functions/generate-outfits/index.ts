@@ -57,37 +57,49 @@ serve(async (req) => {
 
     console.log('Wardrobe description:', wardrobeDescription);
 
-    const prompt = `Kullanıcının gardırobundaki şu ürünlerden 3 farklı kombin önerisi oluştur:
+    const prompt = `You are KombinAI's styling assistant. Generate outfit recommendations using only items from the user's digital wardrobe.
+
+AVAILABLE WARDROBE ITEMS:
 ${wardrobeDescription}
 
-Kriterler:
-- Durum: ${occasion}
-- Zaman: ${timeOfDay}
-- Hava durumu: ${weather}
+CONDITIONS:
+- Occasion: ${occasion}
+- Time of day: ${timeOfDay}  
+- Weather: ${weather}
 
-ÖNEMLİ: Sadece yukarıda listelenen ürünleri kullan. Her kombin için:
-1. Türkçe yaratıcı bir isim ver
-2. Kombinde yer alan 2-4 ürünü listele (sadece yukarıdaki listeden)
-3. Uyum skoru (80-100 arası)
-4. Türkçe kısa stil ipucu
-5. Her kombin için görsel bir açıklama (bu ürünlerle nasıl görüneceği)
+CORE FUNCTION:
+- Combine wardrobe items into complete outfits
+- Provide 3-4 different outfit options
+- Include brief styling tip for each outfit
+- Consider weather appropriateness
+- Match occasion formality level
 
-JSON formatında şu yapıda döndür:
+OUTPUT REQUIREMENTS:
+- List specific items from their wardrobe
+- Create complete outfit combinations (2-4 items per outfit)
+- Each outfit should work as a cohesive look
+
+CONSTRAINTS:
+- ONLY use items that exist in user's wardrobe (listed above)
+- No external shopping recommendations
+- Keep suggestions practical and wearable
+- Consider basic color coordination
+- Account for seasonal appropriateness
+
+Return ONLY valid JSON in this exact format (no additional text):
 {
   "outfits": [
     {
       "id": 1,
-      "name": "Kombin ismi",
-      "items": ["ürün1", "ürün2", "ürün3"],
-      "item_ids": ["id1", "id2", "id3"],
+      "name": "Creative Turkish outfit name",
+      "items": ["exact item name 1", "exact item name 2", "exact item name 3"],
       "confidence": 95,
-      "styling_tips": "Türkçe stil ipucu",
-      "visual_description": "Bu kombinle nasıl görüneceğinin açıklaması"
+      "styling_tips": "Brief Turkish styling tip"
     }
   ]
 }`;
 
-    console.log('Sending request to OpenAI...');
+    console.log('Sending request to OpenAI with KombinAI prompt...');
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -100,12 +112,12 @@ JSON formatında şu yapıda döndür:
         messages: [
           { 
             role: 'system', 
-            content: 'Sen profesyonel bir moda stilistisin. Sadece geçerli JSON formatında yanıt ver, başka bir metin ekleme. Kullanıcının sahip olduğu ürünlerden gerçekçi kombinler oluştur.' 
+            content: 'You are KombinAI, a professional styling assistant. You MUST respond ONLY with valid JSON. Never include any text outside the JSON structure. Always use exact item names from the wardrobe list provided.' 
           },
           { role: 'user', content: prompt }
         ],
         temperature: 0.7,
-        max_tokens: 2000,
+        max_tokens: 1500,
       }),
     });
 
@@ -120,8 +132,17 @@ JSON formatında şu yapıda döndür:
     const data = await response.json();
     console.log('OpenAI response received, processing...');
     
-    const generatedContent = data.choices[0].message.content;
+    let generatedContent = data.choices[0].message.content;
     console.log('Generated content:', generatedContent);
+
+    // Clean the response to ensure it's valid JSON
+    generatedContent = generatedContent.trim();
+    if (generatedContent.startsWith('```json')) {
+      generatedContent = generatedContent.replace(/```json\n?/, '').replace(/\n?```$/, '');
+    }
+    if (generatedContent.startsWith('```')) {
+      generatedContent = generatedContent.replace(/```\n?/, '').replace(/\n?```$/, '');
+    }
 
     try {
       const parsedOutfits = JSON.parse(generatedContent);
@@ -130,10 +151,11 @@ JSON formatında şu yapıda döndür:
         throw new Error('No outfits generated');
       }
 
-      // Add item_ids and images to outfits based on item names
+      // Process outfits to add item_ids and images
       const processedOutfits = parsedOutfits.outfits.map((outfit: any) => {
         const itemIds = outfit.items.map((itemName: string) => {
           const foundItem = wardrobeItems.find((item: any) => 
+            item.name.toLowerCase().trim() === itemName.toLowerCase().trim() ||
             item.name.toLowerCase().includes(itemName.toLowerCase()) ||
             itemName.toLowerCase().includes(item.name.toLowerCase())
           );
@@ -142,6 +164,7 @@ JSON formatında şu yapıda döndür:
         
         const itemImages = outfit.items.map((itemName: string) => {
           const foundItem = wardrobeItems.find((item: any) => 
+            item.name.toLowerCase().trim() === itemName.toLowerCase().trim() ||
             item.name.toLowerCase().includes(itemName.toLowerCase()) ||
             itemName.toLowerCase().includes(item.name.toLowerCase())
           );
@@ -157,6 +180,7 @@ JSON formatında şu yapıda döndür:
       });
 
       console.log('Processed outfits count:', processedOutfits.length);
+      console.log('KombinAI generation successful!');
       
       // If only one outfit was generated, show notification
       if (processedOutfits.length === 1) {
@@ -175,7 +199,7 @@ JSON formatında şu yapıda döndür:
       console.error('Failed to parse OpenAI response:', parseError);
       console.error('Raw response:', generatedContent);
       
-      // Fallback response using actual wardrobe items
+      // Fallback: Create outfit combinations from actual wardrobe items
       const shuffleArray = (array: any[]) => {
         const shuffled = [...array];
         for (let i = shuffled.length - 1; i > 0; i--) {
@@ -185,11 +209,37 @@ JSON formatında şu yapıda döndür:
         return shuffled;
       };
 
-      const createFallbackOutfit = (items: any[], index: number) => {
-        const selectedItems = shuffleArray(items).slice(0, Math.min(3, items.length));
+      const createOutfitCombination = (items: any[], index: number) => {
+        // Try to create logical outfit combinations
+        const tops = items.filter(item => ['Tişörtler', 'Gömlek', 'Bluz', 'Kazak'].includes(item.category));
+        const bottoms = items.filter(item => ['Pantolonlar', 'Etek', 'Şort'].includes(item.category));
+        const outerwear = items.filter(item => ['Ceket', 'Hırka', 'Mont'].includes(item.category));
+        
+        let selectedItems = [];
+        
+        // Add a top if available
+        if (tops.length > 0) {
+          selectedItems.push(shuffleArray(tops)[0]);
+        }
+        
+        // Add a bottom if available
+        if (bottoms.length > 0) {
+          selectedItems.push(shuffleArray(bottoms)[0]);
+        }
+        
+        // Add outerwear if available and weather suggests it
+        if (outerwear.length > 0 && (weather === 'cool' || weather === 'cold' || weather === 'rainy')) {
+          selectedItems.push(shuffleArray(outerwear)[0]);
+        }
+        
+        // If we don't have enough items, just pick randomly
+        if (selectedItems.length < 2) {
+          selectedItems = shuffleArray(items).slice(0, Math.min(3, items.length));
+        }
+        
         return {
           id: index + 1,
-          name: `Stil Önerisi ${index + 1}`,
+          name: `Kombin ${index + 1}`,
           items: selectedItems.map((item: any) => item.name),
           item_ids: selectedItems.map((item: any) => item.id),
           confidence: Math.floor(Math.random() * 20) + 80,
@@ -200,14 +250,14 @@ JSON formatında şu yapıda döndür:
       };
 
       const fallbackOutfits = [
-        createFallbackOutfit(wardrobeItems, 0),
-        createFallbackOutfit(wardrobeItems, 1),
-        createFallbackOutfit(wardrobeItems, 2)
+        createOutfitCombination(wardrobeItems, 0),
+        createOutfitCombination(wardrobeItems, 1),
+        createOutfitCombination(wardrobeItems, 2)
       ];
 
       return new Response(JSON.stringify({
         outfits: fallbackOutfits,
-        warning: 'AI servisinde sorun oluştu, gardırobunuzdaki ürünlerden rastgele kombinler oluşturuldu.'
+        warning: 'AI servisi geçici olarak kullanılamadı, gardırobunuzdaki ürünlerden mantıklı kombinler oluşturuldu.'
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
