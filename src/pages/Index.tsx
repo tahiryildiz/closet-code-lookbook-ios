@@ -1,13 +1,48 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Sparkles, Shirt, Plus, Cloud, Sun, CloudRain, User } from "lucide-react";
+import { Sparkles, Shirt, Plus, Cloud, Sun, CloudRain, User, MapPin } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useEffect, useState } from "react";
 
 const Index = () => {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
+  const [location, setLocation] = useState<string>("");
+  const [temperature, setTemperature] = useState<number>(22);
+  const [weatherCondition, setWeatherCondition] = useState<string>("Güneşli");
+
+  useEffect(() => {
+    if (user && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const { latitude, longitude } = position.coords;
+          
+          // Get location name from coordinates
+          try {
+            const response = await fetch(
+              `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=tr`
+            );
+            const data = await response.json();
+            setLocation(data.city || data.locality || "Konumunuz");
+            
+            // Mock weather data - in a real app, you'd call a weather API
+            // Using coordinates to simulate different temperatures
+            const mockTemp = Math.round(15 + (latitude / 10) + Math.random() * 10);
+            setTemperature(mockTemp);
+          } catch (error) {
+            console.log("Location fetch error:", error);
+            setLocation("Konumunuz");
+          }
+        },
+        (error) => {
+          console.log("Geolocation error:", error);
+          setLocation("Türkiye");
+        }
+      );
+    }
+  }, [user]);
 
   if (loading) {
     return (
@@ -28,11 +63,9 @@ const Index = () => {
         <div className="bg-gradient-to-br from-blue-900 to-blue-800 text-white">
           <div className="px-6 pt-12 pb-8">
             <div className="text-center">
-              <div className="bg-white/20 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4">
-                <Sparkles className="h-10 w-10 text-white" />
-              </div>
-              <h1 className="text-2xl font-medium">Ana Sayfa</h1>
-              <p className="text-white/80 text-base mt-1">Hoş geldiniz, {user.email.split('@')[0]}</p>
+              <h1 className="text-3xl font-bold text-white mb-2">
+                Hoş geldiniz, {user.email.split('@')[0]}
+              </h1>
             </div>
           </div>
         </div>
@@ -40,20 +73,21 @@ const Index = () => {
         {/* Content */}
         <div className="px-4 py-6 space-y-6">
           {/* Weather Card */}
-          <Card className="bg-gradient-to-r from-blue-400 to-blue-600 border-0 shadow-lg rounded-2xl text-white">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-lg font-semibold mb-1">Bugün Hava</h3>
-                  <p className="text-white/90 text-sm mb-2">İstanbul</p>
-                  <div className="flex items-center space-x-2">
-                    <span className="text-2xl font-bold">22°C</span>
-                    <Sun className="h-6 w-6 text-yellow-300" />
+          <Card className="bg-white border-0 shadow-lg rounded-2xl overflow-hidden">
+            <CardContent className="p-0">
+              <div className="bg-gradient-to-r from-blue-400 to-blue-600 p-6 text-white">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <MapPin className="h-5 w-5 text-white/80" />
+                    <span className="text-white/90 text-lg font-medium">{location}</span>
                   </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-white/90 text-sm">Güneşli</p>
-                  <p className="text-white/80 text-xs mt-1">Kombinleriniz için ideal hava!</p>
+                  <div className="text-right">
+                    <div className="flex items-center space-x-2 justify-end">
+                      <span className="text-3xl font-bold">{temperature}°C</span>
+                      <Sun className="h-8 w-8 text-yellow-300" />
+                    </div>
+                    <p className="text-white/90 text-sm mt-1">{weatherCondition}</p>
+                  </div>
                 </div>
               </div>
             </CardContent>
