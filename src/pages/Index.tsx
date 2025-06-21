@@ -3,6 +3,7 @@ import { Plus, TrendingUp, Calendar, Sun, CloudRain, ChevronRight, Zap, Lightbul
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import { Camera, CameraResultType, CameraSource } from "@capacitor/camera";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import AnalysisStep from "@/components/AnalysisStep";
@@ -150,8 +151,78 @@ const Index = () => {
     }
   };
 
-  const handleAddProduct = () => {
-    fileInputRef.current?.click();
+  const handleAddProduct = async () => {
+    try {
+      // Try to use Capacitor Camera first (for mobile)
+      const image = await Camera.getPhoto({
+        quality: 90,
+        allowEditing: false,
+        source: CameraSource.Prompt, // This shows the iOS menu with camera/gallery options
+        resultType: CameraResultType.DataUrl,
+      });
+
+      if (image.dataUrl) {
+        setIsAnalyzing(true);
+        
+        try {
+          const fileExt = 'jpg';
+          const fileName = `${Math.random()}.${fileExt}`;
+          const filePath = `clothing/${fileName}`;
+
+          // Convert dataUrl to blob
+          const response = await fetch(image.dataUrl);
+          const blob = await response.blob();
+
+          const { error: uploadError } = await supabase.storage
+            .from('clothing-images')
+            .upload(filePath, blob);
+
+          if (uploadError) {
+            console.error('Upload error:', uploadError);
+            toast({
+              title: "Yükleme hatası",
+              description: "Fotoğraf yüklenirken bir hata oluştu",
+              variant: "destructive"
+            });
+            setIsAnalyzing(false);
+            return;
+          }
+
+          const { data: { publicUrl } } = supabase.storage
+            .from('clothing-images')
+            .getPublicUrl(filePath);
+
+          setTimeout(() => {
+            setAnalysisResult({
+              name: "Yeni Kıyafet",
+              category: "üstler",
+              primaryColor: "Beyaz",
+              suggestedBrand: "",
+              tags: ["rahat", "günlük", "casual"],
+              confidence: 85,
+              material: "Pamuk",
+              season: "Tüm Mevsim",
+              style: "Casual",
+              imageUrl: publicUrl
+            });
+            setIsAnalyzing(false);
+            setShowAnalysis(true);
+          }, 2000);
+        } catch (error) {
+          console.error('Error processing image:', error);
+          toast({
+            title: "İşlem hatası",
+            description: "Fotoğraf işlenirken bir hata oluştu",
+            variant: "destructive"
+          });
+          setIsAnalyzing(false);
+        }
+      }
+    } catch (error) {
+      console.log('Capacitor camera not available, falling back to file input');
+      // Fallback to file input for web
+      fileInputRef.current?.click();
+    }
   };
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -190,7 +261,7 @@ const Index = () => {
           category: "üstler",
           primaryColor: "Beyaz",
           suggestedBrand: "",
-          tags: ["rahat", "günlük"],
+          tags: ["rahat", "günlük", "casual"],
           confidence: 85,
           material: "Pamuk",
           season: "Tüm Mevsim",
