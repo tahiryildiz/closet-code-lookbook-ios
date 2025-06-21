@@ -43,9 +43,25 @@ const Index = () => {
             const locationName = data.city || data.locality || "Konumunuz";
             setLocation(locationName);
             
-            // Mock weather data - in a real app, you'd call a weather API
-            // Using coordinates to simulate different temperatures but keep it more stable
-            const mockTemp = Math.round(15 + (latitude / 10) + (longitude / 20));
+            // More realistic temperature calculation based on season and location
+            const currentMonth = new Date().getMonth(); // 0-11
+            let baseTemp;
+            
+            // Season-based temperature for Mediterranean climate (like Kuşadası)
+            if (currentMonth >= 2 && currentMonth <= 4) { // March-May (Spring)
+              baseTemp = 18 + Math.random() * 8; // 18-26°C
+            } else if (currentMonth >= 5 && currentMonth <= 8) { // June-September (Summer)
+              baseTemp = 28 + Math.random() * 8; // 28-36°C
+            } else if (currentMonth >= 9 && currentMonth <= 11) { // October-December (Autumn)
+              baseTemp = 15 + Math.random() * 10; // 15-25°C
+            } else { // January-February (Winter)
+              baseTemp = 8 + Math.random() * 8; // 8-16°C
+            }
+            
+            // Adjust slightly based on latitude (further south = warmer)
+            const latitudeAdjustment = (latitude - 35) * 0.5; // Small adjustment
+            const mockTemp = Math.round(baseTemp + latitudeAdjustment);
+            
             setTemperature(mockTemp);
             
             // Cache the data
