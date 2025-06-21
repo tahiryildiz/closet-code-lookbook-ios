@@ -31,6 +31,7 @@ export type Database = {
           updated_at: string | null
           user_id: string
           user_notes: string | null
+          wear_count: number | null
         }
         Insert: {
           ai_analysis?: Json | null
@@ -53,6 +54,7 @@ export type Database = {
           updated_at?: string | null
           user_id: string
           user_notes?: string | null
+          wear_count?: number | null
         }
         Update: {
           ai_analysis?: Json | null
@@ -75,6 +77,7 @@ export type Database = {
           updated_at?: string | null
           user_id?: string
           user_notes?: string | null
+          wear_count?: number | null
         }
         Relationships: []
       }

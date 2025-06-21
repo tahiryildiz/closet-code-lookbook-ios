@@ -24,7 +24,9 @@ interface FormData {
 const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
   const [step, setStep] = useState<'upload' | 'details'>('upload');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [analysisResult, setAnalysisResult] = useState<any>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [analysisResults, setAnalysisResults] = useState<any[]>([]);
+  const [currentItemIndex, setCurrentItemIndex] = useState(0);
   const [formData, setFormData] = useState<FormData>({
     name: '',
     brand: '',
@@ -35,36 +37,62 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
   });
   const { toast } = useToast();
 
-  const handleFileSelect = async (file: File) => {
+  const handleFileSelect = (files: File[]) => {
+    console.log('Files received in modal:', files.length);
+    setSelectedFiles(files);
+  };
+
+  const handleRemoveFile = (index: number) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const processFiles = async () => {
+    if (selectedFiles.length === 0) {
+      toast({
+        title: "Hata",
+        description: "Lütfen en az bir fotoğraf seçin",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsAnalyzing(true);
-    
+    const results: any[] = [];
+
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random()}.${fileExt}`;
-      const filePath = `clothing/${fileName}`;
+      for (let i = 0; i < selectedFiles.length; i++) {
+        const file = selectedFiles[i];
+        console.log(`Processing file ${i + 1}/${selectedFiles.length}:`, file.name);
 
-      const { error: uploadError } = await supabase.storage
-        .from('clothing-images')
-        .upload(filePath, file);
+        // Upload file to Supabase Storage
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Math.random()}.${fileExt}`;
+        const filePath = `clothing/${fileName}`;
 
-      if (uploadError) {
-        console.error('Upload error:', uploadError);
-        toast({
-          title: "Yükleme hatası",
-          description: "Fotoğraf yüklenirken bir hata oluştu",
-          variant: "destructive"
-        });
-        setIsAnalyzing(false);
-        return;
-      }
+        const { error: uploadError } = await supabase.storage
+          .from('clothing-images')
+          .upload(filePath, file);
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('clothing-images')
-        .getPublicUrl(filePath);
+        if (uploadError) {
+          console.error('Upload error for file', file.name, ':', uploadError);
+          toast({
+            title: "Yükleme hatası",
+            description: `${file.name} yüklenirken hata oluştu: ${uploadError.message}`,
+            variant: "destructive"
+          });
+          continue;
+        }
 
-      setTimeout(() => {
-        setAnalysisResult({
-          name: "Yeni Kıyafet",
+        // Get public URL
+        const { data: { publicUrl } } = supabase.storage
+          .from('clothing-images')
+          .getPublicUrl(filePath);
+
+        console.log('File uploaded successfully:', publicUrl);
+
+        // Mock AI analysis for now
+        const analysisResult = {
+          name: `Kıyafet ${i + 1}`,
           category: "üstler",
           primaryColor: "Beyaz",
           suggestedBrand: "",
@@ -73,18 +101,30 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
           material: "Pamuk",
           season: "Tüm Mevsim",
           style: "Casual",
-          imageUrl: publicUrl
-        });
-        setIsAnalyzing(false);
+          imageUrl: publicUrl,
+          originalFile: file
+        };
+
+        results.push(analysisResult);
+      }
+
+      if (results.length > 0) {
+        setAnalysisResults(results);
+        setCurrentItemIndex(0);
         setStep('details');
-      }, 2000);
+        toast({
+          title: "Başarılı!",
+          description: `${results.length} ürün analiz edildi`,
+        });
+      }
     } catch (error) {
-      console.error('Error processing image:', error);
+      console.error('Error processing files:', error);
       toast({
         title: "İşlem hatası",
-        description: "Fotoğraf işlenirken bir hata oluştu",
+        description: "Fotoğraflar işlenirken bir hata oluştu",
         variant: "destructive"
       });
+    } finally {
       setIsAnalyzing(false);
     }
   };
@@ -93,19 +133,21 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
     setFormData(prev => ({ ...prev, ...data }));
   };
 
-  const handleSave = async () => {
+  const handleSaveCurrentItem = async () => {
+    const currentResult = analysisResults[currentItemIndex];
+    
     try {
       const { error } = await supabase
         .from('clothing_items')
         .insert({
-          name: formData.name || analysisResult?.name,
+          name: formData.name || currentResult?.name,
           brand: formData.brand,
-          category: formData.category || analysisResult?.category,
-          primary_color: formData.primaryColor || analysisResult?.primaryColor,
-          style_tags: formData.tags ? formData.tags.split(', ') : analysisResult?.tags,
+          category: formData.category || currentResult?.category,
+          primary_color: formData.primaryColor || currentResult?.primaryColor,
+          style_tags: formData.tags ? formData.tags.split(', ') : currentResult?.tags,
           user_notes: formData.notes,
-          image_url: analysisResult?.imageUrl,
-          material: analysisResult?.material,
+          image_url: currentResult?.imageUrl,
+          material: currentResult?.material,
           user_id: '00000000-0000-0000-0000-000000000000'
         });
 
@@ -113,28 +155,13 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
         console.error('Save error:', error);
         toast({
           title: "Kaydetme hatası",
-          description: "Ürün kaydedilirken bir hata oluştu",
+          description: `Ürün kaydedilirken hata oluştu: ${error.message}`,
           variant: "destructive"
         });
-        return;
+        return false;
       }
 
-      toast({
-        title: "Başarılı!",
-        description: "Ürün gardırobunuza eklendi",
-      });
-
-      onClose();
-      setStep('upload');
-      setAnalysisResult(null);
-      setFormData({
-        name: '',
-        brand: '',
-        category: '',
-        primaryColor: '',
-        tags: '',
-        notes: ''
-      });
+      return true;
     } catch (error) {
       console.error('Error saving item:', error);
       toast({
@@ -142,33 +169,111 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
         description: "Beklenmeyen bir hata oluştu",
         variant: "destructive"
       });
+      return false;
+    }
+  };
+
+  const handleSave = async () => {
+    const success = await handleSaveCurrentItem();
+    
+    if (success) {
+      // Check if there are more items to process
+      if (currentItemIndex < analysisResults.length - 1) {
+        setCurrentItemIndex(prev => prev + 1);
+        // Reset form for next item
+        setFormData({
+          name: '',
+          brand: '',
+          category: '',
+          primaryColor: '',
+          tags: '',
+          notes: ''
+        });
+        toast({
+          title: "Kaydedildi!",
+          description: `Ürün ${currentItemIndex + 1} kaydedildi. Sıradaki ürüne geçiliyor...`,
+        });
+      } else {
+        // All items processed
+        toast({
+          title: "Tamamlandı!",
+          description: `Tüm ürünler (${analysisResults.length}) gardırobunuza eklendi`,
+        });
+        handleClose();
+      }
+    }
+  };
+
+  const handleClose = () => {
+    onClose();
+    // Reset all state
+    setStep('upload');
+    setSelectedFiles([]);
+    setAnalysisResults([]);
+    setCurrentItemIndex(0);
+    setFormData({
+      name: '',
+      brand: '',
+      category: '',
+      primaryColor: '',
+      tags: '',
+      notes: ''
+    });
+  };
+
+  const handleBack = () => {
+    if (step === 'details' && currentItemIndex > 0) {
+      setCurrentItemIndex(prev => prev - 1);
+    } else {
+      setStep('upload');
     }
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md bg-white rounded-3xl border-0 shadow-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader className="pb-4">
           <DialogTitle className="flex items-center space-x-3 text-xl font-bold">
             <div className="bg-blue-100 rounded-full p-2">
               <Sparkles className="h-5 w-5 text-blue-600" />
             </div>
-            <span>Yeni Ürün Ekle</span>
+            <span>
+              {step === 'upload' ? 'Yeni Ürün Ekle' : 
+               `Ürün ${currentItemIndex + 1}/${analysisResults.length}`}
+            </span>
           </DialogTitle>
         </DialogHeader>
 
         {step === 'upload' && (
-          <UploadStep onFileSelect={handleFileSelect} />
+          <div className="space-y-6">
+            <UploadStep 
+              onFileSelect={handleFileSelect}
+              selectedFiles={selectedFiles}
+              onRemoveFile={handleRemoveFile}
+            />
+            
+            {selectedFiles.length > 0 && (
+              <div className="flex space-x-3">
+                <button
+                  onClick={processFiles}
+                  disabled={isAnalyzing}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-semibold py-3 px-6 rounded-2xl transition-colors"
+                >
+                  {isAnalyzing ? 'Analiz ediliyor...' : `${selectedFiles.length} Ürünü Analiz Et`}
+                </button>
+              </div>
+            )}
+          </div>
         )}
 
-        {step === 'details' && (
+        {step === 'details' && analysisResults[currentItemIndex] && (
           <AnalysisStep
-            isAnalyzing={isAnalyzing}
-            analysisResult={analysisResult}
+            isAnalyzing={false}
+            analysisResult={analysisResults[currentItemIndex]}
             formData={formData}
             onFormDataChange={handleFormDataChange}
             onSave={handleSave}
-            onBack={() => setStep('upload')}
+            onBack={handleBack}
           />
         )}
       </DialogContent>
