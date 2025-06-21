@@ -169,6 +169,18 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
     const currentResult = analysisResults[currentItemIndex];
     
     try {
+      // Get current user session
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.user) {
+        toast({
+          title: "Kimlik doğrulama hatası",
+          description: "Ürün kaydetmek için giriş yapmanız gerekiyor",
+          variant: "destructive"
+        });
+        return false;
+      }
+
       const { error } = await supabase
         .from('clothing_items')
         .insert({
@@ -180,7 +192,7 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
           user_notes: formData.notes,
           image_url: currentResult?.imageUrl,
           material: currentResult?.material,
-          user_id: '00000000-0000-0000-0000-000000000000'
+          user_id: session.user.id
         });
 
       if (error) {
@@ -300,7 +312,7 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
 
         {step === 'details' && analysisResults[currentItemIndex] && (
           <AnalysisStep
-            isAnalyzing={false}
+            isAnalyzing={isAnalyzing}
             analysisResult={analysisResults[currentItemIndex]}
             formData={formData}
             onFormDataChange={handleFormDataChange}

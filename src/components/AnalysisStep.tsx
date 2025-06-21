@@ -1,4 +1,3 @@
-
 import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -42,10 +41,15 @@ const AnalysisStep = ({
         <div className="space-y-4">
           <h3 className="font-bold text-gray-900 text-xl">AI Analizi Devam Ediyor...</h3>
           <div className="space-y-2">
-            <Progress value={33} className="w-full max-w-xs mx-auto" />
-            <p className="text-gray-600 text-sm">Ürün kategorisi ve rengi belirleniyor</p>
+            <Progress value={75} className="w-full max-w-xs mx-auto h-2" />
+            <p className="text-gray-600 text-sm animate-pulse">Ürün detayları belirleniyor...</p>
           </div>
           <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 max-w-sm mx-auto">
+            <div className="flex items-center justify-center space-x-2 mb-2">
+              <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
+              <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+              <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+            </div>
             <p className="text-blue-700 text-sm leading-relaxed">
               AI'mız ürününüzü detaylıca inceliyor ve en doğru bilgileri sağlamaya çalışıyor. 
               Bu işlem 10-15 saniye sürebilir.
@@ -107,7 +111,7 @@ const AnalysisStep = ({
           onClick={onSave}
           className="flex-1 bg-blue-500 hover:bg-blue-600 text-white rounded-xl py-3 text-base font-semibold"
         >
-          Gardiroba Kaydet
+          Gardıroba Kaydet
         </Button>
       </div>
     </div>
