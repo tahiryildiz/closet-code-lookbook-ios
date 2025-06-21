@@ -162,10 +162,10 @@ Return ONLY valid JSON in this exact format (no additional text):
           return foundItem ? foundItem.id : null;
         }).filter(Boolean);
         
-        // Create image generation prompt for this outfit
-        const imagePrompt = `Fashion outfit layout on clean white background: ${outfit.items.join(', ')} arranged as a complete stylish outfit for ${occasion}. Professional product photography style, flat lay arrangement, soft lighting, high quality, realistic clothing items`;
+        // Create a more specific image generation prompt for outfit combinations
+        const imagePrompt = `A complete fashion outfit styled flat lay on a clean white background. The outfit consists of: ${outfit.items.join(', ')}. Show these clothing items arranged together as they would be worn - a ${outfit.items.join(' with ')} combination for ${occasion}. Professional fashion photography style, all items visible and neatly arranged as a complete look, bright clean lighting, high quality, realistic clothing pieces combined into one cohesive outfit.`;
         
-        console.log(`Generating image for outfit ${index + 1}:`, imagePrompt);
+        console.log(`Generating outfit image ${index + 1}:`, imagePrompt);
         
         let generatedImageUrl = null;
         
@@ -181,18 +181,26 @@ Return ONLY valid JSON in this exact format (no additional text):
               prompt: imagePrompt,
               n: 1,
               size: '1024x1024',
-              quality: 'standard'
+              quality: 'high'
             }),
           });
 
           if (imageResponse.ok) {
             const imageData = await imageResponse.json();
-            if (imageData.data && imageData.data[0] && imageData.data[0].url) {
-              generatedImageUrl = imageData.data[0].url;
-              console.log(`Generated image URL for outfit ${index + 1}:`, generatedImageUrl);
+            console.log('Image generation response:', imageData);
+            
+            // For gpt-image-1, the response includes base64 data
+            if (imageData.data && imageData.data[0]) {
+              if (imageData.data[0].b64_json) {
+                generatedImageUrl = `data:image/png;base64,${imageData.data[0].b64_json}`;
+              } else if (imageData.data[0].url) {
+                generatedImageUrl = imageData.data[0].url;
+              }
+              console.log(`Generated image for outfit ${index + 1}: success`);
             }
           } else {
-            console.error(`Failed to generate image for outfit ${index + 1}:`, await imageResponse.text());
+            const errorText = await imageResponse.text();
+            console.error(`Failed to generate image for outfit ${index + 1}:`, errorText);
           }
         } catch (imageError) {
           console.error(`Error generating image for outfit ${index + 1}:`, imageError);
