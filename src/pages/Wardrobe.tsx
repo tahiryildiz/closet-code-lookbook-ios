@@ -1,18 +1,67 @@
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Plus, Search, Filter } from "lucide-react";
+import { Camera } from "@capacitor/camera";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import WardrobeGrid from "@/components/WardrobeGrid";
 import CategoryFilter from "@/components/CategoryFilter";
-import AddItemModal from "@/components/AddItemModal";
+import AnalysisStep from "@/components/AnalysisStep";
 
 const Wardrobe = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [showFilters, setShowFilters] = useState(false);
-  const [showAddModal, setShowAddModal] = useState(false);
+  const [showAnalysisStep, setShowAnalysisStep] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleAddProduct = async () => {
+    try {
+      // Try to use Capacitor Camera first (for mobile)
+      const image = await Camera.getPhoto({
+        quality: 90,
+        allowEditing: false,
+        source: Camera.CameraSource.Prompt, // This shows the iOS menu with camera/gallery options
+        resultType: Camera.CameraResultType.DataUrl,
+      });
+
+      if (image.dataUrl) {
+        setSelectedImage(image.dataUrl);
+        setShowAnalysisStep(true);
+      }
+    } catch (error) {
+      console.log('Capacitor camera not available, falling back to file input');
+      // Fallback to file input for web
+      fileInputRef.current?.click();
+    }
+  };
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const result = e.target?.result as string;
+        setSelectedImage(result);
+        setShowAnalysisStep(true);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  if (showAnalysisStep && selectedImage) {
+    return (
+      <AnalysisStep
+        imageUrl={selectedImage}
+        onBack={() => {
+          setShowAnalysisStep(false);
+          setSelectedImage(null);
+        }}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
@@ -25,7 +74,7 @@ const Wardrobe = () => {
               <p className="text-white/80 text-base mt-1">Gardırobunu düzenle ve yönet</p>
             </div>
             <Button
-              onClick={() => setShowAddModal(true)}
+              onClick={handleAddProduct}
               className="bg-white/20 hover:bg-white/30 rounded-full h-12 w-12 p-0 backdrop-blur-sm border border-white/20"
             >
               <Plus className="h-6 w-6 text-white" />
@@ -78,8 +127,15 @@ const Wardrobe = () => {
         />
       </div>
 
-      {/* Add Item Modal */}
-      <AddItemModal isOpen={showAddModal} onClose={() => setShowAddModal(false)} />
+      {/* Hidden file input for fallback */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        onChange={handleFileSelect}
+        className="hidden"
+      />
     </div>
   );
 };
