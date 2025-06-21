@@ -1,14 +1,11 @@
 
 import { useState } from "react";
-import { Plus, Settings, TrendingUp, Calendar, Sun, CloudRain, ChevronRight, Zap, Lightbulb } from "lucide-react";
+import { Plus, TrendingUp, Calendar, Sun, CloudRain, ChevronRight, Zap, Lightbulb } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
-import AddItemModal from "@/components/AddItemModal";
 
 const Index = () => {
-  const [showAddModal, setShowAddModal] = useState(false);
-
   // Mock data for carousels
   const recentItems = [
     { id: 1, name: "Beyaz Gömlek", image: "https://images.unsplash.com/photo-1586790170083-2f9ceadc732d?w=400&h=400&fit=crop", category: "Üstler" },
@@ -57,21 +54,6 @@ const Index = () => {
         <div className="px-6 pt-12 pb-8">
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-2xl font-medium">Günaydın</h1>
-            <div className="flex items-center space-x-3">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-10 w-10 rounded-full text-white/80 hover:text-white hover:bg-white/10"
-              >
-                <Settings className="h-5 w-5" />
-              </Button>
-              <Button
-                onClick={() => setShowAddModal(true)}
-                className="bg-white/20 hover:bg-white/30 rounded-full h-10 w-10 p-0 backdrop-blur-sm border border-white/20"
-              >
-                <Plus className="h-5 w-5 text-white" />
-              </Button>
-            </div>
           </div>
           
           <p className="text-white/80 text-base mb-6">Bugün ne giymek istiyorsun?</p>
@@ -260,9 +242,6 @@ const Index = () => {
           </Card>
         </div>
       </div>
-
-      {/* Add Item Modal */}
-      <AddItemModal isOpen={showAddModal} onClose={() => setShowAddModal(false)} />
     </div>
   );
 };
