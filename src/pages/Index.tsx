@@ -104,7 +104,7 @@ const Index = () => {
           <Carousel className="w-full">
             <CarouselContent>
               {weatherOutfits.map((item) => (
-                <CarouselItem key={item.id} className="basis-1/4">
+                <CarouselItem key={item.id} className="basis-[35%]">
                   <Card className="bg-white border-0 shadow-sm rounded-2xl overflow-hidden">
                     <CardContent className="p-0">
                       <div className="aspect-square bg-gray-100">
@@ -164,7 +164,7 @@ const Index = () => {
           <Carousel className="w-full">
             <CarouselContent>
               {recentItems.map((item) => (
-                <CarouselItem key={item.id} className="basis-1/4">
+                <CarouselItem key={item.id} className="basis-[35%]">
                   <Card className="bg-white border-0 shadow-sm rounded-2xl overflow-hidden">
                     <CardContent className="p-0">
                       <div className="aspect-square bg-gray-100">
@@ -200,7 +200,7 @@ const Index = () => {
           <Carousel className="w-full">
             <CarouselContent>
               {mostWornItems.map((item) => (
-                <CarouselItem key={item.id} className="basis-1/3">
+                <CarouselItem key={item.id} className="basis-[35%]">
                   <Card className="bg-white border-0 shadow-sm rounded-2xl overflow-hidden relative">
                     <CardContent className="p-0">
                       <div className="aspect-square bg-gray-100 relative">
