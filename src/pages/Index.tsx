@@ -4,6 +4,17 @@ import { Sparkles, Shirt, Plus, Cloud, Sun, CloudRain, User, MapPin } from "luci
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+
+interface WardrobeItem {
+  id: string;
+  name: string;
+  category: string;
+  primary_color: string;
+  brand?: string;
+  image_url: string;
+  created_at: string;
+}
 
 const Index = () => {
   const navigate = useNavigate();
@@ -11,6 +22,8 @@ const Index = () => {
   const [location, setLocation] = useState<string>("");
   const [temperature, setTemperature] = useState<number>(22);
   const [weatherCondition, setWeatherCondition] = useState<string>("Güneşli");
+  const [recentItems, setRecentItems] = useState<WardrobeItem[]>([]);
+  const [hasItems, setHasItems] = useState(false);
 
   useEffect(() => {
     if (user && navigator.geolocation) {
@@ -82,6 +95,33 @@ const Index = () => {
     }
   }, [user]);
 
+  // Fetch recent wardrobe items
+  useEffect(() => {
+    if (user) {
+      fetchRecentItems();
+    }
+  }, [user]);
+
+  const fetchRecentItems = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('clothing_items')
+        .select('id, name, category, primary_color, brand, image_url, created_at')
+        .order('created_at', { ascending: false })
+        .limit(4);
+
+      if (error) {
+        console.error('Error fetching recent items:', error);
+        return;
+      }
+
+      setRecentItems(data || []);
+      setHasItems((data || []).length > 0);
+    } catch (error) {
+      console.error('Error fetching recent items:', error);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -132,25 +172,69 @@ const Index = () => {
             </CardContent>
           </Card>
 
-          {/* Add Products Section */}
-          <Card className="bg-white border-0 shadow-sm rounded-2xl">
-            <CardContent className="p-6 text-center">
-              <div className="bg-blue-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                <Plus className="h-8 w-8 text-blue-600" />
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Gardırobunu Oluştur</h3>
-              <p className="text-gray-600 mb-6">
-                Kıyafetlerini ekleyerek AI destekli akıllı gardırop deneyimini başlat
-              </p>
-              <Button
-                onClick={() => navigate('/wardrobe')}
-                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-3 rounded-xl transition-all duration-200"
-              >
-                <Shirt className="h-5 w-5 mr-2" />
-                Kıyafet Ekle
-              </Button>
-            </CardContent>
-          </Card>
+          {/* Conditional Content Based on Items */}
+          {hasItems ? (
+            // Show Recent Items
+            <Card className="bg-white border-0 shadow-sm rounded-2xl">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-xl font-semibold text-gray-900">Son Eklenenler</h3>
+                  <Button
+                    variant="ghost"
+                    onClick={() => navigate('/wardrobe')}
+                    className="text-blue-600 hover:text-blue-700"
+                  >
+                    Tümünü Gör
+                  </Button>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  {recentItems.map((item) => (
+                    <div
+                      key={item.id}
+                      className="bg-gray-50 rounded-xl p-3 cursor-pointer hover:bg-gray-100 transition-colors"
+                      onClick={() => navigate('/wardrobe')}
+                    >
+                      <div className="aspect-square bg-white rounded-lg mb-2 overflow-hidden">
+                        {item.image_url ? (
+                          <img
+                            src={item.image_url}
+                            alt={item.name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+                            <Shirt className="h-8 w-8 text-gray-400" />
+                          </div>
+                        )}
+                      </div>
+                      <p className="font-medium text-sm text-gray-900 truncate">{item.name}</p>
+                      <p className="text-xs text-gray-500">{item.category}</p>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            // Show Add Products Section
+            <Card className="bg-white border-0 shadow-sm rounded-2xl">
+              <CardContent className="p-6 text-center">
+                <div className="bg-blue-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                  <Plus className="h-8 w-8 text-blue-600" />
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">Gardırobunu Oluştur</h3>
+                <p className="text-gray-600 mb-6">
+                  Kıyafetlerini ekleyerek AI destekli akıllı gardırop deneyimini başlat
+                </p>
+                <Button
+                  onClick={() => navigate('/wardrobe')}
+                  className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-3 rounded-xl transition-all duration-200"
+                >
+                  <Shirt className="h-5 w-5 mr-2" />
+                  Kıyafet Ekle
+                </Button>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Quick Access Cards */}
           <div className="grid grid-cols-2 gap-4">
