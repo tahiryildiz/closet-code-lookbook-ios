@@ -303,7 +303,7 @@ const Index = () => {
         AI'mız her şeyi analiz edip size özel kombin önerileri sunacak!
       </p>
       <Button
-        onClick={() => setIsAddItemModalOpen(true)}
+        onClick={handleAddProduct}
         className="bg-blue-900 hover:bg-blue-800 text-white font-semibold px-8 py-3 rounded-2xl text-base"
       >
         <Plus className="h-5 w-5 mr-2" />
@@ -626,7 +626,7 @@ const Index = () => {
         )}
       </div>
 
-      {/* Hidden file input for direct camera/gallery access */}
+      {/* Hidden file input for direct camera/gallery access - with proper capture attribute for iOS */}
       <input
         ref={fileInputRef}
         type="file"
