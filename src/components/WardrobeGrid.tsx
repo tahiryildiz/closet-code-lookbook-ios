@@ -91,7 +91,7 @@ const WardrobeGrid = ({ viewMode, searchQuery, selectedCategory }: WardrobeGridP
         </h3>
         <p className="text-gray-500">
           {items.length === 0 
-            ? "İlk ürününüzü eklemek için + butonuna tıklayın" 
+            ? "Dolabınız şu anda boş, siz kıyafetlerinizi yükledikçe burada görünecekler. İlk ürününüzü eklemek için sağ üstteki + butonuna tıklayın." 
             : "Arama kriterlerinizi değiştirin veya yeni ürünler ekleyin"
           }
         </p>
