@@ -1,6 +1,7 @@
 
 import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
 import ItemForm from "./ItemForm";
 
 interface FormData {
@@ -31,10 +32,26 @@ const AnalysisStep = ({
 }: AnalysisStepProps) => {
   if (isAnalyzing) {
     return (
-      <div className="text-center py-12">
-        <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-500 border-t-transparent mx-auto mb-6"></div>
-        <h3 className="font-semibold text-gray-900 mb-3 text-lg">Ürününüz analiz ediliyor...</h3>
-        <p className="text-gray-500 text-base">AI'mız kategori, renk, malzeme ve stili tanımlıyor</p>
+      <div className="text-center py-12 space-y-6">
+        <div className="relative">
+          <div className="animate-spin rounded-full h-20 w-20 border-4 border-blue-500 border-t-transparent mx-auto"></div>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-12 h-12 bg-blue-100 rounded-full animate-pulse"></div>
+          </div>
+        </div>
+        <div className="space-y-4">
+          <h3 className="font-bold text-gray-900 text-xl">AI Analizi Devam Ediyor...</h3>
+          <div className="space-y-2">
+            <Progress value={33} className="w-full max-w-xs mx-auto" />
+            <p className="text-gray-600 text-sm">Ürün kategorisi ve rengi belirleniyor</p>
+          </div>
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 max-w-sm mx-auto">
+            <p className="text-blue-700 text-sm leading-relaxed">
+              AI'mız ürününüzü detaylıca inceliyor ve en doğru bilgileri sağlamaya çalışıyor. 
+              Bu işlem 10-15 saniye sürebilir.
+            </p>
+          </div>
+        </div>
       </div>
     );
   }

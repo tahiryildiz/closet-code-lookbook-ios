@@ -36,24 +36,31 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `You are a fashion expert analyzing clothing items. You must respond with a JSON object containing:
-            - name: A descriptive name (e.g., "Lacivert Blazer Ceket", "Siyah Tişört")
-            - category: One of these exact categories: "Ceketler", "Gömlekler", "Tişörtler", "Kazaklar", "Elbiseler", "Pantolonlar", "Etekler", "Üstler", "Altlar"
-            - primaryColor: Color in Turkish (e.g., "Lacivert", "Siyah", "Beyaz", "Kırmızı", "Yeşil", "Mavi", "Gri", "Kahverengi")
-            - tags: Array of relevant tags in Turkish
-            - material: Material type in Turkish
-            - confidence: Number between 0-100
-            - season: Season suitability in Turkish
-            - style: Style description in Turkish
+            content: `Sen bir moda uzmanısın ve kıyafet analizi yapıyorsun. Görüntüyü dikkatli bir şekilde analiz et ve aşağıdaki JSON formatında yanıt ver:
 
-            Be very accurate with colors and specific with categories. For jackets, use "Ceketler" not "Üstler".`
+{
+  "name": "Ürün adı (örn: Lacivert Slim Fit Blazer)",
+  "category": "Kategori (şunlardan biri: Ceketler, Gömlekler, Tişörtler, Kazaklar, Elbiseler, Pantolonlar, Etekler, Üstler, Altlar)",
+  "primaryColor": "Ana renk (Türkçe: Lacivert, Siyah, Beyaz, Kırmızı, Yeşil, Mavi, Gri, Kahverengi, vb.)",
+  "tags": ["stil", "etiketleri", "listesi"],
+  "material": "Malzeme tahmini",
+  "confidence": 85,
+  "season": "Mevsim uygunluğu",
+  "style": "Stil açıklaması"
+}
+
+ÖNEMLİ KURALLAR:
+- Rengi çok dikkatli belirle (lacivert ≠ gri, beyaz ≠ krem)
+- Ceketler için mutlaka "Ceketler" kategorisini kullan, "Üstler" değil
+- Ürün adını açıklayıcı yap (Kıyafet değil, Lacivert Blazer Ceket gibi)
+- Sadece JSON döndür, başka metin ekleme`
           },
           {
             role: 'user',
             content: [
               {
                 type: 'text',
-                text: 'Analyze this clothing item and provide detailed information about it.'
+                text: 'Bu kıyafet ürününü analiz et ve detaylı bilgilerini ver. Özellikle renk, kategori ve ürün adını çok dikkatli belirle.'
               },
               {
                 type: 'image_url',
@@ -85,10 +92,23 @@ serve(async (req) => {
     // Parse the JSON response
     let analysisResult
     try {
-      analysisResult = JSON.parse(content)
+      // Clean the content in case it has markdown formatting
+      const cleanContent = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
+      analysisResult = JSON.parse(cleanContent)
     } catch (parseError) {
       console.error('Failed to parse OpenAI response as JSON:', content)
-      throw new Error('Invalid response format from AI')
+      
+      // Try to extract JSON from the response if it's wrapped in markdown
+      const jsonMatch = content.match(/\{[\s\S]*\}/)
+      if (jsonMatch) {
+        try {
+          analysisResult = JSON.parse(jsonMatch[0])
+        } catch (secondParseError) {
+          throw new Error('Invalid response format from AI')
+        }
+      } else {
+        throw new Error('Invalid response format from AI')
+      }
     }
 
     return new Response(JSON.stringify(analysisResult), {
