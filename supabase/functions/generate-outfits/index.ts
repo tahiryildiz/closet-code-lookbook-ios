@@ -51,10 +51,20 @@ serve(async (req) => {
       );
     }
 
-    // Enhanced wardrobe description using rich metadata
+    // Clean item name function to remove metadata artifacts
+    const cleanItemName = (item: any) => {
+      let name = item.name || '';
+      // Remove "colorless" and other metadata artifacts
+      name = name.replace(/^colorless\s+/i, '');
+      name = name.replace(/^\s+/, ''); // Remove leading spaces
+      return name.trim();
+    };
+
+    // Enhanced wardrobe description using clean names and rich metadata
     const wardrobeDescription = wardrobeItems.map((item: any) => {
+      const cleanName = cleanItemName(item);
       const description = item.prompt_description || 
-        `${item.primary_color || 'colorless'} ${item.fit || ''} ${item.material || ''} ${item.name}`.trim();
+        `${item.primary_color || 'colorless'} ${item.fit || ''} ${item.material || ''} ${cleanName}`.trim();
       return `${description} (${item.category}${item.brand ? `, ${item.brand}` : ''})`;
     }).join(', ');
 
@@ -78,7 +88,7 @@ CORE FUNCTION:
 - Match occasion formality level
 
 OUTPUT REQUIREMENTS:
-- List specific items from their wardrobe
+- List specific items from their wardrobe using CLEAN NAMES (no "colorless" or metadata)
 - Create complete outfit combinations (2-4 items per outfit)
 - Each outfit should work as a cohesive look
 
@@ -88,6 +98,7 @@ CONSTRAINTS:
 - Keep suggestions practical and wearable
 - Consider basic color coordination
 - Account for seasonal appropriateness
+- Use CLEAN item names without metadata artifacts
 
 Return ONLY valid JSON in this exact format (no additional text):
 {
@@ -95,7 +106,7 @@ Return ONLY valid JSON in this exact format (no additional text):
     {
       "id": 1,
       "name": "Creative Turkish outfit name",
-      "items": ["exact item name 1", "exact item name 2", "exact item name 3"],
+      "items": ["clean item name 1", "clean item name 2", "clean item name 3"],
       "confidence": 95,
       "styling_tips": "Brief Turkish styling tip"
     }
@@ -115,7 +126,7 @@ Return ONLY valid JSON in this exact format (no additional text):
         messages: [
           { 
             role: 'system', 
-            content: 'You are KombinAI, a professional styling assistant. You MUST respond ONLY with valid JSON. Never include any text outside the JSON structure. Always use exact item names from the wardrobe list provided.' 
+            content: 'You are KombinAI, a professional styling assistant. You MUST respond ONLY with valid JSON. Never include any text outside the JSON structure. Always use clean item names from the wardrobe list provided WITHOUT any metadata like "colorless".' 
           },
           { role: 'user', content: prompt }
         ],
@@ -186,7 +197,7 @@ Return ONLY valid JSON in this exact format (no additional text):
         
         // Create rich, realistic descriptions with proper garment terminology
         const parts = [];
-        if (color) parts.push(color);
+        if (color && color !== 'colorless') parts.push(color);
         if (fit) parts.push(`${fit}-fit`);
         if (material) parts.push(material);
         if (pattern && pattern !== 'solid') parts.push(pattern);
@@ -197,55 +208,64 @@ Return ONLY valid JSON in this exact format (no additional text):
         return parts.join(' ');
       };
 
-      // Generate outfit images with bulletproof anti-hallucination prompts
+      // Generate outfit images with ultra-strict anti-hallucination prompts
       const processedOutfits = await Promise.all(parsedOutfits.outfits.slice(0, 3).map(async (outfit: any, index: number) => {
         const itemIds = outfit.items.map((itemName: string) => {
-          const foundItem = wardrobeItems.find((item: any) => 
-            item.name.toLowerCase().trim() === itemName.toLowerCase().trim() ||
-            item.name.toLowerCase().includes(itemName.toLowerCase()) ||
-            itemName.toLowerCase().includes(item.name.toLowerCase())
-          );
+          const cleanedItemName = itemName.replace(/^colorless\s+/i, '').trim();
+          const foundItem = wardrobeItems.find((item: any) => {
+            const cleanWardrobeName = cleanItemName(item);
+            return cleanWardrobeName.toLowerCase().trim() === cleanedItemName.toLowerCase().trim() ||
+                   cleanWardrobeName.toLowerCase().includes(cleanedItemName.toLowerCase()) ||
+                   cleanedItemName.toLowerCase().includes(cleanWardrobeName.toLowerCase());
+          });
           return foundItem ? foundItem.id : null;
         }).filter(Boolean);
         
         // Create enhanced descriptions for each selected item with rich fallback
         const enhancedItemDescriptions = outfit.items.map((itemName: string) => {
-          const wardrobeItem = wardrobeItems.find((item: any) => 
-            item.name.toLowerCase().trim() === itemName.toLowerCase().trim() ||
-            item.name.toLowerCase().includes(itemName.toLowerCase()) ||
-            itemName.toLowerCase().includes(item.name.toLowerCase())
-          );
-          return createEnhancedItemDescription(itemName, wardrobeItem);
+          const cleanedItemName = itemName.replace(/^colorless\s+/i, '').trim();
+          const wardrobeItem = wardrobeItems.find((item: any) => {
+            const cleanWardrobeName = cleanItemName(item);
+            return cleanWardrobeName.toLowerCase().trim() === cleanedItemName.toLowerCase().trim() ||
+                   cleanWardrobeName.toLowerCase().includes(cleanedItemName.toLowerCase()) ||
+                   cleanedItemName.toLowerCase().includes(cleanWardrobeName.toLowerCase());
+          });
+          return createEnhancedItemDescription(cleanedItemName, wardrobeItem);
         });
 
-        // Create bulletproof anti-hallucination prompt with single image constraint
-        const imagePrompt = `Professional flat lay fashion photography of a complete men's outfit on a clean light beige background.
+        // Create ULTRA-STRICT anti-hallucination prompt with absolute constraints
+        const imagePrompt = `ULTRA-STRICT Professional flat lay fashion photography of a complete outfit on a clean light beige background.
 
-Generate only one image, no variations.
+ABSOLUTE CONSTRAINT: Generate EXACTLY ONE IMAGE with NO VARIATIONS.
 
-The outfit includes EXACTLY these ${enhancedItemDescriptions.length} items and NO OTHER ITEMS:
+The outfit contains ONLY these ${enhancedItemDescriptions.length} items and ABSOLUTELY NOTHING ELSE:
 ${enhancedItemDescriptions.map((item, i) => `${i + 1}. ${item}`).join('\n')}
 
-BULLETPROOF CONSTRAINTS:
-- Generate ONLY ONE SINGLE IMAGE (no variations or alternatives)
-- Use ONLY the ${enhancedItemDescriptions.length} items listed above
-- Do NOT add any extra clothing items, garments, or pieces
-- Do NOT change the colors, materials, or fits of any items
-- Do NOT include shoes, belts, or accessories unless explicitly listed above
-- Do NOT include mannequins, models, hangers, or human figures
-- Do NOT add any styling props, backgrounds items, or decorative elements
-- Arrange items exactly as they would be worn by a person
-- Use square composition (1024x1024)
+MANDATORY RESTRICTIONS - VIOLATION WILL RESULT IN REJECTION:
+- Generate ONLY ONE SINGLE IMAGE (no alternatives, no variations, no multiple angles)
+- Include ONLY the ${enhancedItemDescriptions.length} items listed above
+- DO NOT add shoes of any kind (no sneakers, boots, dress shoes, sandals, slippers)
+- DO NOT add belts, watches, jewelry, or any accessories
+- DO NOT add bags, purses, or backpacks
+- DO NOT add hats, caps, or headwear
+- DO NOT add socks, underwear, or undergarments
+- DO NOT add ties, scarves, or neck accessories
+- DO NOT change colors, materials, or fits of listed items
+- DO NOT include mannequins, models, hangers, or human figures
+- DO NOT add background props, furniture, or decorative elements
+- DO NOT add extra garments not in the list
+
+COMPOSITION REQUIREMENTS:
+- Arrange items as they would be worn by a person (shirt on top, pants below)
+- Square composition (1024x1024)
 - Professional catalog-style flat lay photography
-
-LIGHTING & STYLE:
 - Bright studio lighting with soft, even shadows
-- Clean, minimal, catalog-quality presentation
-- Neutral light beige background only
+- Clean, minimal presentation
+- Neutral light beige background ONLY
 
-CRITICAL: Stay 100% faithful to the provided wardrobe items. Generate exactly one image with only the listed items. Do not hallucinate, add, or modify anything.`;
+CRITICAL: This is an exact inventory check. Generate only what is listed. Any additional items will be considered a failure.`;
         
-        console.log(`Generating bulletproof single image ${index + 1}:`, imagePrompt);
+        console.log(`Generating ultra-strict single image ${index + 1}:`, imagePrompt);
         
         let generatedImageUrl = null;
         
@@ -272,7 +292,7 @@ CRITICAL: Stay 100% faithful to the provided wardrobe items. Generate exactly on
             
             if (imageData.data && imageData.data[0] && imageData.data[0].url) {
               generatedImageUrl = imageData.data[0].url;
-              console.log(`Generated bulletproof image for outfit ${index + 1}: success`);
+              console.log(`Generated ultra-strict image for outfit ${index + 1}: success`);
             }
           } else {
             const errorText = await imageResponse.text();
@@ -282,8 +302,14 @@ CRITICAL: Stay 100% faithful to the provided wardrobe items. Generate exactly on
           console.error(`Error generating image for outfit ${index + 1}:`, imageError);
         }
         
+        // Clean item names for display
+        const cleanItems = outfit.items.map((item: string) => 
+          item.replace(/^colorless\s+/i, '').trim()
+        );
+        
         return {
           ...outfit,
+          items: cleanItems,
           item_ids: itemIds,
           images: generatedImageUrl ? [generatedImageUrl] : ['https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=500&fit=crop'],
           occasion: occasion,
@@ -291,8 +317,8 @@ CRITICAL: Stay 100% faithful to the provided wardrobe items. Generate exactly on
         };
       }));
 
-      console.log('Processed bulletproof outfits count:', processedOutfits.length);
-      console.log('KombinAI bulletproof generation successful!');
+      console.log('Processed ultra-strict outfits count:', processedOutfits.length);
+      console.log('KombinAI ultra-strict generation successful!');
       
       // If only one outfit was generated, show notification
       if (processedOutfits.length === 1) {
@@ -328,7 +354,7 @@ CRITICAL: Stay 100% faithful to the provided wardrobe items. Generate exactly on
         }
         
         const parts = [];
-        if (item.primary_color) parts.push(item.primary_color);
+        if (item.primary_color && item.primary_color !== 'colorless') parts.push(item.primary_color);
         if (item.fit) parts.push(`${item.fit}-fit`);
         if (item.material) parts.push(item.material);
         if (item.pattern && item.pattern !== 'solid') parts.push(item.pattern);
@@ -386,7 +412,7 @@ CRITICAL: Stay 100% faithful to the provided wardrobe items. Generate exactly on
         return {
           id: index + 1,
           name: `Kombin ${index + 1}`,
-          items: selectedItems.map((item: any) => item.name),
+          items: selectedItems.map((item: any) => cleanItemName(item)),
           item_ids: selectedItems.map((item: any) => item.id),
           confidence: Math.floor(Math.random() * 20) + 80,
           styling_tips: `Bu kombinasyon ${selectedItems.map(item => createRichFallbackDescription(item)).join(', ')} ürünlerinden oluşturuldu`,
