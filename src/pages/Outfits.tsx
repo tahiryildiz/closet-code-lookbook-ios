@@ -1,7 +1,5 @@
 
 import { useState } from "react";
-import { Sparkles } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import OutfitGenerator from "@/components/OutfitGenerator";
 
 const Outfits = () => {
@@ -23,14 +21,6 @@ const Outfits = () => {
       <div className="px-4 py-6 space-y-6">
         {/* Outfit Generator */}
         <OutfitGenerator />
-
-        {/* AI Outfit Generator Button at bottom */}
-        <div className="fixed bottom-24 left-4 right-4">
-          <Button className="w-full bg-blue-900 hover:bg-blue-800 text-white font-semibold py-4 rounded-2xl text-base shadow-lg">
-            <Sparkles className="h-5 w-5 mr-2" />
-            Yeni AI Kombin Oluştur
-          </Button>
-        </div>
       </div>
     </div>
   );

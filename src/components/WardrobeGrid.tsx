@@ -110,8 +110,8 @@ const WardrobeGrid = ({ viewMode, searchQuery, selectedCategory }: WardrobeGridP
     return (
       <div className="text-center py-16">
         <div className="text-6xl mb-4">👗</div>
-        <h3 className="text-xl font-semibold text-gray-900 mb-2">No items found</h3>
-        <p className="text-gray-500">Try adjusting your search or add new items to your closet</p>
+        <h3 className="text-xl font-semibold text-gray-900 mb-2">Ürün bulunamadı</h3>
+        <p className="text-gray-500">Arama kriterlerinizi değiştirin veya yeni ürünler ekleyin</p>
       </div>
     );
   }
@@ -145,14 +145,6 @@ const WardrobeGrid = ({ viewMode, searchQuery, selectedCategory }: WardrobeGridP
                 >
                   <MoreHorizontal className="h-4 w-4 text-gray-600" />
                 </Button>
-              </div>
-              <div className="absolute bottom-3 left-3">
-                <Badge
-                  variant="secondary"
-                  className="bg-white/95 text-gray-700 text-xs font-medium rounded-full"
-                >
-                  {item.primaryColor}
-                </Badge>
               </div>
             </div>
             <div className="p-4 space-y-2">
