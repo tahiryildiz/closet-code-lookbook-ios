@@ -44,9 +44,9 @@ const Auth = () => {
         } else {
           toast({
             title: "Başarılı!",
-            description: "Gardırobunuza hoş geldiniz",
+            description: "Ana sayfaya hoş geldiniz",
           });
-          navigate('/wardrobe');
+          navigate('/');
         }
       } else {
         const { error } = await signUp(formData.email, formData.password);
