@@ -150,56 +150,29 @@ Return ONLY valid JSON in this exact format (no additional text):
         throw new Error('No outfits generated');
       }
 
-      // Helper function to enhance item descriptions for better image generation
-      const enhanceItemDescription = (itemName: string, wardrobeItem: any) => {
-        const category = wardrobeItem?.category || '';
+      // Helper function to create exact item descriptions without hallucination
+      const createExactItemDescription = (itemName: string, wardrobeItem: any) => {
         const color = wardrobeItem?.primary_color || wardrobeItem?.color || '';
-        const brand = wardrobeItem?.brand || '';
+        const category = wardrobeItem?.category || '';
         
-        // Map Turkish categories to English descriptive terms
+        // Map Turkish categories to English with basic descriptors
         const categoryMap: { [key: string]: string } = {
-          'Tişörtler': 'cotton crewneck t-shirt',
-          'Gömlek': 'button-up shirt',
-          'Pantolonlar': 'trousers',
-          'Ceket': 'blazer jacket',
+          'Tişörtler': 't-shirt',
+          'Gömlek': 'shirt', 
+          'Pantolonlar': 'pants',
+          'Ceket': 'blazer',
           'Kazak': 'sweater',
           'Etek': 'skirt',
           'Şort': 'shorts',
-          'Mont': 'jacket coat',
+          'Mont': 'jacket',
           'Hırka': 'cardigan'
         };
 
-        const enhancedType = categoryMap[category] || category.toLowerCase();
-        const fit = itemName.toLowerCase().includes('slim') ? 'slim-fit' : 
-                   itemName.toLowerCase().includes('oversize') ? 'oversized' : 'regular-fit';
-        
-        return `${color} ${fit} ${enhancedType}`;
+        const englishType = categoryMap[category] || category.toLowerCase();
+        return `${color} ${englishType}`;
       };
 
-      // Translate context to English for better image generation
-      const translateContext = (context: string) => {
-        const translations: { [key: string]: string } = {
-          'office': 'business office',
-          'meeting': 'business meeting',
-          'casual': 'casual everyday',
-          'date': 'dinner date',
-          'party': 'social party',
-          'workout': 'gym workout',
-          'travel': 'travel comfort',
-          'morning': 'morning',
-          'afternoon': 'afternoon',
-          'evening': 'evening',
-          'night': 'night',
-          'sunny': 'sunny and warm',
-          'cool': 'cool and mild',
-          'cold': 'cold weather',
-          'rainy': 'rainy weather',
-          'windy': 'windy conditions'
-        };
-        return translations[context] || context;
-      };
-
-      // Generate outfit images using OpenAI DALL-E with enhanced prompts
+      // Generate outfit images using OpenAI DALL-E with strict adherence to provided items
       const processedOutfits = await Promise.all(parsedOutfits.outfits.map(async (outfit: any, index: number) => {
         const itemIds = outfit.items.map((itemName: string) => {
           const foundItem = wardrobeItems.find((item: any) => 
@@ -210,44 +183,37 @@ Return ONLY valid JSON in this exact format (no additional text):
           return foundItem ? foundItem.id : null;
         }).filter(Boolean);
         
-        // Create detailed descriptions for each item
-        const enhancedItems = outfit.items.map((itemName: string) => {
+        // Create exact descriptions for each selected item only
+        const exactItemDescriptions = outfit.items.map((itemName: string) => {
           const wardrobeItem = wardrobeItems.find((item: any) => 
             item.name.toLowerCase().trim() === itemName.toLowerCase().trim() ||
             item.name.toLowerCase().includes(itemName.toLowerCase()) ||
             itemName.toLowerCase().includes(item.name.toLowerCase())
           );
-          return enhanceItemDescription(itemName, wardrobeItem);
+          return createExactItemDescription(itemName, wardrobeItem);
         });
 
-        // Create a highly detailed flat lay prompt
-        const translatedOccasion = translateContext(occasion);
-        const translatedWeather = translateContext(weather);
-        const translatedTime = translateContext(timeOfDay);
+        // Create a strict flat lay prompt that prevents hallucination
+        const imagePrompt = `Professional flat lay fashion photography of a complete men's outfit arranged vertically as if worn on a person, on a clean light beige background.
 
-        const imagePrompt = `Professional flat lay fashion photography of a complete men's outfit on a clean light beige background.
+The outfit includes EXACTLY these items and NO OTHER ITEMS:
+${exactItemDescriptions.map(item => `- a ${item}`).join('\n')}
 
-Context:
-- Occasion: ${translatedOccasion}
-- Weather: ${translatedWeather}
-- Time of day: ${translatedTime}
-- Style: Smart casual
-
-The outfit includes:
-${enhancedItems.map(item => `- a ${item}`).join('\n')}
-
-Visual Requirements:
-- All clothing items arranged neatly as a complete outfit flat lay
-- No model or mannequin, just the clothes
-- Clean light beige or white background
-- Professional studio lighting with soft shadows
-- High-end fashion catalog photography style
-- All items visible and properly arranged
-- Realistic fabric textures and colors
+STRICT REQUIREMENTS:
+- Use ONLY the items listed above
+- Do NOT add any extra clothing items, accessories, or garments
+- Do NOT change the colors of any items
+- Do NOT include shoes unless specifically listed
+- Do NOT include belts, watches, or accessories unless specifically listed
+- Do NOT include mannequins, models, or hangers
+- Use soft studio lighting with natural shadows
+- Clean light beige background
+- High-quality fashion catalog style
 - Square composition (1024x1024)
-- Fashion lookbook aesthetic`;
+
+IMPORTANT: Stay 100% faithful to the provided wardrobe items. Do not hallucinate or add any extra garments.`;
         
-        console.log(`Generating detailed flat lay image ${index + 1}:`, imagePrompt);
+        console.log(`Generating strict flat lay image ${index + 1}:`, imagePrompt);
         
         let generatedImageUrl = null;
         
@@ -274,7 +240,7 @@ Visual Requirements:
             
             if (imageData.data && imageData.data[0] && imageData.data[0].url) {
               generatedImageUrl = imageData.data[0].url;
-              console.log(`Generated flat lay image for outfit ${index + 1}: success`);
+              console.log(`Generated strict flat lay image for outfit ${index + 1}: success`);
             }
           } else {
             const errorText = await imageResponse.text();
