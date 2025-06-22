@@ -18,15 +18,30 @@ export const categoryOptions: LocalizedOption[] = [
   { value: "Activewear", label: "Spor Giyim" }
 ];
 
-// Color translations (new addition)
+// Color translations (comprehensive with compound colors first)
 export const colorOptions: LocalizedOption[] = [
+  // Compound colors first (most specific matches)
+  { value: "Olive Green", label: "Zeytin Yeşili" },
+  { value: "Light Blue", label: "Açık Mavi" },
+  { value: "Dark Blue", label: "Koyu Mavi" },
+  { value: "Light Gray", label: "Açık Gri" },
+  { value: "Light Grey", label: "Açık Gri" },
+  { value: "Dark Gray", label: "Koyu Gri" },
+  { value: "Dark Grey", label: "Koyu Gri" },
+  { value: "Light Pink", label: "Açık Pembe" },
+  { value: "Dark Pink", label: "Koyu Pembe" },
+  { value: "Light Green", label: "Açık Yeşil" },
+  { value: "Dark Green", label: "Koyu Yeşil" },
+  { value: "Forest Green", label: "Orman Yeşili" },
+  { value: "Mint Green", label: "Nane Yeşili" },
+  { value: "Army Green", label: "Asker Yeşili" },
+  
+  // Single colors
   { value: "Black", label: "Siyah" },
   { value: "White", label: "Beyaz" },
   { value: "Gray", label: "Gri" },
   { value: "Grey", label: "Gri" },
   { value: "Blue", label: "Mavi" },
-  { value: "Light Blue", label: "Açık Mavi" },
-  { value: "Dark Blue", label: "Koyu Mavi" },
   { value: "Navy", label: "Lacivert" },
   { value: "Red", label: "Kırmızı" },
   { value: "Green", label: "Yeşil" },
@@ -39,11 +54,18 @@ export const colorOptions: LocalizedOption[] = [
   { value: "Cream", label: "Krem" },
   { value: "Olive", label: "Zeytin Yeşili" },
   { value: "Khaki", label: "Haki" },
-  { value: "Rust", label: "Kahverengi" },
+  { value: "Rust", label: "Pas Rengi" },
+  { value: "Maroon", label: "Bordo" },
+  { value: "Burgundy", label: "Bordo" },
+  { value: "Teal", label: "Petrol Mavisi" },
+  { value: "Turquoise", label: "Turkuaz" },
+  { value: "Coral", label: "Mercan" },
+  { value: "Gold", label: "Altın" },
+  { value: "Silver", label: "Gümüş" },
   { value: "Unknown", label: "Bilinmiyor" }
 ];
 
-// Comprehensive subcategory translations (updated with polo handling)
+// Comprehensive subcategory translations (updated with proper polo handling)
 export const subcategoryOptions: LocalizedOption[] = [
   // Tops subcategories (updated with proper polo handling)
   { value: "T-Shirt", label: "Tişört" },
@@ -60,8 +82,6 @@ export const subcategoryOptions: LocalizedOption[] = [
   { value: "Bodysuit", label: "Body" },
   { value: "Bustier", label: "Büstiy" },
   { value: "Kimono", label: "Kimono" },
-  
-  // ... keep existing code (bottoms subcategories and rest)
   
   // Bottoms subcategories
   { value: "Jeans", label: "Kot Pantolon" },
@@ -296,10 +316,23 @@ export const occasionOptions: LocalizedOption[] = [
   { value: "Holiday", label: "Tatil" }
 ];
 
-// Helper function to get Turkish label for English value
+// Enhanced helper function to get Turkish label for English value with better matching
 export const getTurkishLabel = (englishValue: string, options: LocalizedOption[]): string => {
-  const option = options.find(opt => opt.value === englishValue);
-  return option ? option.label : englishValue;
+  if (!englishValue) return englishValue;
+  
+  // First try exact match
+  const exactMatch = options.find(opt => opt.value === englishValue);
+  if (exactMatch) return exactMatch.label;
+  
+  // For colors specifically, try case-insensitive match
+  if (options === colorOptions) {
+    const caseInsensitiveMatch = options.find(opt => 
+      opt.value.toLowerCase() === englishValue.toLowerCase()
+    );
+    if (caseInsensitiveMatch) return caseInsensitiveMatch.label;
+  }
+  
+  return englishValue;
 };
 
 // Helper function to get English value for Turkish label

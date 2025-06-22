@@ -1,6 +1,7 @@
 
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { getTurkishLabel, subcategoryOptions, colorOptions } from "@/utils/localization";
 
 interface FormData {
   name: string;
@@ -21,6 +22,8 @@ const ItemForm = ({ formData, analysisResult, onFormDataChange }: ItemFormProps)
   // Helper function to translate product names and add color
   const translateProductName = (name: string, category: string, subcategory: string, color: string) => {
     if (!name) return '';
+    
+    console.log('Translating product name:', { name, category, subcategory, color });
     
     const nameTranslations: Record<string, string> = {
       'Linen Trousers': 'Keten Pantolon',
@@ -48,31 +51,8 @@ const ItemForm = ({ formData, analysisResult, onFormDataChange }: ItemFormProps)
       'Polo': 'Polo Yaka',
       'Sweatshirt': 'Sweatshirt',
       'Trousers': 'Pantolon',
-      'Rust Colored Trousers': 'Kahverengi Pantolon'
-    };
-    
-    // Color translations
-    const colorTranslations: Record<string, string> = {
-      'Black': 'Siyah',
-      'White': 'Beyaz',
-      'Gray': 'Gri',
-      'Grey': 'Gri',
-      'Blue': 'Mavi',
-      'Light Blue': 'Açık Mavi',
-      'Dark Blue': 'Koyu Mavi',  
-      'Navy': 'Lacivert',
-      'Red': 'Kırmızı',
-      'Green': 'Yeşil',
-      'Yellow': 'Sarı',
-      'Pink': 'Pembe',
-      'Purple': 'Mor',
-      'Brown': 'Kahverengi',
-      'Orange': 'Turuncu',
-      'Beige': 'Bej',
-      'Cream': 'Krem',
-      'Olive': 'Zeytin Yeşili',
-      'Khaki': 'Haki',
-      'Rust': 'Kahverengi'
+      'Rust Colored Trousers': 'Pas Renkli Pantolon',
+      'Olive Green Trousers': 'Zeytin Yeşili Pantolon'
     };
     
     // First try to find direct translation
@@ -97,31 +77,33 @@ const ItemForm = ({ formData, analysisResult, onFormDataChange }: ItemFormProps)
       } else if (name.toLowerCase().includes('jacket')) {
         translatedName = 'Ceket';
       } else {
-        // Try to build from category/subcategory
+        // Try to build from subcategory
         if (subcategory && subcategory !== 'Unknown') {
-          if (subcategory === 'Trousers') translatedName = 'Pantolon';
-          else if (subcategory === 'T-Shirt') translatedName = 'Tişört';
-          else if (subcategory === 'Shirt') translatedName = 'Gömlek';
-          else if (subcategory === 'Jeans') translatedName = 'Kot Pantolon';
-          else if (subcategory === 'Polo Shirt' || subcategory === 'Polo') translatedName = 'Polo Yaka';
-          else translatedName = subcategory;
-        } else if (category && category !== 'Unknown') {
-          if (category === 'Tops') translatedName = 'Üst';
-          else if (category === 'Bottoms') translatedName = 'Alt';
-          else translatedName = category;
+          const subcategoryTranslation = getTurkishLabel(subcategory, subcategoryOptions);
+          if (subcategoryTranslation && subcategoryTranslation !== subcategory) {
+            translatedName = subcategoryTranslation;
+          } else {
+            translatedName = subcategory;
+          }
         } else {
           translatedName = name; // Fallback to original
         }
       }
     }
     
-    const translatedColor = colorTranslations[color] || color;
+    // Translate color using the enhanced color options
+    const translatedColor = getTurkishLabel(color, colorOptions);
+    console.log('Color translation:', color, '->', translatedColor);
     
     // Add color to the product name if color exists and is not already in the name
-    if (translatedColor && translatedColor !== 'Unknown' && !translatedName.toLowerCase().includes(translatedColor.toLowerCase())) {
-      return `${translatedColor} ${translatedName}`;
+    if (translatedColor && translatedColor !== 'Bilinmiyor' && translatedColor !== color && 
+        !translatedName.toLowerCase().includes(translatedColor.toLowerCase())) {
+      const finalName = `${translatedColor} ${translatedName}`;
+      console.log('Final translated name:', finalName);
+      return finalName;
     }
     
+    console.log('Final translated name (no color):', translatedName);
     return translatedName;
   };
 
