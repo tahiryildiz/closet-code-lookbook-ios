@@ -2,6 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { categoryOptions, getTurkishLabel } from "@/utils/localization";
 
 interface CategoryFilterProps {
   selectedCategory: string;
@@ -20,21 +21,6 @@ const categoryIcons: Record<string, string> = {
   'Underwear & Loungewear': '👙',
   'Swimwear': '🩱',
   'Activewear': '🏃'
-};
-
-// Turkish translations for categories
-const categoryTranslations: Record<string, string> = {
-  'all': 'Tümü',
-  'Tops': 'Üstler',
-  'Bottoms': 'Altlar',
-  'Dresses & Suits': 'Elbise & Takım',
-  'Outerwear': 'Dış Giyim',
-  'Footwear': 'Ayakkabı',
-  'Accessories': 'Aksesuar',
-  'Bags': 'Çanta',
-  'Underwear & Loungewear': 'İç Giyim',
-  'Swimwear': 'Mayo & Bikini',
-  'Activewear': 'Spor Giyim'
 };
 
 const CategoryFilter = ({ selectedCategory, onCategoryChange }: CategoryFilterProps) => {
@@ -68,7 +54,7 @@ const CategoryFilter = ({ selectedCategory, onCategoryChange }: CategoryFilterPr
     { id: 'all', name: 'Tümü', icon: '👕' },
     ...availableCategories.map(category => ({
       id: category,
-      name: categoryTranslations[category] || category,
+      name: getTurkishLabel(category, categoryOptions),
       icon: categoryIcons[category] || '👕'
     }))
   ];

@@ -123,12 +123,8 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
 
           console.log('Analysis successful:', analysisData);
 
-          // Translate category to Turkish before storing
-          const translatedCategory = categoryTranslations[analysisData.category] || analysisData.category;
-
           results.push({
             ...analysisData,
-            category: translatedCategory, // Store Turkish category
             imageUrl: publicUrl,
             originalFile: file
           });
@@ -136,26 +132,26 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
         } catch (analysisError) {
           console.error('AI analysis failed for', file.name, ':', analysisError);
           
-          // Use enhanced fallback analysis with Turkish category
+          // Use fallback analysis with English values
           const fallbackAnalysis = {
-            name: file.name.split('.')[0] || 'Kıyafet Ürünü',
-            category: 'Üstler', // Use Turkish category in fallback
+            name: file.name.split('.')[0] || 'Clothing Item',
+            category: 'Tops', // Store English values
             subcategory: 'T-Shirt',
-            primaryColor: 'Bilinmiyor',
+            primaryColor: 'Unknown',
             secondaryColors: [],
-            colorTone: 'Orta',
-            pattern: 'Düz',
+            colorTone: 'Medium',
+            pattern: 'Solid',
             patternType: null,
-            material: 'Bilinmiyor',
+            material: 'Unknown',
             fit: 'Regular Fit',
-            collar: 'Bilinmiyor',
-            sleeve: 'Bilinmiyor',
-            seasons: ['Tüm Mevsimler'],
-            occasions: ['Günlük'],
-            tags: ['genel'],
-            contextTags: ['günlük'],
+            collar: 'Unknown',
+            sleeve: 'Unknown',
+            seasons: ['All Seasons'],
+            occasions: ['Casual'],
+            tags: ['general'],
+            contextTags: ['casual'],
             confidence: 30,
-            style: 'Otomatik analiz başarısız oldu, manuel düzenleme gerekli'
+            style: 'Automatic analysis failed, manual editing required'
           };
 
           results.push({
@@ -223,16 +219,16 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
         return false;
       }
 
-      // Make sure we're using Turkish category name
-      const categoryToSave = formData.category || currentResult?.category || 'Üstler';
+      // Store English values in database
+      const categoryToSave = formData.category || currentResult?.category || 'Tops';
 
       // Create base item data with only fields that exist in the current database schema
       const itemData = {
-        name: formData.name || currentResult?.name || 'Kıyafet Ürünü',
+        name: formData.name || currentResult?.name || 'Clothing Item',
         brand: formData.brand || currentResult?.brand || null,
-        category: categoryToSave, // This will be the Turkish category
+        category: categoryToSave, // Store English category
         subcategory: currentResult?.subcategory || null,
-        primary_color: formData.primaryColor || currentResult?.primaryColor || 'Bilinmiyor',
+        primary_color: formData.primaryColor || currentResult?.primaryColor || 'Unknown',
         secondary_colors: currentResult?.secondaryColors || [],
         color_tone: currentResult?.colorTone || null,
         pattern: currentResult?.pattern || null,

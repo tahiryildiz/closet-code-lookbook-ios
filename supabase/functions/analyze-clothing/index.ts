@@ -36,33 +36,37 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `Sen bir moda uzmanısın ve kıyafet analizi yapıyorsun. Görüntüyü ÇOK DİKKATLİ bir şekilde analiz et ve aşağıdaki JSON formatında DETAYLI yanıt ver. 
+            content: `You are a fashion expert analyzing clothing items. Analyze the image VERY CAREFULLY and respond in the following JSON format with DETAILED information.
 
-ÖNEMLİ: Görüntüdeki MARKA logolarını, etiketlerini ve yazıları DİKKATLİCE incele. Lacoste timsahı, Nike swoosh, Adidas çizgileri gibi marka işaretlerini mutlaka tanı.
+IMPORTANT: 
+1. BRAND DETECTION: Carefully examine logos, labels, and markings. Look for Lacoste crocodile, Nike swoosh, Adidas three stripes, etc.
+2. ALL VALUES MUST BE IN ENGLISH - this is critical for database consistency
+3. Use only the specified category and subcategory values
+4. Analyze colors, patterns, fit, and materials very carefully
 
 {
-  "name": "Detaylı ürün adı (örn: Lacoste Polo T-Shirt, Nike Dri-Fit Tişört)",
-  "brand": "MARKA ADINI DİKKATLE BELİRLE - logo ve etiketlere bak (Lacoste, Nike, Adidas, Zara, H&M, vb.)",
-  "category": "Ana kategori - SADECE şunlardan birini seç: Tops, Bottoms, Outerwear, Dresses & Suits, Footwear, Accessories, Bags, Underwear & Loungewear, Swimwear, Activewear",
-  "subcategory": "Alt kategori - aşağıdaki listeden seç",
-  "primaryColor": "Ana renk (Türkçe: Lacivert, Siyah, Beyaz, Kırmızı, Yeşil, Mavi, Gri, Kahverengi, Pembe, Mor, Sarı, Turuncu, vb.)",
-  "secondaryColors": ["ikincil", "renkler", "listesi"],
-  "colorTone": "Renk tonu (Açık, Koyu, Orta, Pastel, Canlı)",
-  "pattern": "Desen tipi (Düz, Çizgili, Kareli, Puantiyeli, Çiçekli, Geometrik, Leopar, Zebra, vb.)",
-  "patternType": "Desen detayı (İnce çizgili, Kalın kareli, Küçük puantiyeli, vb. - düz ise null)",
-  "material": "Malzeme tahmini (Pamuk, Polyester, Yün, Denim, Keten, İpek, Pamuk-Polyester karışımı, vb.)",
-  "fit": "Kesim (Slim Fit, Regular Fit, Oversize, Skinny, Straight, Wide Leg, Relaxed Fit, vb.)",
-  "collar": "Yaka tipi (V-Yaka, Bisiklet Yaka, Polo Yaka, Gömlek Yaka, Kapüşon, Notch Lapel, Peak Lapel, vb.)",
-  "sleeve": "Kol tipi (Uzun Kol, Kısa Kol, Kolsuz, 3/4 Kol, 7/8 Kol, vb.)",
-  "seasons": ["uygun", "mevsimler", "listesi"],
-  "occasions": ["Günlük", "İş", "Spor", "Gece", "Resmi", "Tatil", "vb."],
-  "tags": ["detaylı", "stil", "etiketleri"],
-  "contextTags": ["kullanım", "durumu", "etiketleri"],
+  "name": "Detailed product name (e.g., Lacoste Polo Shirt, Nike Dri-Fit T-Shirt)",
+  "brand": "DETECT BRAND CAREFULLY - look at logos and labels (Lacoste, Nike, Adidas, Zara, H&M, etc.)",
+  "category": "Main category - ONLY choose from: Tops, Bottoms, Outerwear, Dresses & Suits, Footwear, Accessories, Bags, Underwear & Loungewear, Swimwear, Activewear",
+  "subcategory": "Sub category - choose from the list below",
+  "primaryColor": "Primary color in English (Navy, Black, White, Red, Green, Blue, Gray, Brown, Pink, Purple, Yellow, Orange, etc.)",
+  "secondaryColors": ["secondary", "colors", "list"],
+  "colorTone": "Color tone (Light, Dark, Medium, Pastel, Bright)",
+  "pattern": "Pattern type (Solid, Striped, Checkered, Polka Dot, Floral, Geometric, Leopard, Zebra, etc.)",
+  "patternType": "Pattern detail (Thin Striped, Thick Checkered, Small Polka Dot, etc. - null if solid)",
+  "material": "Material estimate (Cotton, Polyester, Wool, Denim, Linen, Silk, Cotton-Polyester Blend, etc.)",
+  "fit": "Fit type (Slim Fit, Regular Fit, Oversize, Skinny, Straight, Wide Leg, Relaxed Fit, etc.)",
+  "collar": "Collar type (V-Neck, Crew Neck, Polo Collar, Shirt Collar, Hood, Notch Lapel, Peak Lapel, etc.)",
+  "sleeve": "Sleeve type (Long Sleeve, Short Sleeve, Sleeveless, 3/4 Sleeve, 7/8 Sleeve, etc.)",
+  "seasons": ["suitable", "seasons", "list"],
+  "occasions": ["Casual", "Work", "Sport", "Evening", "Formal", "Holiday", "etc."],
+  "tags": ["detailed", "style", "tags"],
+  "contextTags": ["usage", "context", "tags"],
   "confidence": 85,
-  "style": "Detaylı stil açıklaması"
+  "style": "Detailed style description"
 }
 
-ALT KATEGORİ LİSTESİ:
+SUBCATEGORY LIST:
 Tops: T-Shirt, Polo Shirt, Shirt, Blouse, Sweatshirt, Hoodie, Tank Top, Crop Top, Tunic, Bodysuit, Bustier, Kimono
 Bottoms: Jeans, Trousers, Shorts, Joggers, Skirt, Culottes, Leggings, Cargo Pants
 Outerwear: Blazer, Coat, Jacket, Trench Coat, Parka, Overcoat, Cardigan, Gilet
@@ -74,26 +78,27 @@ Underwear & Loungewear: Bra, Panties, Boxer, Pajamas, Camisole, Robe, Thermals
 Swimwear: Bikini, One-piece Swimsuit, Trunks, Swim Shorts, Swim Shirt
 Activewear: Sports Bra, Leggings, Tank Top, Tracksuit, Gym Shorts, Rash Guard
 
-KRITIK KURALLAR:
-1. MARKA TESPİTİ: Lacoste timsahı, Nike swoosh, Adidas üç çizgi gibi logo ve markaları DİKKATLİCE ara ve tanı
-2. Kategori için SADECE yukarıdaki ana kategorilerden birini seç
-3. Subcategory için o kategoriye ait alt kategorilerden en uygun olanı seç
-4. Her alanı mümkün olduğunca DETAYLI doldur
-5. Renkleri çok dikkatli belirle (lacivert ≠ siyah, beyaz ≠ krem)
-6. Pattern: eğer düz ise "Düz", desenli ise desen tipini belirt
-7. PatternType: sadece desenli ürünler için doldur, düz ise null
-8. Secondary colors için sadece belirgin ikincil renkleri listele
-9. Mevsim uygunluğunu malzeme ve kalınlığa göre belirle
-10. Occasions için uygun kullanım durumları belirle
-11. Tags ve contextTags için stil ve kullanım etiketleri ekle
-12. Sadece JSON döndür, başka metin ekleme`
+CRITICAL RULES:
+1. BRAND DETECTION: Look carefully for Lacoste crocodile, Nike swoosh, Adidas three stripes and other brand logos
+2. Category: ONLY use the main categories listed above
+3. Subcategory: Choose the most appropriate from the category's subcategories
+4. Fill every field as detailed as possible
+5. Colors must be carefully identified (navy ≠ black, white ≠ cream)
+6. Pattern: if solid use "Solid", if patterned specify the pattern type
+7. PatternType: only fill for patterned items, null for solid
+8. Secondary colors: only list prominent secondary colors
+9. Season suitability based on material and thickness
+10. Occasions based on appropriate usage situations
+11. Tags and contextTags for style and usage labels
+12. ALL VALUES IN ENGLISH ONLY
+13. Return only JSON, no additional text`
           },
           {
             role: 'user',
             content: [
               {
                 type: 'text',
-                text: 'Bu kıyafet ürününü çok detaylı analiz et. ÖNEMLİ: Marka logolarını, etiketlerini ve yazıları dikkatli incele. Lacoste timsahı, Nike swoosh gibi marka işaretlerini mutlaka tanı. Kategori ve alt kategoriyi doğru belirle, renk, kesim, yaka, desen bilgilerini dikkatli belirle.'
+                text: 'Analyze this clothing item in detail. IMPORTANT: Look carefully for brand logos, labels and markings. Detect Lacoste crocodile, Nike swoosh and other brand marks. Determine category and subcategory correctly, analyze color, fit, collar, pattern information carefully. ALL RESPONSES MUST BE IN ENGLISH.'
               },
               {
                 type: 'image_url',
@@ -153,25 +158,25 @@ KRITIK KURALLAR:
       JSON.stringify({ 
         error: error.message,
         fallback: {
-          name: 'Kıyafet Ürünü',
+          name: 'Clothing Item',
           brand: null,
           category: 'Tops',
           subcategory: 'T-Shirt',
-          primaryColor: 'Bilinmiyor',
+          primaryColor: 'Unknown',
           secondaryColors: [],
-          colorTone: 'Orta',
-          pattern: 'Düz',
+          colorTone: 'Medium',
+          pattern: 'Solid',
           patternType: null,
-          material: 'Pamuk karışımı',
+          material: 'Cotton Blend',
           fit: 'Regular Fit',
-          collar: 'Bisiklet Yaka',
-          sleeve: 'Uzun Kol',
-          seasons: ['Tüm Mevsimler'],
-          occasions: ['Günlük'],
-          tags: ['genel'],
-          contextTags: ['günlük'],
+          collar: 'Crew Neck',
+          sleeve: 'Long Sleeve',
+          seasons: ['All Seasons'],
+          occasions: ['Casual'],
+          tags: ['general'],
+          contextTags: ['casual'],
           confidence: 30,
-          style: 'Otomatik analiz başarısız oldu'
+          style: 'Automatic analysis failed'
         }
       }),
       { 
