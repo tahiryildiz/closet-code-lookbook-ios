@@ -19,11 +19,17 @@ interface ItemFormProps {
 }
 
 const ItemForm = ({ formData, analysisResult, onFormDataChange }: ItemFormProps) => {
-  // Helper function to translate product names and add color
-  const translateProductName = (name: string, category: string, subcategory: string, color: string) => {
-    if (!name) return '';
+  // Helper function to generate Turkish product name from analysis
+  const generateTurkishProductName = (analysisName: string, category: string, subcategory: string, color: string) => {
+    if (!analysisName) return '';
     
-    console.log('Translating product name:', { name, category, subcategory, color });
+    console.log('Generating Turkish product name:', { analysisName, category, subcategory, color });
+    
+    // If analysis already provided a Turkish name, use it
+    if (analysisName && (analysisName.includes('Polo Yaka') || analysisName.includes('Tişört') || 
+        analysisName.includes('Gömlek') || analysisName.includes('Pantolon'))) {
+      return analysisName;
+    }
     
     const nameTranslations: Record<string, string> = {
       'Linen Trousers': 'Keten Pantolon',
@@ -56,25 +62,25 @@ const ItemForm = ({ formData, analysisResult, onFormDataChange }: ItemFormProps)
     };
     
     // First try to find direct translation
-    let translatedName = nameTranslations[name];
+    let translatedName = nameTranslations[analysisName];
     
     // If no direct translation, try to extract base item type
     if (!translatedName) {
       // Special handling for polo shirts
       if (subcategory === 'Polo Shirt' || subcategory === 'Polo' || 
-          name.toLowerCase().includes('polo')) {
+          analysisName.toLowerCase().includes('polo')) {
         translatedName = 'Polo Yaka';
-      } else if (name.toLowerCase().includes('jean') || name.toLowerCase().includes('denim')) {
+      } else if (analysisName.toLowerCase().includes('jean') || analysisName.toLowerCase().includes('denim')) {
         translatedName = 'Kot Pantolon';
-      } else if (name.toLowerCase().includes('shirt') && !name.toLowerCase().includes('t-shirt') && !name.toLowerCase().includes('polo')) {
+      } else if (analysisName.toLowerCase().includes('shirt') && !analysisName.toLowerCase().includes('t-shirt') && !analysisName.toLowerCase().includes('polo')) {
         translatedName = 'Gömlek';
-      } else if (name.toLowerCase().includes('t-shirt') || name.toLowerCase().includes('tshirt')) {
+      } else if (analysisName.toLowerCase().includes('t-shirt') || analysisName.toLowerCase().includes('tshirt')) {
         translatedName = 'Tişört';
-      } else if (name.toLowerCase().includes('trouser') || name.toLowerCase().includes('pant')) {
+      } else if (analysisName.toLowerCase().includes('trouser') || analysisName.toLowerCase().includes('pant')) {
         translatedName = 'Pantolon';
-      } else if (name.toLowerCase().includes('sweater')) {
+      } else if (analysisName.toLowerCase().includes('sweater')) {
         translatedName = 'Kazak';
-      } else if (name.toLowerCase().includes('jacket')) {
+      } else if (analysisName.toLowerCase().includes('jacket')) {
         translatedName = 'Ceket';
       } else {
         // Try to build from subcategory
@@ -86,7 +92,7 @@ const ItemForm = ({ formData, analysisResult, onFormDataChange }: ItemFormProps)
             translatedName = subcategory;
           }
         } else {
-          translatedName = name; // Fallback to original
+          translatedName = analysisName; // Fallback to original
         }
       }
     }
@@ -112,12 +118,16 @@ const ItemForm = ({ formData, analysisResult, onFormDataChange }: ItemFormProps)
   const productCategory = analysisResult?.category || '';
   const productSubcategory = analysisResult?.subcategory || '';
   
+  // Only auto-generate name if user hasn't provided one
+  const displayName = formData.name || 
+    (analysisResult?.name ? generateTurkishProductName(analysisResult.name, productCategory, productSubcategory, productColor) : '');
+  
   return (
     <div className="space-y-5">
       <div>
         <label className="block text-sm font-semibold text-gray-900 mb-2">Ürün Adı</label>
         <Input
-          value={formData.name || translateProductName(analysisResult?.name || '', productCategory, productSubcategory, productColor) || ''}
+          value={displayName}
           onChange={(e) => onFormDataChange({ name: e.target.value })}
           className="bg-gray-50 border-gray-200 focus:border-blue-400 rounded-xl text-base py-3"
           placeholder="Ürün adını girin"
@@ -127,7 +137,7 @@ const ItemForm = ({ formData, analysisResult, onFormDataChange }: ItemFormProps)
       <div>
         <label className="block text-sm font-semibold text-gray-900 mb-2">Marka</label>
         <Input
-          value={formData.brand || (analysisResult?.brand && analysisResult.brand !== 'Unknown' ? analysisResult.brand : '')}
+          value={formData.brand || (analysisResult?.brand && analysisResult.brand !== 'Bilinmiyor' ? analysisResult.brand : '')}
           onChange={(e) => onFormDataChange({ brand: e.target.value })}
           placeholder="Ürün markasını girebilirsiniz"
           className="bg-gray-50 border-gray-200 focus:border-blue-400 rounded-xl text-base py-3"

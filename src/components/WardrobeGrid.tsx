@@ -1,10 +1,11 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Heart, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { getTurkishLabel, categoryOptions, subcategoryOptions, colorOptions } from "@/utils/localization";
+import { getTurkishLabel, categoryOptions, colorOptions } from "@/utils/localization";
 
 interface ClothingItem {
   id: string;
@@ -163,86 +164,6 @@ const WardrobeGrid = ({ viewMode, searchQuery, selectedCategory, refreshTrigger 
     }
   };
 
-  const translateProductName = (name: string, category: string, subcategory: string, primaryColor: string) => {
-    if (!name) return '';
-    
-    // Enhanced translation mapping
-    const nameTranslations: Record<string, string> = {
-      'Linen Trousers': 'Keten Pantolon',
-      'Cotton Shirt': 'Pamuk Gömlek',
-      'Denim Jeans': 'Kot Pantolon',
-      'Light Blue Denim Jeans': 'Açık Mavi Kot Pantolon',
-      'Dark Blue Denim Jeans': 'Koyu Mavi Kot Pantolon',
-      'Blue Denim Jeans': 'Mavi Kot Pantolon',
-      'Jeans': 'Kot Pantolon',
-      'Wool Sweater': 'Yün Kazak',
-      'Silk Blouse': 'İpek Bluz',
-      'Leather Jacket': 'Deri Ceket',
-      'Canvas Sneakers': 'Kanvas Spor Ayakkabı',
-      'Light Blue Straight Leg Jeans': 'Açık Mavi Düz Paça Kot Pantolon',
-      'Lacoste Cargo Pants': 'Kargo Pantolon',
-      'Cargo Pants': 'Kargo Pantolon',
-      'Chino Pants': 'Chino Pantolon',
-      'Dress Pants': 'Klasik Pantolon',
-      'Joggers': 'Eşofman Altı',
-      'Shorts': 'Şort',
-      'T-Shirt': 'Tişört',
-      'Shirt': 'Gömlek',
-      'Blouse': 'Bluz',
-      'Polo Shirt': 'Polo Yaka',
-      'Polo': 'Polo Yaka',
-      'Sweatshirt': 'Sweatshirt'
-    };
-
-    // First try direct translation
-    let translatedName = nameTranslations[name];
-    
-    // If no direct translation, build from category/subcategory
-    if (!translatedName) {
-      // Special handling for polo shirts first
-      if (subcategory === 'Polo Shirt' || subcategory === 'Polo' || 
-          name.toLowerCase().includes('polo')) {
-        translatedName = 'Polo Yaka';
-      } else if (subcategory) {
-        const subcategoryLabel = getTurkishLabel(subcategory, subcategoryOptions);
-        if (subcategoryLabel && subcategoryLabel !== subcategory) {
-          translatedName = subcategoryLabel;
-        }
-      }
-      
-      // Fallback to category
-      if (!translatedName) {
-        const categoryLabel = getTurkishLabel(category, categoryOptions);
-        if (categoryLabel && categoryLabel !== category) {
-          translatedName = categoryLabel;
-        }
-      }
-      
-      // Last resort - try partial matching
-      if (!translatedName) {
-        if (name.toLowerCase().includes('jean') || name.toLowerCase().includes('denim')) {
-          translatedName = 'Kot Pantolon';
-        } else if (name.toLowerCase().includes('shirt') && !name.toLowerCase().includes('polo')) {
-          translatedName = 'Gömlek';
-        } else if (name.toLowerCase().includes('t-shirt') || name.toLowerCase().includes('tshirt')) {
-          translatedName = 'Tişört';
-        } else if (name.toLowerCase().includes('trouser') || name.toLowerCase().includes('pant')) {
-          translatedName = 'Pantolon';
-        } else {
-          translatedName = name; // Fallback to original
-        }
-      }
-    }
-    
-    // Add color if available and not already included (using Turkish translation)
-    const translatedColor = getTurkishLabel(primaryColor, colorOptions);
-    if (translatedColor && translatedColor !== 'Unknown' && translatedColor !== primaryColor && !translatedName.toLowerCase().includes(translatedColor.toLowerCase())) {
-      return `${translatedColor} ${translatedName}`;
-    }
-    
-    return translatedName;
-  };
-
   if (loading) {
     return (
       <div className="grid grid-cols-2 gap-4">
@@ -293,7 +214,7 @@ const WardrobeGrid = ({ viewMode, searchQuery, selectedCategory, refreshTrigger 
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  deleteItem(item.id, translateProductName(item.name, item.category, item.subcategory || '', item.primary_color));
+                  deleteItem(item.id, item.name);
                 }}
                 className="absolute top-3 left-3 bg-white/80 hover:bg-white rounded-full p-2 shadow-sm transition-colors hover:bg-red-50"
               >
@@ -302,7 +223,7 @@ const WardrobeGrid = ({ viewMode, searchQuery, selectedCategory, refreshTrigger 
 
               <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent p-4">
                 <h3 className="text-white font-semibold text-base mb-1">
-                  {translateProductName(item.name, item.category, item.subcategory || '', item.primary_color)}
+                  {item.name || 'Adsız Ürün'}
                 </h3>
                 
                 <div className="flex items-center justify-between">
