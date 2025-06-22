@@ -11,21 +11,29 @@ export type Database = {
     Tables: {
       clothing_items: {
         Row: {
+          accessories: string[] | null
           ai_analysis: Json | null
           brand: string | null
+          button_count: string | null
           category: string
           closure_type: string | null
           collar: string | null
           color_tone: string | null
+          confidence: number | null
           context_tags: string[] | null
           created_at: string | null
+          cuff_style: string | null
           fit: string | null
+          has_lining: boolean | null
           hem_style: string | null
           id: string
+          image_description: string | null
           image_url: string
           is_favorite: boolean | null
+          lapel_style: string | null
           material: string | null
           name: string
+          neckline: string | null
           occasions: string[] | null
           pattern: string | null
           pattern_type: string | null
@@ -46,21 +54,29 @@ export type Database = {
           wear_count: number | null
         }
         Insert: {
+          accessories?: string[] | null
           ai_analysis?: Json | null
           brand?: string | null
+          button_count?: string | null
           category: string
           closure_type?: string | null
           collar?: string | null
           color_tone?: string | null
+          confidence?: number | null
           context_tags?: string[] | null
           created_at?: string | null
+          cuff_style?: string | null
           fit?: string | null
+          has_lining?: boolean | null
           hem_style?: string | null
           id?: string
+          image_description?: string | null
           image_url: string
           is_favorite?: boolean | null
+          lapel_style?: string | null
           material?: string | null
           name: string
+          neckline?: string | null
           occasions?: string[] | null
           pattern?: string | null
           pattern_type?: string | null
@@ -81,21 +97,29 @@ export type Database = {
           wear_count?: number | null
         }
         Update: {
+          accessories?: string[] | null
           ai_analysis?: Json | null
           brand?: string | null
+          button_count?: string | null
           category?: string
           closure_type?: string | null
           collar?: string | null
           color_tone?: string | null
+          confidence?: number | null
           context_tags?: string[] | null
           created_at?: string | null
+          cuff_style?: string | null
           fit?: string | null
+          has_lining?: boolean | null
           hem_style?: string | null
           id?: string
+          image_description?: string | null
           image_url?: string
           is_favorite?: boolean | null
+          lapel_style?: string | null
           material?: string | null
           name?: string
+          neckline?: string | null
           occasions?: string[] | null
           pattern?: string | null
           pattern_type?: string | null

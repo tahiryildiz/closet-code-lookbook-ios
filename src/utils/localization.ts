@@ -18,7 +18,32 @@ export const categoryOptions: LocalizedOption[] = [
   { value: "Activewear", label: "Spor Giyim" }
 ];
 
-// Comprehensive subcategory translations (updated with polo shirt)
+// Color translations (new addition)
+export const colorOptions: LocalizedOption[] = [
+  { value: "Black", label: "Siyah" },
+  { value: "White", label: "Beyaz" },
+  { value: "Gray", label: "Gri" },
+  { value: "Grey", label: "Gri" },
+  { value: "Blue", label: "Mavi" },
+  { value: "Light Blue", label: "Açık Mavi" },
+  { value: "Dark Blue", label: "Koyu Mavi" },
+  { value: "Navy", label: "Lacivert" },
+  { value: "Red", label: "Kırmızı" },
+  { value: "Green", label: "Yeşil" },
+  { value: "Yellow", label: "Sarı" },
+  { value: "Pink", label: "Pembe" },
+  { value: "Purple", label: "Mor" },
+  { value: "Brown", label: "Kahverengi" },
+  { value: "Orange", label: "Turuncu" },
+  { value: "Beige", label: "Bej" },
+  { value: "Cream", label: "Krem" },
+  { value: "Olive", label: "Zeytin Yeşili" },
+  { value: "Khaki", label: "Haki" },
+  { value: "Rust", label: "Kahverengi" },
+  { value: "Unknown", label: "Bilinmiyor" }
+];
+
+// Comprehensive subcategory translations (updated with polo handling)
 export const subcategoryOptions: LocalizedOption[] = [
   // Tops subcategories (updated with proper polo handling)
   { value: "T-Shirt", label: "Tişört" },
@@ -316,6 +341,8 @@ export const getOptionsForCategory = (category: string): LocalizedOption[] => {
       return seasonOptions;
     case 'occasions':
       return occasionOptions;
+    case 'colors':
+      return colorOptions;
     default:
       return [];
   }

@@ -1,11 +1,10 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Heart, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { getTurkishLabel, categoryOptions, subcategoryOptions } from "@/utils/localization";
+import { getTurkishLabel, categoryOptions, subcategoryOptions, colorOptions } from "@/utils/localization";
 
 interface ClothingItem {
   id: string;
@@ -195,29 +194,6 @@ const WardrobeGrid = ({ viewMode, searchQuery, selectedCategory, refreshTrigger 
       'Sweatshirt': 'Sweatshirt'
     };
 
-    // Color translations
-    const colorTranslations: Record<string, string> = {
-      'Black': 'Siyah',
-      'White': 'Beyaz',
-      'Gray': 'Gri',
-      'Grey': 'Gri',
-      'Blue': 'Mavi',
-      'Light Blue': 'Açık Mavi',
-      'Dark Blue': 'Koyu Mavi',
-      'Navy': 'Lacivert',
-      'Red': 'Kırmızı',
-      'Green': 'Yeşil',
-      'Yellow': 'Sarı',
-      'Pink': 'Pembe',
-      'Purple': 'Mor',
-      'Brown': 'Kahverengi',
-      'Orange': 'Turuncu',
-      'Beige': 'Bej',
-      'Cream': 'Krem',
-      'Olive': 'Zeytin Yeşili',
-      'Khaki': 'Haki'
-    };
-
     // First try direct translation
     let translatedName = nameTranslations[name];
     
@@ -258,9 +234,9 @@ const WardrobeGrid = ({ viewMode, searchQuery, selectedCategory, refreshTrigger 
       }
     }
     
-    // Add color if available and not already included
-    const translatedColor = colorTranslations[primaryColor] || primaryColor;
-    if (translatedColor && translatedColor !== 'Unknown' && !translatedName.toLowerCase().includes(translatedColor.toLowerCase())) {
+    // Add color if available and not already included (using Turkish translation)
+    const translatedColor = getTurkishLabel(primaryColor, colorOptions);
+    if (translatedColor && translatedColor !== 'Unknown' && translatedColor !== primaryColor && !translatedName.toLowerCase().includes(translatedColor.toLowerCase())) {
       return `${translatedColor} ${translatedName}`;
     }
     
@@ -335,7 +311,7 @@ const WardrobeGrid = ({ viewMode, searchQuery, selectedCategory, refreshTrigger 
                   </Badge>
                   {item.primary_color && (
                     <Badge className="bg-white/20 text-white border-0 text-xs">
-                      {item.primary_color}
+                      {getTurkishLabel(item.primary_color, colorOptions)}
                     </Badge>
                   )}
                 </div>
