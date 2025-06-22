@@ -17,7 +17,7 @@ interface ClothingItem {
   primary_color: string; // Made required to match WardrobeItem
   image_url: string;
   is_favorite?: boolean;
-  style_tags?: string[];
+  style_tags: string[]; // Made required to match WardrobeItem
   seasons?: string[];
   occasions?: string[];
   user_notes?: string;
@@ -91,7 +91,13 @@ const WardrobeGrid = ({ viewMode, searchQuery, selectedCategory, refreshTrigger 
         );
       }
 
-      setItems(filteredData);
+      // Ensure style_tags is always an array
+      const processedData = filteredData.map(item => ({
+        ...item,
+        style_tags: item.style_tags || []
+      }));
+
+      setItems(processedData);
     } catch (error) {
       console.error('Error:', error);
       toast({
@@ -205,10 +211,7 @@ const WardrobeGrid = ({ viewMode, searchQuery, selectedCategory, refreshTrigger 
           item={selectedItem}
           isOpen={!!selectedItem}
           onClose={() => setSelectedItem(null)}
-          onUpdate={(updatedItem) => {
-            setItems(prev => prev.map(item => 
-              item.id === updatedItem.id ? updatedItem : item
-            ));
+          onUpdate={() => {
             fetchItems(); // Refresh the items to get updated data
           }}
         />
