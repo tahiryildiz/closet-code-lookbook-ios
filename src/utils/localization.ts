@@ -6,7 +6,7 @@ export interface LocalizedOption {
 
 // Category translations (updated)
 export const categoryOptions: LocalizedOption[] = [
-  { value: "Tops", label: "Üst Giyim" },
+  { value: "Tops", label: "Üstler" },
   { value: "Bottoms", label: "Altlar" },
   { value: "Dresses & Suits", label: "Elbise & Takım" },
   { value: "Outerwear", label: "Dış Giyim" },
