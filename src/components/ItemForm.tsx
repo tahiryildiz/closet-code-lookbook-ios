@@ -26,6 +26,10 @@ const ItemForm = ({ formData, analysisResult, onFormDataChange }: ItemFormProps)
       'Linen Trousers': 'Keten Pantolon',
       'Cotton Shirt': 'Pamuk Gömlek',
       'Denim Jeans': 'Kot Pantolon',
+      'Light Blue Denim Jeans': 'Açık Mavi Kot Pantolon',
+      'Dark Blue Denim Jeans': 'Koyu Mavi Kot Pantolon',
+      'Blue Denim Jeans': 'Mavi Kot Pantolon',
+      'Jeans': 'Kot Pantolon',
       'Wool Sweater': 'Yün Kazak',
       'Silk Blouse': 'İpek Bluz',
       'Leather Jacket': 'Deri Ceket',
@@ -36,7 +40,12 @@ const ItemForm = ({ formData, analysisResult, onFormDataChange }: ItemFormProps)
       'Chino Pants': 'Chino Pantolon',
       'Dress Pants': 'Klasik Pantolon',
       'Joggers': 'Eşofman Altı',
-      'Shorts': 'Şort'
+      'Shorts': 'Şort',
+      'T-Shirt': 'Tişört',
+      'Shirt': 'Gömlek',
+      'Blouse': 'Bluz',
+      'Polo Shirt': 'Polo Tişört',
+      'Sweatshirt': 'Sweatshirt'
     };
     
     // Color translations
@@ -46,6 +55,8 @@ const ItemForm = ({ formData, analysisResult, onFormDataChange }: ItemFormProps)
       'Gray': 'Gri',
       'Grey': 'Gri',
       'Blue': 'Mavi',
+      'Light Blue': 'Açık Mavi',
+      'Dark Blue': 'Koyu Mavi',  
       'Navy': 'Lacivert',
       'Red': 'Kırmızı',
       'Green': 'Yeşil',
@@ -60,7 +71,24 @@ const ItemForm = ({ formData, analysisResult, onFormDataChange }: ItemFormProps)
       'Khaki': 'Haki'
     };
     
-    const translatedName = nameTranslations[name] || name;
+    // First try to find direct translation
+    let translatedName = nameTranslations[name];
+    
+    // If no direct translation, try to extract base item type
+    if (!translatedName) {
+      if (name.includes('Jeans')) {
+        translatedName = 'Kot Pantolon';
+      } else if (name.includes('Shirt')) {
+        translatedName = 'Gömlek';
+      } else if (name.includes('T-Shirt')) {
+        translatedName = 'Tişört';
+      } else if (name.includes('Pants')) {
+        translatedName = 'Pantolon';
+      } else {
+        translatedName = name; // Fallback to original
+      }
+    }
+    
     const translatedColor = colorTranslations[color] || color;
     
     // Add color to the product name if color exists and is not already in the name

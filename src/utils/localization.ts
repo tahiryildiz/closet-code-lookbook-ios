@@ -1,13 +1,12 @@
-
 // Comprehensive localization utility for clothing categories and attributes
 export interface LocalizedOption {
   value: string;
   label: string;
 }
 
-// Category translations
+// Category translations (updated)
 export const categoryOptions: LocalizedOption[] = [
-  { value: "Tops", label: "Üstler" },
+  { value: "Tops", label: "Üst Giyim" },
   { value: "Bottoms", label: "Altlar" },
   { value: "Dresses & Suits", label: "Elbise & Takım" },
   { value: "Outerwear", label: "Dış Giyim" },
@@ -19,11 +18,13 @@ export const categoryOptions: LocalizedOption[] = [
   { value: "Activewear", label: "Spor Giyim" }
 ];
 
-// Comprehensive subcategory translations
+// Comprehensive subcategory translations (updated with shirts)
 export const subcategoryOptions: LocalizedOption[] = [
-  // Tops subcategories
+  // Tops subcategories (updated)
   { value: "T-Shirt", label: "Tişört" },
-  { value: "Polo Shirt", label: "Polo Tişört" },
+  { value: "TShirt", label: "Tişört" },
+  { value: "Polo Shirt", label: "Polo Yaka" },
+  { value: "Polo", label: "Polo Yaka" },
   { value: "Shirt", label: "Gömlek" },
   { value: "Blouse", label: "Bluz" },
   { value: "Sweatshirt", label: "Sweatshirt" },
@@ -47,6 +48,8 @@ export const subcategoryOptions: LocalizedOption[] = [
   { value: "Culottes", label: "Bol Etek" },
   { value: "Leggings", label: "Tayt" },
   { value: "Cargo Pants", label: "Kargo Pantolon" },
+  
+  // ... keep existing code (other subcategories)
   
   // Outerwear subcategories
   { value: "Blazer", label: "Blazer" },
@@ -127,14 +130,14 @@ export const subcategoryOptions: LocalizedOption[] = [
   { value: "Rash Guard", label: "Dalış Tişörtü" }
 ];
 
-// Material translations
+// Material translations (updated)
 export const materialOptions: LocalizedOption[] = [
   { value: "Cotton", label: "Pamuk" },
-  { value: "Polyester", label: "Polyester" },
-  { value: "Wool", label: "Yün" },
-  { value: "Denim", label: "Kot" },
   { value: "Linen", label: "Keten" },
+  { value: "Polyester", label: "Polyester" },
   { value: "Silk", label: "İpek" },
+  { value: "Denim", label: "Kot" },
+  { value: "Wool", label: "Yün" },
   { value: "Cotton-Polyester Blend", label: "Pamuk-Polyester Karışımı" },
   { value: "Viscose", label: "Viskon" },
   { value: "Cashmere", label: "Kaşmir" },
@@ -143,23 +146,69 @@ export const materialOptions: LocalizedOption[] = [
   { value: "Unknown", label: "Bilinmiyor" }
 ];
 
-// Fit translations
+// Fit translations (updated)
 export const fitOptions: LocalizedOption[] = [
-  { value: "Skinny", label: "Dar Kesim" },
-  { value: "Slim", label: "Slim Fit" },
-  { value: "Slim Fit", label: "Dar Kesim" },
+  { value: "Slim", label: "Dar Kesim" },
   { value: "Regular", label: "Normal Kesim" },
-  { value: "Regular Fit", label: "Normal Kesim" },
   { value: "Relaxed", label: "Rahat Kesim" },
+  { value: "Oversize", label: "Bol Kesim" },
+  { value: "Skinny", label: "Dar Kesim" },
+  { value: "Slim Fit", label: "Dar Kesim" },
+  { value: "Regular Fit", label: "Normal Kesim" },
   { value: "Relaxed Fit", label: "Rahat Kesim" },
-  { value: "Oversize", label: "Oversize" },
   { value: "Straight", label: "Düz Kesim" },
   { value: "Wide", label: "Geniş Paça" },
   { value: "Wide Leg", label: "Geniş Paça" },
   { value: "Tapered", label: "Daralan Kesim" }
 ];
 
-// Waist style translations (new field)
+// Sleeve length options (new)
+export const sleeveLengthOptions: LocalizedOption[] = [
+  { value: "Short", label: "Kısa Kol" },
+  { value: "Long", label: "Uzun Kol" },
+  { value: "Sleeveless", label: "Kolsuz" },
+  { value: "ThreeQuarter", label: "3/4 Kol" }
+];
+
+// Collar style options (new)
+export const collarStyleOptions: LocalizedOption[] = [
+  { value: "ButtonDown", label: "Düğmeli Yaka" },
+  { value: "Spread", label: "Geniş Yaka" },
+  { value: "Mandarin", label: "Çin Yakası" },
+  { value: "Classic", label: "Klasik Yaka" },
+  { value: "None", label: "Yakasız" }
+];
+
+// Closure type translations (updated)
+export const closureTypeOptions: LocalizedOption[] = [
+  { value: "Buttons", label: "Düğme" },
+  { value: "Zipper", label: "Fermuar" },
+  { value: "Snap", label: "Çıtçıt" },
+  { value: "Elastic", label: "Lastik" },
+  { value: "None", label: "Yok" }
+];
+
+// Cuff style options (new)
+export const cuffStyleOptions: LocalizedOption[] = [
+  { value: "Button", label: "Düğmeli Manşet" },
+  { value: "French", label: "Fransız Manşet" },
+  { value: "Elastic", label: "Lastikli Manşet" },
+  { value: "None", label: "Manşetsiz" }
+];
+
+// Pocket style translations (updated)
+export const pocketStyleOptions: LocalizedOption[] = [
+  { value: "SingleChest", label: "Tek Göğüs Cebi" },
+  { value: "DoubleChest", label: "Çift Göğüs Cebi" },
+  { value: "NoPocket", label: "Cepsiz" },
+  { value: "Side", label: "Yan Cep" },
+  { value: "Cargo", label: "Kargo Cep" },
+  { value: "Slant", label: "Eğimli Cep" },
+  { value: "Flap", label: "Kapaklı Cep" },
+  { value: "None", label: "Cep Yok" }
+];
+
+// Waist style translations
 export const waistStyleOptions: LocalizedOption[] = [
   { value: "Elastic", label: "Lastikli Bel" },
   { value: "Drawstring", label: "Bağcıklı Bel" },
@@ -168,24 +217,7 @@ export const waistStyleOptions: LocalizedOption[] = [
   { value: "Belted", label: "Kemerli" }
 ];
 
-// Closure type translations (new field)
-export const closureTypeOptions: LocalizedOption[] = [
-  { value: "Zipper", label: "Fermuar" },
-  { value: "Buttons", label: "Düğme" },
-  { value: "Elastic", label: "Lastik" },
-  { value: "None", label: "Yok" }
-];
-
-// Pocket style translations (new field)
-export const pocketStyleOptions: LocalizedOption[] = [
-  { value: "Side", label: "Yan Cep" },
-  { value: "Cargo", label: "Kargo Cep" },
-  { value: "Slant", label: "Eğimli Cep" },
-  { value: "Flap", label: "Kapaklı Cep" },
-  { value: "None", label: "Cep Yok" }
-];
-
-// Hem style translations (new field)
+// Hem style translations
 export const hemStyleOptions: LocalizedOption[] = [
   { value: "Straight", label: "Düz Paça" },
   { value: "Elastic", label: "Lastikli Paça" },
@@ -193,7 +225,7 @@ export const hemStyleOptions: LocalizedOption[] = [
   { value: "Drawstring", label: "Bağcıklı Paça" }
 ];
 
-// Color tone translations
+// Color tone translations (updated)
 export const colorToneOptions: LocalizedOption[] = [
   { value: "Light", label: "Açık Ton" },
   { value: "Medium", label: "Orta Ton" },
@@ -202,12 +234,12 @@ export const colorToneOptions: LocalizedOption[] = [
   { value: "Bright", label: "Canlı" }
 ];
 
-// Pattern translations
+// Pattern translations (updated)
 export const patternOptions: LocalizedOption[] = [
   { value: "Solid", label: "Düz" },
   { value: "Striped", label: "Çizgili" },
-  { value: "Checkered", label: "Ekose" },
   { value: "Checked", label: "Ekose" },
+  { value: "Checkered", label: "Ekose" },
   { value: "Polka Dot", label: "Puantiyeli" },
   { value: "Floral", label: "Çiçekli" },
   { value: "Geometric", label: "Geometrik" },
@@ -217,7 +249,7 @@ export const patternOptions: LocalizedOption[] = [
   { value: "None", label: "Desensiz" }
 ];
 
-// Season translations
+// Season translations (updated)
 export const seasonOptions: LocalizedOption[] = [
   { value: "Spring", label: "İlkbahar" },
   { value: "Summer", label: "Yaz" },
@@ -226,17 +258,17 @@ export const seasonOptions: LocalizedOption[] = [
   { value: "All Seasons", label: "Tüm Mevsimler" }
 ];
 
-// Occasion translations
+// Occasion translations (updated)
 export const occasionOptions: LocalizedOption[] = [
   { value: "Casual", label: "Günlük" },
   { value: "Work", label: "Ofis" },
+  { value: "Party", label: "Parti" },
+  { value: "Formal", label: "Resmi" },
+  { value: "Outdoor", label: "Açık Hava" },
+  { value: "Travel", label: "Seyahat" },
   { value: "Sport", label: "Spor" },
   { value: "Evening", label: "Gece" },
-  { value: "Formal", label: "Resmi" },
-  { value: "Holiday", label: "Tatil" },
-  { value: "Party", label: "Parti" },
-  { value: "Outdoor", label: "Açık Hava" },
-  { value: "Travel", label: "Seyahat" }
+  { value: "Holiday", label: "Tatil" }
 ];
 
 // Helper function to get Turkish label for English value
@@ -262,6 +294,12 @@ export const getOptionsForCategory = (category: string): LocalizedOption[] => {
       return materialOptions;
     case 'fit':
       return fitOptions;
+    case 'sleeveLength':
+      return sleeveLengthOptions;
+    case 'collarStyle':
+      return collarStyleOptions;
+    case 'cuffStyle':
+      return cuffStyleOptions;
     case 'waistStyle':
       return waistStyleOptions;
     case 'closureType':
