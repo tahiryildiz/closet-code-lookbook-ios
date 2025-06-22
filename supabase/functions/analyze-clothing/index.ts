@@ -38,20 +38,64 @@ serve(async (req) => {
             content: [
               {
                 type: 'text',
-                text: `Analyze this clothing item image and provide detailed information in JSON format. Be very specific and accurate in your analysis.
+                text: `You are a professional fashion analyst and stylist. Analyze this clothing item image with extreme attention to detail and provide comprehensive metadata in JSON format.
 
-IMPORTANT: For T-shirts specifically, pay special attention to these attributes:
-- subcategory: Choose from ["TShirt", "TankTop", "LongSleeve", "Henley"] for T-shirt types
-- neckline: Choose from ["CrewNeck", "VNeck", "Henley", "Polo"] 
-- design_details: Choose from ["LogoPrint", "Embroidered", "ChestPrint", "BackPrint", "NoDesign", "GraphicPrint", "TextPrint", "AllOverPrint"]
-- fit: Choose from ["Slim", "Regular", "Relaxed", "Oversize"]
-- sleeve: Use "Short", "Long", or "Sleeveless"
-- material: For T-shirts, commonly ["Cotton", "Polyester", "Modal", "Linen", "Elastane"]
-- pattern: Choose from ["Solid", "Printed", "Striped", "Graphic", "None"]
-- seasons: For T-shirts, typically ["Spring", "Summer", "Autumn"]
-- occasions: For T-shirts, commonly ["Casual", "Sport", "Outdoor", "Home", "Travel"]
+CRITICAL INSTRUCTIONS:
+1. AUTO-FILL ALL POSSIBLE FIELDS by analyzing the image thoroughly
+2. STANDARDIZE ALL VALUES IN ENGLISH with proper capitalization (e.g., "Short Sleeve", "Crew Neck", "Slim Fit")
+3. For arrays like style_tags, occasions, seasons - include multiple relevant values
+4. Use your fashion expertise to infer details even if not perfectly visible
+5. Be specific and accurate in your analysis
 
-Return a JSON object with these exact fields:
+FIELD REQUIREMENTS:
+
+**Basic Info:**
+- name: Descriptive English name (e.g., "Navy Blue Cotton Crew Neck T-Shirt")
+- brand: Detected brand or "Unknown"
+- category: Main category in English
+- subcategory: Specific subcategory - for T-shirts use: "TShirt", "TankTop", "LongSleeve", "Henley"
+
+**Colors & Patterns:**
+- primary_color: Main color in English
+- secondary_colors: Array of additional colors
+- color_tone: "Light", "Medium", or "Dark"
+- pattern: "Solid", "Printed", "Striped", "Graphic", "None"
+- pattern_type: Specific pattern details or null
+
+**Physical Attributes:**
+- material: Fabric type (e.g., "Cotton", "Polyester", "Modal", "Linen", "Elastane")
+- fit: "Slim", "Regular", "Relaxed", "Oversize"
+- sleeve: "Short Sleeve", "Long Sleeve", "Sleeveless"
+- neckline: "Crew Neck", "V Neck", "Henley", "Polo"
+- collar: Collar style or null
+- design_details: Array from ["Logo Print", "Embroidered", "Chest Print", "Back Print", "No Design", "Graphic Print", "Text Print", "All Over Print"]
+
+**Construction Details (AUTO-FILL):**
+- closure_type: "Pullover", "Button-Up", "Zip", "Snap", etc. or null
+- waist_style: "Straight", "Fitted", "Loose", "Elastic" or null
+- pocket_style: "No Pockets", "Chest Pocket", "Side Pockets", etc. or null
+- hem_style: "Straight", "Curved", "High-Low", "Raw Edge" or null
+- lapel_style: Style if applicable or null
+- has_lining: true/false
+- button_count: Number or "Unknown"
+
+**Style & Usage:**
+- accessories: Array of any visible accessories
+- season_suitability: Array from ["Spring", "Summer", "Autumn", "Winter"]
+- occasions: Array from ["Casual", "Sport", "Outdoor", "Home", "Travel", "Office", "Evening", "Formal"]
+- style_tags: Array of style descriptors (e.g., ["Modern", "Classic", "Sporty", "Minimalist"])
+
+**AI Analysis:**
+- image_description: Detailed description of the item and its styling
+- confidence: 1-100 confidence score
+
+IMPORTANT: 
+- Fill every possible field based on image analysis and fashion knowledge
+- Use consistent English terminology throughout
+- Include multiple values for arrays when applicable
+- Be thorough and professional in your analysis
+
+Return ONLY valid JSON in this exact format:
 {
   "name": "descriptive name in English",
   "brand": "detected brand or Unknown",
@@ -81,9 +125,7 @@ Return a JSON object with these exact fields:
   "image_description": "detailed description of the item",
   "style_tags": ["array", "of", "style", "tags"],
   "confidence": 85
-}
-
-Be thorough and accurate in your analysis.`
+}`
               },
               {
                 type: 'image_url',
@@ -94,7 +136,7 @@ Be thorough and accurate in your analysis.`
             ]
           }
         ],
-        max_tokens: 1000
+        max_tokens: 1500
       })
     })
 
