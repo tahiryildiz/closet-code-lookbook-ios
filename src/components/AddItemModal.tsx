@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Sparkles } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -121,24 +120,24 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
           
           // Use enhanced fallback analysis
           const fallbackAnalysis = {
-            name: 'Kıyafet Ürünü',
-            category: 'Üstler',
-            subcategory: 'Genel',
-            primaryColor: 'Gri',
+            name: file.name.split('.')[0] || 'Kıyafet Ürünü',
+            category: 'Tops',
+            subcategory: 'T-Shirt',
+            primaryColor: 'Bilinmiyor',
             secondaryColors: [],
             colorTone: 'Orta',
             pattern: 'Düz',
-            patternType: 'Desenli değil',
-            material: 'Pamuk karışımı',
+            patternType: null,
+            material: 'Bilinmiyor',
             fit: 'Regular Fit',
-            collar: 'Bisiklet Yaka',
-            sleeve: 'Uzun Kol',
-            seasons: ['Sonbahar', 'Kış'],
+            collar: 'Bilinmiyor',
+            sleeve: 'Bilinmiyor',
+            seasons: ['Tüm Mevsimler'],
             occasions: ['Günlük'],
-            tags: ['rahat', 'günlük'],
-            contextTags: ['genel kullanım'],
-            confidence: 50,
-            style: 'Genel kullanım için uygun kıyafet'
+            tags: ['genel'],
+            contextTags: ['günlük'],
+            confidence: 30,
+            style: 'Otomatik analiz başarısız oldu, manuel düzenleme gerekli'
           };
 
           results.push({
@@ -206,61 +205,37 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
         return false;
       }
 
-      console.log('Saving comprehensive item to database:', {
-        name: formData.name || currentResult?.name,
-        category: formData.category || currentResult?.category,
-        subcategory: currentResult?.subcategory,
-        primary_color: formData.primaryColor || currentResult?.primaryColor,
-        secondary_colors: currentResult?.secondaryColors,
-        color_tone: currentResult?.colorTone,
-        pattern: currentResult?.pattern,
-        pattern_type: currentResult?.patternType,
-        fit: currentResult?.fit,
-        collar: currentResult?.collar,
-        sleeve: currentResult?.sleeve,
-        button_count: currentResult?.button_count,
-        has_lining: currentResult?.has_lining,
-        closure: currentResult?.closure,
-        lapel_style: currentResult?.lapel_style,
-        structure: currentResult?.structure,
-        formality_level: currentResult?.formality_level,
-        seasons: currentResult?.seasons,
-        occasions: currentResult?.occasions,
-        image_url: currentResult?.imageUrl
-      });
+      // Create base item data with only fields that exist in the current database schema
+      const itemData = {
+        name: formData.name || currentResult?.name || 'Kıyafet Ürünü',
+        brand: formData.brand || currentResult?.brand || null,
+        category: formData.category || currentResult?.category || 'Tops',
+        subcategory: currentResult?.subcategory || null,
+        primary_color: formData.primaryColor || currentResult?.primaryColor || 'Bilinmiyor',
+        secondary_colors: currentResult?.secondaryColors || [],
+        color_tone: currentResult?.colorTone || null,
+        pattern: currentResult?.pattern || null,
+        pattern_type: currentResult?.patternType || null,
+        material: currentResult?.material || null,
+        fit: currentResult?.fit || null,
+        collar: currentResult?.collar || null,
+        sleeve: currentResult?.sleeve || null,
+        seasons: currentResult?.seasons || [],
+        occasions: currentResult?.occasions || [],
+        style_tags: formData.tags ? formData.tags.split(', ') : currentResult?.tags || [],
+        context_tags: currentResult?.contextTags || [],
+        user_notes: formData.notes || null,
+        image_url: currentResult?.imageUrl,
+        prompt_description: currentResult?.style || null,
+        user_id: session.user.id,
+        ai_analysis: currentResult || null
+      };
+
+      console.log('Saving item to database:', itemData);
 
       const { error } = await supabase
         .from('clothing_items')
-        .insert({
-          name: formData.name || currentResult?.name,
-          brand: formData.brand,
-          category: formData.category || currentResult?.category,
-          subcategory: currentResult?.subcategory,
-          primary_color: formData.primaryColor || currentResult?.primaryColor,
-          secondary_colors: currentResult?.secondaryColors,
-          color_tone: currentResult?.colorTone,
-          pattern: currentResult?.pattern,
-          pattern_type: currentResult?.patternType,
-          material: currentResult?.material,
-          fit: currentResult?.fit,
-          collar: currentResult?.collar,
-          sleeve: currentResult?.sleeve,
-          button_count: currentResult?.button_count,
-          has_lining: currentResult?.has_lining,
-          closure: currentResult?.closure,
-          lapel_style: currentResult?.lapel_style,
-          structure: currentResult?.structure,
-          formality_level: currentResult?.formality_level,
-          seasons: currentResult?.seasons,
-          occasions: currentResult?.occasions,
-          style_tags: formData.tags ? formData.tags.split(', ') : currentResult?.tags,
-          context_tags: currentResult?.contextTags,
-          user_notes: formData.notes,
-          image_url: currentResult?.imageUrl,
-          prompt_description: currentResult?.style,
-          user_id: session.user.id,
-          ai_analysis: currentResult
-        });
+        .insert(itemData);
 
       if (error) {
         console.error('Save error:', error);
@@ -272,7 +247,7 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
         return false;
       }
 
-      console.log('Item saved successfully with comprehensive details!');
+      console.log('Item saved successfully!');
       return true;
     } catch (error) {
       console.error('Error saving item:', error);

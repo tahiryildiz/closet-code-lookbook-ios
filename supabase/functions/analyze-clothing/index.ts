@@ -36,73 +36,64 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `Sen bir moda uzmanısın ve kıyafet analizi yapıyorsun. Görüntüyü çok dikkatli bir şekilde analiz et ve aşağıdaki JSON formatında DETAYLI yanıt ver:
+            content: `Sen bir moda uzmanısın ve kıyafet analizi yapıyorsun. Görüntüyü ÇOK DİKKATLİ bir şekilde analiz et ve aşağıdaki JSON formatında DETAYLI yanıt ver. 
+
+ÖNEMLİ: Görüntüdeki MARKA logolarını, etiketlerini ve yazıları DİKKATLİCE incele. Lacoste timsahı, Nike swoosh, Adidas çizgileri gibi marka işaretlerini mutlaka tanı.
 
 {
-  "name": "Detaylı ürün adı (örn: Lacivert Slim Fit Blazer Ceket)",
-  "category": "Ana kategori - SADECE bu kategorilerden birini seç: Tops, Bottoms, Outerwear, Dresses & Suits, Footwear, Accessories, Bags, Underwear & Loungewear, Swimwear, Activewear",
-  "subcategory": "Alt kategori - kategori bazında uygun olanı seç:",
-  "primaryColor": "Ana renk (Türkçe: Lacivert, Siyah, Beyaz, Kırmızı, Yeşil, Mavi, Gri, Kahverengi, vb.)",
+  "name": "Detaylı ürün adı (örn: Lacoste Polo T-Shirt, Nike Dri-Fit Tişört)",
+  "brand": "MARKA ADINI DİKKATLE BELİRLE - logo ve etiketlere bak (Lacoste, Nike, Adidas, Zara, H&M, vb.)",
+  "category": "Ana kategori - SADECE şunlardan birini seç: Tops, Bottoms, Outerwear, Dresses & Suits, Footwear, Accessories, Bags, Underwear & Loungewear, Swimwear, Activewear",
+  "subcategory": "Alt kategori - aşağıdaki listeden seç",
+  "primaryColor": "Ana renk (Türkçe: Lacivert, Siyah, Beyaz, Kırmızı, Yeşil, Mavi, Gri, Kahverengi, Pembe, Mor, Sarı, Turuncu, vb.)",
   "secondaryColors": ["ikincil", "renkler", "listesi"],
   "colorTone": "Renk tonu (Açık, Koyu, Orta, Pastel, Canlı)",
-  "pattern": "Desen tipi (Düz, Çizgili, Kareli, Puantiyeli, Çiçekli, Geometrik, vb.)",
-  "patternType": "Desen detayı (İnce çizgili, Kalın kareli, Küçük puantiyeli, vb.)",
-  "material": "Malzeme tahmini (Pamuk, Polyester, Yün, Denim, Keten, Pamuk-Polyester karışımı, vb.)",
-  "fit": "Kesim (Slim Fit, Regular Fit, Oversize, Skinny, Straight, Wide Leg, vb.)",
-  "collar": "Yaka tipi (V-Yaka, Bisiklet Yaka, Polo Yaka, Gömlek Yaka, Kapüşon, Notch Lapel, vb.)",
-  "sleeve": "Kol tipi (Uzun Kol, Kısa Kol, Kolsuz, 3/4 Kol, vb.)",
-  "button_count": 2,
-  "has_lining": true,
-  "closure": "Kapatma türü (Düğmeli, Fermuarlı, Çıtçıtlı, Bağcıklı, vb.)",
-  "lapel_style": "Yaka stili (Notched, Peak, Shawl, vb. - sadece ceket/blazer için)",
-  "structure": "Yapı (Structured, Semi-structured, Unstructured)",
-  "formality_level": "Formalite seviyesi (Casual, Smart Casual, Business Casual, Formal, Black Tie)",
-  "seasons": ["uygun", "mevsimler"],
-  "occasions": ["uygun", "durumlar"],
+  "pattern": "Desen tipi (Düz, Çizgili, Kareli, Puantiyeli, Çiçekli, Geometrik, Leopar, Zebra, vb.)",
+  "patternType": "Desen detayı (İnce çizgili, Kalın kareli, Küçük puantiyeli, vb. - düz ise null)",
+  "material": "Malzeme tahmini (Pamuk, Polyester, Yün, Denim, Keten, İpek, Pamuk-Polyester karışımı, vb.)",
+  "fit": "Kesim (Slim Fit, Regular Fit, Oversize, Skinny, Straight, Wide Leg, Relaxed Fit, vb.)",
+  "collar": "Yaka tipi (V-Yaka, Bisiklet Yaka, Polo Yaka, Gömlek Yaka, Kapüşon, Notch Lapel, Peak Lapel, vb.)",
+  "sleeve": "Kol tipi (Uzun Kol, Kısa Kol, Kolsuz, 3/4 Kol, 7/8 Kol, vb.)",
+  "seasons": ["uygun", "mevsimler", "listesi"],
+  "occasions": ["Günlük", "İş", "Spor", "Gece", "Resmi", "Tatil", "vb."],
   "tags": ["detaylı", "stil", "etiketleri"],
   "contextTags": ["kullanım", "durumu", "etiketleri"],
   "confidence": 85,
   "style": "Detaylı stil açıklaması"
 }
 
-KATEGORİ VE ALT KATEGORİ LISTESI:
-- Tops: T-Shirt, Polo Shirt, Shirt, Blouse, Sweatshirt, Hoodie, Tank Top, Crop Top, Tunic, Bodysuit, Bustier, Kimono
-- Bottoms: Jeans, Trousers, Shorts, Joggers, Skirt, Culottes, Leggings, Cargo Pants
-- Outerwear: Blazer, Coat, Jacket, Trench Coat, Parka, Overcoat, Cardigan, Gilet
-- Dresses & Suits: Mini Dress, Midi Dress, Maxi Dress, Evening Gown, Cocktail Dress, Jumpsuit, Romper, Suit, Abaya
-- Footwear: Sneakers, Loafers, Boots, Heels, Flats, Sandals, Slippers, Espadrilles, Oxford Shoes
-- Accessories: Belt, Watch, Sunglasses, Scarf, Hat, Beanie, Gloves, Tie, Bowtie, Necklace, Earrings
-- Bags: Backpack, Crossbody Bag, Shoulder Bag, Clutch, Tote, Briefcase, Wallet
-- Underwear & Loungewear: Bra, Panties, Boxer, Pajamas, Camisole, Robe, Thermals
-- Swimwear: Bikini, One-piece Swimsuit, Trunks, Swim Shorts, Swim Shirt
-- Activewear: Sports Bra, Leggings, Tank Top, Tracksuit, Gym Shorts, Rash Guard
+ALT KATEGORİ LİSTESİ:
+Tops: T-Shirt, Polo Shirt, Shirt, Blouse, Sweatshirt, Hoodie, Tank Top, Crop Top, Tunic, Bodysuit, Bustier, Kimono
+Bottoms: Jeans, Trousers, Shorts, Joggers, Skirt, Culottes, Leggings, Cargo Pants
+Outerwear: Blazer, Coat, Jacket, Trench Coat, Parka, Overcoat, Cardigan, Gilet
+Dresses & Suits: Mini Dress, Midi Dress, Maxi Dress, Evening Gown, Cocktail Dress, Jumpsuit, Romper, Suit, Abaya
+Footwear: Sneakers, Loafers, Boots, Heels, Flats, Sandals, Slippers, Espadrilles, Oxford Shoes
+Accessories: Belt, Watch, Sunglasses, Scarf, Hat, Beanie, Gloves, Tie, Bowtie, Necklace, Earrings
+Bags: Backpack, Crossbody Bag, Shoulder Bag, Clutch, Tote, Briefcase, Wallet
+Underwear & Loungewear: Bra, Panties, Boxer, Pajamas, Camisole, Robe, Thermals
+Swimwear: Bikini, One-piece Swimsuit, Trunks, Swim Shorts, Swim Shirt
+Activewear: Sports Bra, Leggings, Tank Top, Tracksuit, Gym Shorts, Rash Guard
 
-ÖNEMLİ KURALLAR:
-- Category için SADECE yukarıdaki ana kategorilerden birini seç
-- Subcategory için o kategoriye ait alt kategorilerden en uygun olanı seç
-- Her alanı mümkün olduğunca detaylı doldur
-- Renkleri çok dikkatli belirle (lacivert ≠ gri, beyaz ≠ krem)
-- Fit/kesim bilgisini görsel ipuçlarından çıkar
-- Yaka tipini net belirle
-- Button_count sadece düğme varsa sayı ver, yoksa 0
-- Has_lining astar var mı görsel ipuçlarından tahmin et
-- Closure türünü net belirle
-- Lapel_style sadece ceket/blazer için doldur
-- Structure yapısal sertlik seviyesini belirle
-- Formality_level kullanım durumuna göre belirle
-- Mevsim uygunluğunu malzeme ve kalınlığa göre belirle
-- Occasions için: Günlük, İş, Spor, Gece, Resmi, Tatil gibi durumları değerlendir
-- Secondary colors için sadece belirgin ikincil renkleri listele
-- Pattern için: eğer düz ise "Düz", desenli ise desen tipini belirt
-- Context tags için: rahat, şık, spor, vintage, modern gibi etiketler ekle
-- Sadece JSON döndür, başka metin ekleme`
+KRITIK KURALLAR:
+1. MARKA TESPİTİ: Lacoste timsahı, Nike swoosh, Adidas üç çizgi gibi logo ve markaları DİKKATLİCE ara ve tanı
+2. Kategori için SADECE yukarıdaki ana kategorilerden birini seç
+3. Subcategory için o kategoriye ait alt kategorilerden en uygun olanı seç
+4. Her alanı mümkün olduğunca DETAYLI doldur
+5. Renkleri çok dikkatli belirle (lacivert ≠ siyah, beyaz ≠ krem)
+6. Pattern: eğer düz ise "Düz", desenli ise desen tipini belirt
+7. PatternType: sadece desenli ürünler için doldur, düz ise null
+8. Secondary colors için sadece belirgin ikincil renkleri listele
+9. Mevsim uygunluğunu malzeme ve kalınlığa göre belirle
+10. Occasions için uygun kullanım durumları belirle
+11. Tags ve contextTags için stil ve kullanım etiketleri ekle
+12. Sadece JSON döndür, başka metin ekleme`
           },
           {
             role: 'user',
             content: [
               {
                 type: 'text',
-                text: 'Bu kıyafet ürününü çok detaylı analiz et. Özellikle kategori ve alt kategoriyi doğru belirle, renk, kesim, yaka, desen, düğme sayısı, astar durumu, kapatma türü, formalite seviyesi, mevsim uygunluğu ve kullanım durumlarını dikkatli belirle. Tüm alanları doldur.'
+                text: 'Bu kıyafet ürününü çok detaylı analiz et. ÖNEMLİ: Marka logolarını, etiketlerini ve yazıları dikkatli incele. Lacoste timsahı, Nike swoosh gibi marka işaretlerini mutlaka tanı. Kategori ve alt kategoriyi doğru belirle, renk, kesim, yaka, desen bilgilerini dikkatli belirle.'
               },
               {
                 type: 'image_url',
@@ -163,29 +154,24 @@ KATEGORİ VE ALT KATEGORİ LISTESI:
         error: error.message,
         fallback: {
           name: 'Kıyafet Ürünü',
+          brand: null,
           category: 'Tops',
           subcategory: 'T-Shirt',
-          primaryColor: 'Gri',
+          primaryColor: 'Bilinmiyor',
           secondaryColors: [],
           colorTone: 'Orta',
           pattern: 'Düz',
-          patternType: 'Desenli değil',
+          patternType: null,
           material: 'Pamuk karışımı',
           fit: 'Regular Fit',
           collar: 'Bisiklet Yaka',
           sleeve: 'Uzun Kol',
-          button_count: 0,
-          has_lining: false,
-          closure: 'Pullover',
-          lapel_style: null,
-          structure: 'Unstructured',
-          formality_level: 'Casual',
-          seasons: ['Sonbahar', 'Kış'],
+          seasons: ['Tüm Mevsimler'],
           occasions: ['Günlük'],
-          tags: ['rahat', 'günlük'],
-          contextTags: ['genel kullanım'],
-          confidence: 50,
-          style: 'Genel kullanım için uygun kıyafet'
+          tags: ['genel'],
+          contextTags: ['günlük'],
+          confidence: 30,
+          style: 'Otomatik analiz başarısız oldu'
         }
       }),
       { 
