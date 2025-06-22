@@ -14,7 +14,7 @@ interface ClothingItem {
   brand?: string;
   category: string;
   subcategory?: string;
-  primary_color?: string;
+  primary_color: string; // Made required to match WardrobeItem
   image_url: string;
   is_favorite?: boolean;
   style_tags?: string[];
@@ -22,6 +22,8 @@ interface ClothingItem {
   occasions?: string[];
   user_notes?: string;
   ai_analysis?: any;
+  material?: string;
+  size_info?: string;
 }
 
 interface WardrobeGridProps {
@@ -180,7 +182,6 @@ const WardrobeGrid = ({ viewMode, searchQuery, selectedCategory, refreshTrigger 
 
                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent p-4">
                   <h3 className="text-white font-semibold text-base mb-1">{item.name}</h3>
-                  {/* Brand name removed as requested */}
                   
                   <div className="flex items-center justify-between">
                     <Badge className="bg-white/20 text-white border-0 text-xs">
@@ -208,6 +209,7 @@ const WardrobeGrid = ({ viewMode, searchQuery, selectedCategory, refreshTrigger 
             setItems(prev => prev.map(item => 
               item.id === updatedItem.id ? updatedItem : item
             ));
+            fetchItems(); // Refresh the items to get updated data
           }}
         />
       )}
