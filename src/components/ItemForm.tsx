@@ -18,8 +18,8 @@ interface ItemFormProps {
 }
 
 const ItemForm = ({ formData, analysisResult, onFormDataChange }: ItemFormProps) => {
-  // Helper function to translate product names
-  const translateProductName = (name: string) => {
+  // Helper function to translate product names and add color
+  const translateProductName = (name: string, color: string) => {
     if (!name) return '';
     
     const nameTranslations: Record<string, string> = {
@@ -39,15 +39,47 @@ const ItemForm = ({ formData, analysisResult, onFormDataChange }: ItemFormProps)
       'Shorts': 'Şort'
     };
     
-    return nameTranslations[name] || name;
+    // Color translations
+    const colorTranslations: Record<string, string> = {
+      'Black': 'Siyah',
+      'White': 'Beyaz',
+      'Gray': 'Gri',
+      'Grey': 'Gri',
+      'Blue': 'Mavi',
+      'Navy': 'Lacivert',
+      'Red': 'Kırmızı',
+      'Green': 'Yeşil',
+      'Yellow': 'Sarı',
+      'Pink': 'Pembe',
+      'Purple': 'Mor',
+      'Brown': 'Kahverengi',
+      'Orange': 'Turuncu',
+      'Beige': 'Bej',
+      'Cream': 'Krem',
+      'Olive': 'Zeytin Yeşili',
+      'Khaki': 'Haki'
+    };
+    
+    const translatedName = nameTranslations[name] || name;
+    const translatedColor = colorTranslations[color] || color;
+    
+    // Add color to the product name if color exists and is not already in the name
+    if (translatedColor && translatedColor !== 'Unknown' && !translatedName.includes(translatedColor)) {
+      return `${translatedColor} ${translatedName}`;
+    }
+    
+    return translatedName;
   };
 
+  // Get the color for the product name
+  const productColor = formData.primaryColor || analysisResult?.primary_color || analysisResult?.primaryColor || '';
+  
   return (
     <div className="space-y-5">
       <div>
         <label className="block text-sm font-semibold text-gray-900 mb-2">Ürün Adı</label>
         <Input
-          value={formData.name || translateProductName(analysisResult?.name) || ''}
+          value={formData.name || translateProductName(analysisResult?.name || '', productColor) || ''}
           onChange={(e) => onFormDataChange({ name: e.target.value })}
           className="bg-gray-50 border-gray-200 focus:border-blue-400 rounded-xl text-base py-3"
           placeholder="Ürün adını girin"
@@ -57,7 +89,7 @@ const ItemForm = ({ formData, analysisResult, onFormDataChange }: ItemFormProps)
       <div>
         <label className="block text-sm font-semibold text-gray-900 mb-2">Marka</label>
         <Input
-          value={formData.brand || ''}
+          value={formData.brand || analysisResult?.brand || ''}
           onChange={(e) => onFormDataChange({ brand: e.target.value })}
           placeholder="Marka girin"
           className="bg-gray-50 border-gray-200 focus:border-blue-400 rounded-xl text-base py-3"

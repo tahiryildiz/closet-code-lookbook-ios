@@ -36,69 +36,89 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `You are a fashion expert analyzing clothing items. Analyze the image VERY CAREFULLY and respond in the following JSON format with DETAILED information.
+            content: `You are analyzing a clothing item image. Return a JSON object containing **all possible structured attributes** that can be extracted visually for use in a product database. 
 
-IMPORTANT: 
-1. BRAND DETECTION: Carefully examine logos, labels, and markings. Look for Lacoste crocodile, Nike swoosh, Adidas three stripes, etc.
-2. ALL VALUES MUST BE IN ENGLISH - this is critical for database consistency
-3. Use only the specified category and subcategory values
-4. Analyze colors, patterns, fit, and materials very carefully
+Step 1: Identify the main category and subcategory of the clothing (e.g., category: "Tops", subcategory: "Shirt").
 
-{
-  "name": "Detailed product name (e.g., Lacoste Polo Shirt, Nike Dri-Fit T-Shirt)",
-  "brand": "DETECT BRAND CAREFULLY - look at logos and labels (Lacoste, Nike, Adidas, Zara, H&M, etc.)",
-  "category": "Main category - ONLY choose from: Tops, Bottoms, Outerwear, Dresses & Suits, Footwear, Accessories, Bags, Underwear & Loungewear, Swimwear, Activewear",
-  "subcategory": "Sub category - choose from the list below",
-  "primaryColor": "Primary color in English (Navy, Black, White, Red, Green, Blue, Gray, Brown, Pink, Purple, Yellow, Orange, etc.)",
-  "secondaryColors": ["secondary", "colors", "list"],
-  "colorTone": "Color tone (Light, Dark, Medium, Pastel, Bright)",
-  "pattern": "Pattern type (Solid, Striped, Checkered, Polka Dot, Floral, Geometric, Leopard, Zebra, etc.)",
-  "patternType": "Pattern detail (Thin Striped, Thick Checkered, Small Polka Dot, etc. - null if solid)",
-  "material": "Material estimate (Cotton, Polyester, Wool, Denim, Linen, Silk, Cotton-Polyester Blend, etc.)",
-  "fit": "Fit type (Slim Fit, Regular Fit, Oversize, Skinny, Straight, Wide Leg, Relaxed Fit, etc.)",
-  "collar": "Collar type (V-Neck, Crew Neck, Polo Collar, Shirt Collar, Hood, Notch Lapel, Peak Lapel, etc.)",
-  "sleeve": "Sleeve type (Long Sleeve, Short Sleeve, Sleeveless, 3/4 Sleeve, 7/8 Sleeve, etc.)",
-  "seasons": ["suitable", "seasons", "list"],
-  "occasions": ["Casual", "Work", "Sport", "Evening", "Formal", "Holiday", "etc."],
-  "tags": ["detailed", "style", "tags"],
-  "contextTags": ["usage", "context", "tags"],
-  "confidence": 85,
-  "style": "Detailed style description"
-}
+Step 2: Based on the identified type, include all relevant attributes below. If a field does not apply to this item, mark it as "Not Applicable". If it is not visible or unclear, mark it as "Unknown".
 
-SUBCATEGORY LIST:
-Tops: T-Shirt, Polo Shirt, Shirt, Blouse, Sweatshirt, Hoodie, Tank Top, Crop Top, Tunic, Bodysuit, Bustier, Kimono
-Bottoms: Jeans, Trousers, Shorts, Joggers, Skirt, Culottes, Leggings, Cargo Pants
-Outerwear: Blazer, Coat, Jacket, Trench Coat, Parka, Overcoat, Cardigan, Gilet
-Dresses & Suits: Mini Dress, Midi Dress, Maxi Dress, Evening Gown, Cocktail Dress, Jumpsuit, Romper, Suit, Abaya
-Footwear: Sneakers, Loafers, Boots, Heels, Flats, Sandals, Slippers, Espadrilles, Oxford Shoes
-Accessories: Belt, Watch, Sunglasses, Scarf, Hat, Beanie, Gloves, Tie, Bowtie, Necklace, Earrings
-Bags: Backpack, Crossbody Bag, Shoulder Bag, Clutch, Tote, Briefcase, Wallet
-Underwear & Loungewear: Bra, Panties, Boxer, Pajamas, Camisole, Robe, Thermals
-Swimwear: Bikini, One-piece Swimsuit, Trunks, Swim Shorts, Swim Shirt
-Activewear: Sports Bra, Leggings, Tank Top, Tracksuit, Gym Shorts, Rash Guard
+Return all attributes even if some are Unknown.
+
+Your JSON must include:
+
+- name: "Detailed product name (e.g., Green Cargo Pants, Blue Denim Jacket)"
+- brand: "DETECT BRAND CAREFULLY - look at logos and labels (Lacoste, Nike, Adidas, Zara, H&M, etc.)"
+- category: "Main category - ONLY choose from: Tops, Bottoms, Outerwear, Dresses & Suits, Footwear, Accessories, Bags, Underwear & Loungewear, Swimwear, Activewear"
+- subcategory: "Sub category based on the item type"
+- fit: "Fit type (e.g., Regular Fit, Oversized, Slim Fit, Relaxed Fit)"
+- material: "Material estimate (e.g., Cotton, Denim, Polyester, Wool)"
+- primary_color: "Primary color in English (Navy, Black, White, Red, Green, Blue, Gray, Brown, etc.)"
+- secondary_colors: "Array of secondary colors if any"
+- color_tone: "Color tone (e.g., Dark, Neutral, Light, Bright)"
+- pattern: "Pattern type (e.g., Solid, Striped, Checkered, Polka Dot)"
+- pattern_type: "Pattern detail (e.g., Thin Striped, Large Checkered - null if solid)"
+- season_suitability: "Array of suitable seasons (e.g., [Spring, Summer])"
+- occasions: "Array of occasions (e.g., [Casual, Workwear])"
+- collar: "Collar type (e.g., Polo, Stand, Crew, V-Neck - Not Applicable if none)"
+- sleeve: "Sleeve length (e.g., Short Sleeve, Long Sleeve, Sleeveless)"
+- closure_type: "Closure type (e.g., Zipper, Buttons, Drawstring, None)"
+- waist_style: "Waist style (e.g., Elastic Waist, Drawstring, Fixed Waist - Not Applicable if none)"
+- pocket_style: "Pocket style (e.g., Side Pockets, Cargo, No Pockets)"
+- hem_style: "Hem style (e.g., Regular, Elastic Cuff, Drawstring Hem)"
+- neckline: "Neckline for tops/dresses (e.g., V-Neck, Round, Square - Not Applicable if none)"
+- lapel_style: "Lapel style for jackets (e.g., Notch, Shawl - Not Applicable if none)"
+- has_lining: "true/false"
+- button_count: "Number of buttons or Unknown"
+- accessories: "Array of accessories (e.g., [Belt, Drawstring, Hood])"
+- image_description: "Natural language description of the item"
+- style_tags: "Array of style descriptors (e.g., [casual, elegant, minimalist])"
+- confidence: "Confidence score 0-100"
 
 CRITICAL RULES:
-1. BRAND DETECTION: Look carefully for Lacoste crocodile, Nike swoosh, Adidas three stripes and other brand logos
-2. Category: ONLY use the main categories listed above
-3. Subcategory: Choose the most appropriate from the category's subcategories
-4. Fill every field as detailed as possible
-5. Colors must be carefully identified (navy ≠ black, white ≠ cream)
-6. Pattern: if solid use "Solid", if patterned specify the pattern type
-7. PatternType: only fill for patterned items, null for solid
-8. Secondary colors: only list prominent secondary colors
-9. Season suitability based on material and thickness
-10. Occasions based on appropriate usage situations
-11. Tags and contextTags for style and usage labels
-12. ALL VALUES IN ENGLISH ONLY
-13. Return only JSON, no additional text`
+1. BRAND DETECTION: Look very carefully for brand logos, labels, and markings
+2. ALL VALUES MUST BE IN ENGLISH
+3. Include ALL fields even if marked as "Unknown" or "Not Applicable"
+4. Be specific with colors and include them in the product name
+5. Pattern: if solid use "Solid", if patterned specify the pattern type
+6. Return only valid JSON, no additional text
+
+Example response structure:
+{
+  "name": "Green Cargo Pants",
+  "brand": "Unknown",
+  "category": "Bottoms",
+  "subcategory": "Cargo Pants",
+  "fit": "Regular Fit",
+  "material": "Cotton",
+  "primary_color": "Green",
+  "secondary_colors": [],
+  "color_tone": "Medium",
+  "pattern": "Solid",
+  "pattern_type": null,
+  "season_suitability": ["Spring", "Summer", "Autumn"],
+  "occasions": ["Casual", "Outdoor"],
+  "collar": "Not Applicable",
+  "sleeve": "Not Applicable",
+  "closure_type": "Zipper",
+  "waist_style": "Elastic Waist",
+  "pocket_style": "Cargo",
+  "hem_style": "Regular",
+  "neckline": "Not Applicable",
+  "lapel_style": "Not Applicable",
+  "has_lining": false,
+  "button_count": "Unknown",
+  "accessories": ["Belt Loops"],
+  "image_description": "Green cargo pants with multiple pockets",
+  "style_tags": ["casual", "utilitarian", "outdoor"],
+  "confidence": 85
+}`
           },
           {
             role: 'user',
             content: [
               {
                 type: 'text',
-                text: 'Analyze this clothing item in detail. IMPORTANT: Look carefully for brand logos, labels and markings. Detect Lacoste crocodile, Nike swoosh and other brand marks. Determine category and subcategory correctly, analyze color, fit, collar, pattern information carefully. ALL RESPONSES MUST BE IN ENGLISH.'
+                text: 'Analyze this clothing item in detail. IMPORTANT: Look carefully for brand logos and markings. Include color in the product name. Fill ALL fields even if some are Unknown or Not Applicable. ALL RESPONSES MUST BE IN ENGLISH.'
               },
               {
                 type: 'image_url',
@@ -110,7 +130,7 @@ CRITICAL RULES:
             ]
           }
         ],
-        max_tokens: 1000,
+        max_tokens: 1500,
         temperature: 0.1
       })
     })
@@ -159,24 +179,32 @@ CRITICAL RULES:
         error: error.message,
         fallback: {
           name: 'Clothing Item',
-          brand: null,
+          brand: 'Unknown',
           category: 'Tops',
           subcategory: 'T-Shirt',
-          primaryColor: 'Unknown',
-          secondaryColors: [],
-          colorTone: 'Medium',
+          primary_color: 'Unknown',
+          secondary_colors: [],
+          color_tone: 'Medium',
           pattern: 'Solid',
-          patternType: null,
+          pattern_type: null,
           material: 'Cotton Blend',
           fit: 'Regular Fit',
           collar: 'Crew Neck',
           sleeve: 'Long Sleeve',
-          seasons: ['All Seasons'],
+          closure_type: 'None',
+          waist_style: 'Not Applicable',
+          pocket_style: 'No Pockets',
+          hem_style: 'Regular',
+          neckline: 'Not Applicable',
+          lapel_style: 'Not Applicable',
+          has_lining: false,
+          button_count: 'Unknown',
+          accessories: [],
+          season_suitability: ['All Seasons'],
           occasions: ['Casual'],
-          tags: ['general'],
-          contextTags: ['casual'],
-          confidence: 30,
-          style: 'Automatic analysis failed'
+          image_description: 'Automatic analysis failed',
+          style_tags: ['general'],
+          confidence: 30
         }
       }),
       { 

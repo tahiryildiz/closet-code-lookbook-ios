@@ -135,27 +135,32 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
           // Use fallback analysis with English values
           const fallbackAnalysis = {
             name: file.name.split('.')[0] || 'Clothing Item',
+            brand: 'Unknown',
             category: 'Tops',
             subcategory: 'T-Shirt',
-            primaryColor: 'Unknown',
-            secondaryColors: [],
-            colorTone: 'Medium',
+            primary_color: 'Unknown',
+            secondary_colors: [],
+            color_tone: 'Medium',
             pattern: 'Solid',
-            patternType: null,
+            pattern_type: null,
             material: 'Unknown',
             fit: 'Regular Fit',
             collar: 'Unknown',
             sleeve: 'Unknown',
-            waist_style: null,
-            closure_type: null,
-            pocket_style: null,
-            hem_style: null,
-            seasons: ['All Seasons'],
+            closure_type: 'Unknown',
+            waist_style: 'Not Applicable',
+            pocket_style: 'Unknown',
+            hem_style: 'Regular',
+            neckline: 'Not Applicable',
+            lapel_style: 'Not Applicable',
+            has_lining: false,
+            button_count: 'Unknown',
+            accessories: [],
+            season_suitability: ['All Seasons'],
             occasions: ['Casual'],
-            tags: ['general'],
-            contextTags: ['casual'],
-            confidence: 30,
-            style: 'Automatic analysis failed, manual editing required'
+            image_description: 'Automatic analysis failed',
+            style_tags: ['general'],
+            confidence: 30
           };
 
           results.push({
@@ -223,8 +228,8 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
         return false;
       }
 
-      // Store English values in database but use Turkish translations from user input
-      const categoryToSave = formData.category || currentResult?.category || 'Tops';
+      // Store English values in database
+      const categoryToSave = currentResult?.category || 'Tops';
 
       // Create base item data with all fields including new ones
       const itemData = {
@@ -232,11 +237,11 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
         brand: formData.brand || currentResult?.brand || null,
         category: categoryToSave,
         subcategory: currentResult?.subcategory || null,
-        primary_color: formData.primaryColor || currentResult?.primaryColor || 'Unknown',
-        secondary_colors: currentResult?.secondaryColors || [],
-        color_tone: currentResult?.colorTone || null,
+        primary_color: currentResult?.primary_color || 'Unknown',
+        secondary_colors: currentResult?.secondary_colors || [],
+        color_tone: currentResult?.color_tone || null,
         pattern: currentResult?.pattern || null,
-        pattern_type: currentResult?.patternType || null,
+        pattern_type: currentResult?.pattern_type || null,
         material: currentResult?.material || null,
         fit: currentResult?.fit || null,
         collar: currentResult?.collar || null,
@@ -245,13 +250,13 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
         closure_type: currentResult?.closure_type || null,
         pocket_style: currentResult?.pocket_style || null,
         hem_style: currentResult?.hem_style || null,
-        seasons: currentResult?.seasons || [],
+        seasons: currentResult?.season_suitability || [],
         occasions: currentResult?.occasions || [],
-        style_tags: formData.tags ? formData.tags.split(', ') : currentResult?.tags || [],
+        style_tags: formData.tags ? formData.tags.split(', ') : currentResult?.style_tags || [],
         context_tags: currentResult?.contextTags || [],
         user_notes: formData.notes || null,
         image_url: currentResult?.imageUrl,
-        prompt_description: currentResult?.style || null,
+        prompt_description: currentResult?.image_description || currentResult?.style || null,
         user_id: session.user.id,
         ai_analysis: currentResult || null
       };
