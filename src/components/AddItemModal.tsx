@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Sparkles } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -118,16 +119,26 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
         } catch (analysisError) {
           console.error('AI analysis failed for', file.name, ':', analysisError);
           
-          // Use fallback analysis
+          // Use enhanced fallback analysis
           const fallbackAnalysis = {
-            name: 'Kıyafet',
+            name: 'Kıyafet Ürünü',
             category: 'Üstler',
+            subcategory: 'Genel',
             primaryColor: 'Gri',
-            tags: ['genel'],
-            material: 'Bilinmiyor',
+            secondaryColors: [],
+            colorTone: 'Orta',
+            pattern: 'Düz',
+            patternType: 'Desenli değil',
+            material: 'Pamuk karışımı',
+            fit: 'Regular Fit',
+            collar: 'Bisiklet Yaka',
+            sleeve: 'Uzun Kol',
+            seasons: ['Sonbahar', 'Kış'],
+            occasions: ['Günlük'],
+            tags: ['rahat', 'günlük'],
+            contextTags: ['genel kullanım'],
             confidence: 50,
-            season: 'Tüm Mevsim',
-            style: 'Genel'
+            style: 'Genel kullanım için uygun kıyafet'
           };
 
           results.push({
@@ -195,9 +206,20 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
         return false;
       }
 
-      console.log('Saving item to database:', {
+      console.log('Saving detailed item to database:', {
         name: formData.name || currentResult?.name,
         category: formData.category || currentResult?.category,
+        subcategory: currentResult?.subcategory,
+        primary_color: formData.primaryColor || currentResult?.primaryColor,
+        secondary_colors: currentResult?.secondaryColors,
+        color_tone: currentResult?.colorTone,
+        pattern: currentResult?.pattern,
+        pattern_type: currentResult?.patternType,
+        fit: currentResult?.fit,
+        collar: currentResult?.collar,
+        sleeve: currentResult?.sleeve,
+        seasons: currentResult?.seasons,
+        occasions: currentResult?.occasions,
         image_url: currentResult?.imageUrl
       });
 
@@ -207,12 +229,25 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
           name: formData.name || currentResult?.name,
           brand: formData.brand,
           category: formData.category || currentResult?.category,
+          subcategory: currentResult?.subcategory,
           primary_color: formData.primaryColor || currentResult?.primaryColor,
+          secondary_colors: currentResult?.secondaryColors,
+          color_tone: currentResult?.colorTone,
+          pattern: currentResult?.pattern,
+          pattern_type: currentResult?.patternType,
+          material: currentResult?.material,
+          fit: currentResult?.fit,
+          collar: currentResult?.collar,
+          sleeve: currentResult?.sleeve,
+          seasons: currentResult?.seasons,
+          occasions: currentResult?.occasions,
           style_tags: formData.tags ? formData.tags.split(', ') : currentResult?.tags,
+          context_tags: currentResult?.contextTags,
           user_notes: formData.notes,
           image_url: currentResult?.imageUrl,
-          material: currentResult?.material,
-          user_id: session.user.id
+          prompt_description: currentResult?.style,
+          user_id: session.user.id,
+          ai_analysis: currentResult
         });
 
       if (error) {
@@ -225,7 +260,7 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
         return false;
       }
 
-      console.log('Item saved successfully!');
+      console.log('Item saved successfully with all details!');
       return true;
     } catch (error) {
       console.error('Error saving item:', error);

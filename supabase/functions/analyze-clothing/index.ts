@@ -36,23 +36,39 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `Sen bir moda uzmanısın ve kıyafet analizi yapıyorsun. Görüntüyü dikkatli bir şekilde analiz et ve aşağıdaki JSON formatında yanıt ver:
+            content: `Sen bir moda uzmanısın ve kıyafet analizi yapıyorsun. Görüntüyü çok dikkatli bir şekilde analiz et ve aşağıdaki JSON formatında DETAYLI yanıt ver:
 
 {
-  "name": "Ürün adı (örn: Lacivert Slim Fit Blazer)",
-  "category": "Kategori (şunlardan biri: Ceketler, Gömlekler, Tişörtler, Kazaklar, Elbiseler, Pantolonlar, Etekler, Üstler, Altlar)",
+  "name": "Detaylı ürün adı (örn: Lacivert Slim Fit Blazer Ceket)",
+  "category": "Ana kategori (şunlardan biri: Ceketler, Gömlekler, Tişörtler, Kazaklar, Elbiseler, Pantolonlar, Etekler, Üstler, Altlar)",
+  "subcategory": "Alt kategori (örn: Blazer, V-Yaka, Polo, Skinny, A-Line, vb.)",
   "primaryColor": "Ana renk (Türkçe: Lacivert, Siyah, Beyaz, Kırmızı, Yeşil, Mavi, Gri, Kahverengi, vb.)",
-  "tags": ["stil", "etiketleri", "listesi"],
-  "material": "Malzeme tahmini",
+  "secondaryColors": ["ikincil", "renkler", "listesi"],
+  "colorTone": "Renk tonu (Açık, Koyu, Orta, Pastel, Canlı)",
+  "pattern": "Desen tipi (Düz, Çizgili, Kareli, Puantiyeli, Çiçekli, Geometrik, vb.)",
+  "patternType": "Desen detayı (İnce çizgili, Kalın kareli, Küçük puantiyeli, vb.)",
+  "material": "Malzeme tahmini (Pamuk, Polyester, Yün, Denim, Keten, vb.)",
+  "fit": "Kesim (Slim Fit, Regular Fit, Oversize, Skinny, Straight, Wide Leg, vb.)",
+  "collar": "Yaka tipi (V-Yaka, Bisiklet Yaka, Polo Yaka, Gömlek Yaka, Kapüşon, vb.)",
+  "sleeve": "Kol tipi (Uzun Kol, Kısa Kol, Kolsuz, 3/4 Kol, vb.)",
+  "seasons": ["uygun", "mevsimler"],
+  "occasions": ["uygun", "durumlar"],
+  "tags": ["detaylı", "stil", "etiketleri"],
+  "contextTags": ["kullanım", "durumu", "etiketleri"],
   "confidence": 85,
-  "season": "Mevsim uygunluğu",
-  "style": "Stil açıklaması"
+  "style": "Detaylı stil açıklaması"
 }
 
 ÖNEMLİ KURALLAR:
-- Rengi çok dikkatli belirle (lacivert ≠ gri, beyaz ≠ krem)
-- Ceketler için mutlaka "Ceketler" kategorisini kullan, "Üstler" değil
-- Ürün adını açıklayıcı yap (Kıyafet değil, Lacivert Blazer Ceket gibi)
+- Her alanı mümkün olduğunca detaylı doldur
+- Renkleri çok dikkatli belirle (lacivert ≠ gri, beyaz ≠ krem)
+- Fit/kesim bilgisini görsel ipuçlarından çıkar
+- Yaka tipini net belirle
+- Mevsim uygunluğunu malzeme ve kalınlığa göre belirle
+- Occasions için: Günlük, İş, Spor, Gece, Resmi, Tatil gibi durumları değerlendir
+- Secondary colors için sadece belirgin ikincil renkleri listele
+- Pattern için: eğer düz ise "Düz", desenli ise desen tipini belirt
+- Context tags için: rahat, şık, spor, vintage, modern gibi etiketler ekle
 - Sadece JSON döndür, başka metin ekleme`
           },
           {
@@ -60,7 +76,7 @@ serve(async (req) => {
             content: [
               {
                 type: 'text',
-                text: 'Bu kıyafet ürününü analiz et ve detaylı bilgilerini ver. Özellikle renk, kategori ve ürün adını çok dikkatli belirle.'
+                text: 'Bu kıyafet ürününü çok detaylı analiz et. Özellikle renk, kesim, yaka, desen, mevsim uygunluğu ve kullanım durumlarını dikkatli belirle. Tüm alanları doldur.'
               },
               {
                 type: 'image_url',
@@ -72,7 +88,7 @@ serve(async (req) => {
             ]
           }
         ],
-        max_tokens: 500,
+        max_tokens: 800,
         temperature: 0.1
       })
     })
@@ -120,14 +136,24 @@ serve(async (req) => {
       JSON.stringify({ 
         error: error.message,
         fallback: {
-          name: 'Kıyafet',
+          name: 'Kıyafet Ürünü',
           category: 'Üstler',
+          subcategory: 'Genel',
           primaryColor: 'Gri',
-          tags: ['genel'],
-          material: 'Bilinmiyor',
+          secondaryColors: [],
+          colorTone: 'Orta',
+          pattern: 'Düz',
+          patternType: 'Desenli değil',
+          material: 'Pamuk karışımı',
+          fit: 'Regular Fit',
+          collar: 'Bisiklet Yaka',
+          sleeve: 'Uzun Kol',
+          seasons: ['Sonbahar', 'Kış'],
+          occasions: ['Günlük'],
+          tags: ['rahat', 'günlük'],
+          contextTags: ['genel kullanım'],
           confidence: 50,
-          season: 'Tüm Mevsim',
-          style: 'Genel'
+          style: 'Genel kullanım için uygun kıyafet'
         }
       }),
       { 
