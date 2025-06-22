@@ -2,7 +2,21 @@
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { getTurkishLabel, categoryOptions, subcategoryOptions, materialOptions, fitOptions, colorToneOptions, patternOptions, seasonOptions, occasionOptions } from "@/utils/localization";
+import { 
+  getTurkishLabel, 
+  categoryOptions, 
+  subcategoryOptions, 
+  materialOptions, 
+  fitOptions, 
+  colorToneOptions, 
+  patternOptions, 
+  seasonOptions, 
+  occasionOptions,
+  waistStyleOptions,
+  closureTypeOptions,
+  pocketStyleOptions,
+  hemStyleOptions
+} from "@/utils/localization";
 
 interface FormData {
   name: string;
@@ -20,37 +34,83 @@ interface ItemFormProps {
 }
 
 const ItemForm = ({ formData, analysisResult, onFormDataChange }: ItemFormProps) => {
-  // Get Turkish labels for display
-  const getTurkishCategory = (englishValue: string) => {
-    return getTurkishLabel(englishValue, categoryOptions);
+  // Helper function to translate color names
+  const translateColor = (color: string) => {
+    const colorTranslations: Record<string, string> = {
+      'Red': 'Kırmızı',
+      'Blue': 'Mavi',
+      'Green': 'Yeşil',
+      'Yellow': 'Sarı',
+      'Black': 'Siyah',
+      'White': 'Beyaz',
+      'Gray': 'Gri',
+      'Brown': 'Kahverengi',
+      'Pink': 'Pembe',
+      'Purple': 'Mor',
+      'Orange': 'Turuncu',
+      'Navy': 'Lacivert',
+      'Beige': 'Bej',
+      'Rust': 'Pas Rengi',
+      'Khaki': 'Haki',
+      'Olive': 'Zeytin Yeşili',
+      'Maroon': 'Bordo',
+      'Cream': 'Krem',
+      'Tan': 'Ten Rengi',
+      'Light Blue': 'Açık Mavi',
+      'Dark Blue': 'Koyu Mavi',
+      'Light Gray': 'Açık Gri',
+      'Dark Gray': 'Koyu Gri',
+      'Unknown': 'Bilinmiyor'
+    };
+    return colorTranslations[color] || color;
   };
 
-  const getTurkishSubcategory = (englishValue: string) => {
-    return getTurkishLabel(englishValue, subcategoryOptions);
+  // Helper function to translate style tags
+  const translateStyleTags = (tags: string[]) => {
+    const tagTranslations: Record<string, string> = {
+      'casual': 'günlük',
+      'formal': 'resmi',
+      'sport': 'spor',
+      'elegant': 'şık',
+      'comfortable': 'rahat',
+      'trendy': 'moda',
+      'classic': 'klasik',
+      'modern': 'modern',
+      'vintage': 'vintage',
+      'chic': 'şık',
+      'trousers': 'pantolon',
+      'jeans': 'kot',
+      'linen': 'keten',
+      'cotton': 'pamuk',
+      'denim': 'kot kumaş',
+      'straight': 'düz',
+      'slim': 'dar',
+      'regular': 'normal',
+      'relaxed': 'rahat',
+      'summer': 'yaz',
+      'spring': 'ilkbahar',
+      'autumn': 'sonbahar',
+      'winter': 'kış'
+    };
+    return tags?.map(tag => tagTranslations[tag.toLowerCase()] || tag).join(', ') || '';
   };
 
-  const getTurkishMaterial = (englishValue: string) => {
-    return getTurkishLabel(englishValue, materialOptions);
-  };
-
-  const getTurkishFit = (englishValue: string) => {
-    return getTurkishLabel(englishValue, fitOptions);
-  };
-
-  const getTurkishPattern = (englishValue: string) => {
-    return getTurkishLabel(englishValue, patternOptions);
-  };
-
-  const getTurkishColorTone = (englishValue: string) => {
-    return getTurkishLabel(englishValue, colorToneOptions);
-  };
-
-  const getTurkishSeasons = (englishSeasons: string[]) => {
-    return englishSeasons?.map(season => getTurkishLabel(season, seasonOptions)).join(', ') || '';
-  };
-
-  const getTurkishOccasions = (englishOccasions: string[]) => {
-    return englishOccasions?.map(occasion => getTurkishLabel(occasion, occasionOptions)).join(', ') || '';
+  // Helper function to translate product names
+  const translateProductName = (name: string) => {
+    if (!name) return '';
+    
+    const nameTranslations: Record<string, string> = {
+      'Linen Trousers': 'Keten Pantolon',
+      'Cotton Shirt': 'Pamuk Gömlek',
+      'Denim Jeans': 'Kot Pantolon',
+      'Wool Sweater': 'Yün Kazak',
+      'Silk Blouse': 'İpek Bluz',
+      'Leather Jacket': 'Deri Ceket',
+      'Canvas Sneakers': 'Kanvas Spor Ayakkabı',
+      'Light Blue Straight Leg Jeans': 'Açık Mavi Düz Paça Kot Pantolon'
+    };
+    
+    return nameTranslations[name] || name;
   };
 
   return (
@@ -58,7 +118,7 @@ const ItemForm = ({ formData, analysisResult, onFormDataChange }: ItemFormProps)
       <div>
         <label className="block text-sm font-semibold text-gray-900 mb-2">Ürün Adı</label>
         <Input
-          value={formData.name || analysisResult?.name || ''}
+          value={formData.name || translateProductName(analysisResult?.name) || ''}
           onChange={(e) => onFormDataChange({ name: e.target.value })}
           className="bg-gray-50 border-gray-200 focus:border-blue-400 rounded-xl text-base py-3"
           placeholder="Ürün adını girin"
@@ -85,7 +145,7 @@ const ItemForm = ({ formData, analysisResult, onFormDataChange }: ItemFormProps)
             <SelectTrigger className="bg-gray-50 border-gray-200 rounded-xl text-base py-3">
               <SelectValue placeholder="Kategori seçin">
                 {(formData.category || analysisResult?.category) && 
-                  getTurkishCategory(formData.category || analysisResult?.category)}
+                  getTurkishLabel(formData.category || analysisResult?.category, categoryOptions)}
               </SelectValue>
             </SelectTrigger>
             <SelectContent>
@@ -100,7 +160,7 @@ const ItemForm = ({ formData, analysisResult, onFormDataChange }: ItemFormProps)
         <div>
           <label className="block text-sm font-semibold text-gray-900 mb-2">Ana Renk</label>
           <Input
-            value={formData.primaryColor || analysisResult?.primaryColor || ''}
+            value={formData.primaryColor || translateColor(analysisResult?.primaryColor) || ''}
             onChange={(e) => onFormDataChange({ primaryColor: e.target.value })}
             className="bg-gray-50 border-gray-200 rounded-xl text-base py-3"
             placeholder="Ana renk girin"
@@ -116,49 +176,81 @@ const ItemForm = ({ formData, analysisResult, onFormDataChange }: ItemFormProps)
           {analysisResult.subcategory && (
             <div className="text-sm">
               <span className="font-medium text-gray-700">Alt Kategori:</span>{' '}
-              <span className="text-gray-600">{getTurkishSubcategory(analysisResult.subcategory)}</span>
+              <span className="text-gray-600">{getTurkishLabel(analysisResult.subcategory, subcategoryOptions)}</span>
             </div>
           )}
           
           {analysisResult.material && (
             <div className="text-sm">
               <span className="font-medium text-gray-700">Malzeme:</span>{' '}
-              <span className="text-gray-600">{getTurkishMaterial(analysisResult.material)}</span>
+              <span className="text-gray-600">{getTurkishLabel(analysisResult.material, materialOptions)}</span>
             </div>
           )}
           
           {analysisResult.fit && (
             <div className="text-sm">
               <span className="font-medium text-gray-700">Kesim:</span>{' '}
-              <span className="text-gray-600">{getTurkishFit(analysisResult.fit)}</span>
+              <span className="text-gray-600">{getTurkishLabel(analysisResult.fit, fitOptions)}</span>
+            </div>
+          )}
+
+          {analysisResult.waist_style && (
+            <div className="text-sm">
+              <span className="font-medium text-gray-700">Bel Stili:</span>{' '}
+              <span className="text-gray-600">{getTurkishLabel(analysisResult.waist_style, waistStyleOptions)}</span>
+            </div>
+          )}
+
+          {analysisResult.closure_type && (
+            <div className="text-sm">
+              <span className="font-medium text-gray-700">Kapama Tipi:</span>{' '}
+              <span className="text-gray-600">{getTurkishLabel(analysisResult.closure_type, closureTypeOptions)}</span>
+            </div>
+          )}
+
+          {analysisResult.pocket_style && (
+            <div className="text-sm">
+              <span className="font-medium text-gray-700">Cep Stili:</span>{' '}
+              <span className="text-gray-600">{getTurkishLabel(analysisResult.pocket_style, pocketStyleOptions)}</span>
+            </div>
+          )}
+
+          {analysisResult.hem_style && (
+            <div className="text-sm">
+              <span className="font-medium text-gray-700">Paça Stili:</span>{' '}
+              <span className="text-gray-600">{getTurkishLabel(analysisResult.hem_style, hemStyleOptions)}</span>
             </div>
           )}
           
           {analysisResult.pattern && (
             <div className="text-sm">
               <span className="font-medium text-gray-700">Desen:</span>{' '}
-              <span className="text-gray-600">{getTurkishPattern(analysisResult.pattern)}</span>
+              <span className="text-gray-600">{getTurkishLabel(analysisResult.pattern, patternOptions)}</span>
             </div>
           )}
           
           {analysisResult.colorTone && (
             <div className="text-sm">
               <span className="font-medium text-gray-700">Renk Tonu:</span>{' '}
-              <span className="text-gray-600">{getTurkishColorTone(analysisResult.colorTone)}</span>
+              <span className="text-gray-600">{getTurkishLabel(analysisResult.colorTone, colorToneOptions)}</span>
             </div>
           )}
           
           {analysisResult.seasons && analysisResult.seasons.length > 0 && (
             <div className="text-sm">
               <span className="font-medium text-gray-700">Mevsimler:</span>{' '}
-              <span className="text-gray-600">{getTurkishSeasons(analysisResult.seasons)}</span>
+              <span className="text-gray-600">
+                {analysisResult.seasons.map((season: string) => getTurkishLabel(season, seasonOptions)).join(', ')}
+              </span>
             </div>
           )}
           
           {analysisResult.occasions && analysisResult.occasions.length > 0 && (
             <div className="text-sm">
               <span className="font-medium text-gray-700">Durumlar:</span>{' '}
-              <span className="text-gray-600">{getTurkishOccasions(analysisResult.occasions)}</span>
+              <span className="text-gray-600">
+                {analysisResult.occasions.map((occasion: string) => getTurkishLabel(occasion, occasionOptions)).join(', ')}
+              </span>
             </div>
           )}
         </div>
@@ -167,7 +259,7 @@ const ItemForm = ({ formData, analysisResult, onFormDataChange }: ItemFormProps)
       <div>
         <label className="block text-sm font-semibold text-gray-900 mb-2">Stil Etiketleri</label>
         <Input
-          value={formData.tags || analysisResult?.tags?.join(', ') || ''}
+          value={formData.tags || translateStyleTags(analysisResult?.tags) || ''}
           onChange={(e) => onFormDataChange({ tags: e.target.value })}
           className="bg-gray-50 border-gray-200 rounded-xl text-base py-3"
           placeholder="Stil etiketleri girin (virgülle ayırın)"

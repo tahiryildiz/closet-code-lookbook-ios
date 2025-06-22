@@ -14,11 +14,13 @@ export type Database = {
           ai_analysis: Json | null
           brand: string | null
           category: string
+          closure_type: string | null
           collar: string | null
           color_tone: string | null
           context_tags: string[] | null
           created_at: string | null
           fit: string | null
+          hem_style: string | null
           id: string
           image_url: string
           is_favorite: boolean | null
@@ -27,6 +29,7 @@ export type Database = {
           occasions: string[] | null
           pattern: string | null
           pattern_type: string | null
+          pocket_style: string | null
           primary_color: string | null
           prompt_description: string | null
           purchase_price: number | null
@@ -39,17 +42,20 @@ export type Database = {
           updated_at: string | null
           user_id: string
           user_notes: string | null
+          waist_style: string | null
           wear_count: number | null
         }
         Insert: {
           ai_analysis?: Json | null
           brand?: string | null
           category: string
+          closure_type?: string | null
           collar?: string | null
           color_tone?: string | null
           context_tags?: string[] | null
           created_at?: string | null
           fit?: string | null
+          hem_style?: string | null
           id?: string
           image_url: string
           is_favorite?: boolean | null
@@ -58,6 +64,7 @@ export type Database = {
           occasions?: string[] | null
           pattern?: string | null
           pattern_type?: string | null
+          pocket_style?: string | null
           primary_color?: string | null
           prompt_description?: string | null
           purchase_price?: number | null
@@ -70,17 +77,20 @@ export type Database = {
           updated_at?: string | null
           user_id: string
           user_notes?: string | null
+          waist_style?: string | null
           wear_count?: number | null
         }
         Update: {
           ai_analysis?: Json | null
           brand?: string | null
           category?: string
+          closure_type?: string | null
           collar?: string | null
           color_tone?: string | null
           context_tags?: string[] | null
           created_at?: string | null
           fit?: string | null
+          hem_style?: string | null
           id?: string
           image_url?: string
           is_favorite?: boolean | null
@@ -89,6 +99,7 @@ export type Database = {
           occasions?: string[] | null
           pattern?: string | null
           pattern_type?: string | null
+          pocket_style?: string | null
           primary_color?: string | null
           prompt_description?: string | null
           purchase_price?: number | null
@@ -101,6 +112,7 @@ export type Database = {
           updated_at?: string | null
           user_id?: string
           user_notes?: string | null
+          waist_style?: string | null
           wear_count?: number | null
         }
         Relationships: []

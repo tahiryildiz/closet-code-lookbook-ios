@@ -135,7 +135,7 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
           // Use fallback analysis with English values
           const fallbackAnalysis = {
             name: file.name.split('.')[0] || 'Clothing Item',
-            category: 'Tops', // Store English values
+            category: 'Tops',
             subcategory: 'T-Shirt',
             primaryColor: 'Unknown',
             secondaryColors: [],
@@ -146,6 +146,10 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
             fit: 'Regular Fit',
             collar: 'Unknown',
             sleeve: 'Unknown',
+            waist_style: null,
+            closure_type: null,
+            pocket_style: null,
+            hem_style: null,
             seasons: ['All Seasons'],
             occasions: ['Casual'],
             tags: ['general'],
@@ -219,14 +223,14 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
         return false;
       }
 
-      // Store English values in database
+      // Store English values in database but use Turkish translations from user input
       const categoryToSave = formData.category || currentResult?.category || 'Tops';
 
-      // Create base item data with only fields that exist in the current database schema
+      // Create base item data with all fields including new ones
       const itemData = {
         name: formData.name || currentResult?.name || 'Clothing Item',
         brand: formData.brand || currentResult?.brand || null,
-        category: categoryToSave, // Store English category
+        category: categoryToSave,
         subcategory: currentResult?.subcategory || null,
         primary_color: formData.primaryColor || currentResult?.primaryColor || 'Unknown',
         secondary_colors: currentResult?.secondaryColors || [],
@@ -237,6 +241,10 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
         fit: currentResult?.fit || null,
         collar: currentResult?.collar || null,
         sleeve: currentResult?.sleeve || null,
+        waist_style: currentResult?.waist_style || null,
+        closure_type: currentResult?.closure_type || null,
+        pocket_style: currentResult?.pocket_style || null,
+        hem_style: currentResult?.hem_style || null,
         seasons: currentResult?.seasons || [],
         occasions: currentResult?.occasions || [],
         style_tags: formData.tags ? formData.tags.split(', ') : currentResult?.tags || [],
