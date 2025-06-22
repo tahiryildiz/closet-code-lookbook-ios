@@ -4,16 +4,21 @@ import { createStrictWardrobeList } from './validation.ts';
 export const createOutfitPrompt = (wardrobeItems: any[], occasion: string, timeOfDay: string, weather: string) => {
   const strictWardrobeList = createStrictWardrobeList(wardrobeItems);
   
-  return `Sen KombinAI'ın profesyonel stil danışmanısın. SADECE aşağıdaki gardroba dayanarak kombin önerileri oluşturacaksın.
+  // Extract exact item names for reference
+  const exactItemNames = wardrobeItems.map(item => item.name || item.subcategory || 'Unknown').filter(name => name !== 'Unknown');
+  
+  console.log('Creating prompt with exact item names:', exactItemNames);
+  
+  return `SADECE AŞAĞIDA LİSTELENEN ÜRÜNLERI KULLAN - BAŞKA ÜRÜN EKLEME!
 
-🚨 KRİTİK KURALLAR (İHLAL EDİLMEZ):
-1. SADECE aşağıdaki listeden ürün kullan - BAŞKA ÜRÜN EKLEME
-2. Ürün isimlerini TAM OLARAK aynı şekilde kullan - DEĞİŞTİRME
+🚨 KRİTİK KURALLAR:
+1. SADECE bu listeden ürün seç: ${exactItemNames.map(name => `"${name}"`).join(', ')}
+2. Ürün isimlerini TAM OLARAK AYNI ŞEKİLDE kullan
 3. Her kombinde 2-4 ürün olmalı
-4. Flatlay düzenine uygun kombinler oluştur (üst kısım üstte, alt kısım altta)
+4. BAŞKA ÜRÜN EKLEME - sadece yukarıdaki listeden seç
 5. Tüm çıktılar Türkçe olmalı
 
-MEVCUT GARDROBA:
+MEVCUT GARDROBA (SADECE BUNLARI KULLAN):
 ${strictWardrobeList}
 
 DURUM BİLGİLERİ:
@@ -21,24 +26,19 @@ DURUM BİLGİLERİ:
 - Zaman: ${timeOfDay}  
 - Hava: ${weather}
 
-STİL KURALLARI:
-- Renk uyumu önemli
-- Mevsime ve havaya uygun seçim
-- Her kombin farklı olmalı (sadece 1 ürün değişikliği kabul edilmez)
-- Eksik ürün varsa tamamlamak için yeni ürün EKLEME
-
 ÇIKTI FORMATI (SADECE JSON):
 {
   "outfits": [
     {
       "id": 1,
-      "name": "Türkçe Kombin Adı",
-      "items": ["Tam Ürün Adı 1", "Tam Ürün Adı 2"],
-      "confidence": 90,
+      "name": "Kombin Adı",
+      "items": ["TAM ÜRÜN ADI 1", "TAM ÜRÜN ADI 2"],
+      "confidence": 85,
       "styling_tips": "Türkçe stil ipucu"
     }
   ]
 }
 
-UYARI: Gardrobada olmayan ürün kullanırsan kombin geçersiz sayılacak!`;
+UYARI: Listede olmayan ürün kullanırsan kombin GEÇERSİZ olacak!
+TEKRAR: SADECE ŞU ÜRÜNLERI KULLAN: ${exactItemNames.map(name => `"${name}"`).join(', ')}`;
 };

@@ -7,27 +7,35 @@ export interface ValidationResult {
 }
 
 export const validateOutfitAgainstWardrobe = (outfit: any, wardrobeItems: any[]): ValidationResult => {
-  const wardrobeItemNames = wardrobeItems.map(item => 
-    (item.name || item.subcategory || 'Unknown').toLowerCase().trim()
-  );
+  // Create exact name mapping from wardrobe
+  const exactWardrobeNames = wardrobeItems.map(item => {
+    const name = item.name || item.subcategory || 'Unknown';
+    return name.trim();
+  });
+  
+  console.log('Wardrobe names for validation:', exactWardrobeNames);
+  console.log('Outfit items to validate:', outfit.items);
   
   const validItems: string[] = [];
   const invalidItems: string[] = [];
   const errors: string[] = [];
   
   outfit.items.forEach((itemName: string) => {
-    const cleanItemName = itemName.toLowerCase().trim();
-    const exactMatch = wardrobeItemNames.find(wardrobeName => 
-      wardrobeName === cleanItemName ||
-      wardrobeName.includes(cleanItemName) ||
-      cleanItemName.includes(wardrobeName)
+    const cleanItemName = itemName.trim();
+    
+    // STRICT exact match only - no fuzzy matching
+    const exactMatch = exactWardrobeNames.find(wardrobeName => 
+      wardrobeName === cleanItemName
     );
     
     if (exactMatch) {
       validItems.push(itemName);
+      console.log(`✓ VALID: "${itemName}" found in wardrobe`);
     } else {
       invalidItems.push(itemName);
-      errors.push(`Item "${itemName}" not found in wardrobe`);
+      errors.push(`INVALID: "${itemName}" not found in wardrobe`);
+      console.log(`✗ INVALID: "${itemName}" not found in wardrobe`);
+      console.log('Available names:', exactWardrobeNames);
     }
   });
   
@@ -39,8 +47,16 @@ export const validateOutfitAgainstWardrobe = (outfit: any, wardrobeItems: any[])
     errors.push('Outfit must have maximum 4 items');
   }
   
+  const isValid = errors.length === 0 && invalidItems.length === 0;
+  
+  console.log(`Validation result for outfit "${outfit.name}": ${isValid ? 'VALID' : 'INVALID'}`);
+  if (!isValid) {
+    console.log('Validation errors:', errors);
+    console.log('Invalid items:', invalidItems);
+  }
+  
   return {
-    isValid: errors.length === 0 && invalidItems.length === 0,
+    isValid,
     errors,
     validItems,
     invalidItems
@@ -48,12 +64,15 @@ export const validateOutfitAgainstWardrobe = (outfit: any, wardrobeItems: any[])
 };
 
 export const createStrictWardrobeList = (wardrobeItems: any[]): string => {
-  return wardrobeItems.map((item, index) => {
+  const itemsList = wardrobeItems.map((item, index) => {
     const itemName = item.name || item.subcategory || 'Unknown Item';
     const category = item.category || 'Unknown';
     const color = item.primary_color || '';
     return `${index + 1}. "${itemName}" (${category}${color ? `, ${color}` : ''})`;
   }).join('\n');
+  
+  console.log('Created strict wardrobe list:', itemsList);
+  return itemsList;
 };
 
 export const detectDuplicateOutfits = (outfits: any[]): number[] => {
@@ -61,13 +80,22 @@ export const detectDuplicateOutfits = (outfits: any[]): number[] => {
   
   for (let i = 0; i < outfits.length; i++) {
     for (let j = i + 1; j < outfits.length; j++) {
-      const outfit1Items = outfits[i].items.sort();
-      const outfit2Items = outfits[j].items.sort();
+      const outfit1Items = [...outfits[i].items].sort();
+      const outfit2Items = [...outfits[j].items].sort();
       
-      // Check if outfits are too similar (only 1 item different)
-      const differences = outfit1Items.filter(item => !outfit2Items.includes(item));
-      if (differences.length <= 1) {
+      // Check if outfits are identical or too similar (only 1 item different)
+      let differences = 0;
+      const maxLength = Math.max(outfit1Items.length, outfit2Items.length);
+      
+      for (let k = 0; k < maxLength; k++) {
+        if (outfit1Items[k] !== outfit2Items[k]) {
+          differences++;
+        }
+      }
+      
+      if (differences <= 1) {
         duplicateIndices.push(j);
+        console.log(`Duplicate detected: Outfit ${i + 1} and ${j + 1} are too similar`);
       }
     }
   }
