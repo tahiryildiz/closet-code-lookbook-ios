@@ -20,6 +20,20 @@ interface FormData {
   notes: string;
 }
 
+// Category translations from English to Turkish
+const categoryTranslations: Record<string, string> = {
+  'Tops': 'Üstler',
+  'Bottoms': 'Altlar',
+  'Dresses & Suits': 'Elbise & Takım',
+  'Outerwear': 'Dış Giyim',
+  'Footwear': 'Ayakkabı',
+  'Accessories': 'Aksesuar',
+  'Bags': 'Çanta',
+  'Underwear & Loungewear': 'İç Giyim',
+  'Swimwear': 'Mayo & Bikini',
+  'Activewear': 'Spor Giyim'
+};
+
 const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
   const [step, setStep] = useState<'upload' | 'details'>('upload');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -109,8 +123,12 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
 
           console.log('Analysis successful:', analysisData);
 
+          // Translate category to Turkish before storing
+          const translatedCategory = categoryTranslations[analysisData.category] || analysisData.category;
+
           results.push({
             ...analysisData,
+            category: translatedCategory, // Store Turkish category
             imageUrl: publicUrl,
             originalFile: file
           });
@@ -118,10 +136,10 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
         } catch (analysisError) {
           console.error('AI analysis failed for', file.name, ':', analysisError);
           
-          // Use enhanced fallback analysis
+          // Use enhanced fallback analysis with Turkish category
           const fallbackAnalysis = {
             name: file.name.split('.')[0] || 'Kıyafet Ürünü',
-            category: 'Tops',
+            category: 'Üstler', // Use Turkish category in fallback
             subcategory: 'T-Shirt',
             primaryColor: 'Bilinmiyor',
             secondaryColors: [],
@@ -205,11 +223,14 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
         return false;
       }
 
+      // Make sure we're using Turkish category name
+      const categoryToSave = formData.category || currentResult?.category || 'Üstler';
+
       // Create base item data with only fields that exist in the current database schema
       const itemData = {
         name: formData.name || currentResult?.name || 'Kıyafet Ürünü',
         brand: formData.brand || currentResult?.brand || null,
-        category: formData.category || currentResult?.category || 'Tops',
+        category: categoryToSave, // This will be the Turkish category
         subcategory: currentResult?.subcategory || null,
         primary_color: formData.primaryColor || currentResult?.primaryColor || 'Bilinmiyor',
         secondary_colors: currentResult?.secondaryColors || [],
