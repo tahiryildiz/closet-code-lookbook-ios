@@ -65,11 +65,16 @@ export const colorOptions: LocalizedOption[] = [
   { value: "Unknown", label: "Bilinmiyor" }
 ];
 
-// Comprehensive subcategory translations (updated with proper polo handling)
+// Updated subcategory translations with T-shirt focus
 export const subcategoryOptions: LocalizedOption[] = [
-  // Tops subcategories (updated with proper polo handling)
-  { value: "T-Shirt", label: "Tişört" },
+  // T-shirt specific subcategories
   { value: "TShirt", label: "Tişört" },
+  { value: "TankTop", label: "Atlet" },
+  { value: "LongSleeve", label: "Uzun Kollu Tişört" },
+  { value: "Henley", label: "Henley Yaka" },
+  
+  // Other tops subcategories
+  { value: "T-Shirt", label: "Tişört" },
   { value: "Polo Shirt", label: "Polo Yaka" },
   { value: "Polo", label: "Polo Yaka" },
   { value: "Shirt", label: "Gömlek" },
@@ -175,11 +180,13 @@ export const subcategoryOptions: LocalizedOption[] = [
   { value: "Rash Guard", label: "Dalış Tişörtü" }
 ];
 
-// Material translations (updated)
+// Updated material translations with T-shirt focus
 export const materialOptions: LocalizedOption[] = [
   { value: "Cotton", label: "Pamuk" },
-  { value: "Linen", label: "Keten" },
   { value: "Polyester", label: "Polyester" },
+  { value: "Modal", label: "Modal" },
+  { value: "Linen", label: "Keten" },
+  { value: "Elastane", label: "Elastan" },
   { value: "Silk", label: "İpek" },
   { value: "Denim", label: "Kot" },
   { value: "Wool", label: "Yün" },
@@ -191,7 +198,7 @@ export const materialOptions: LocalizedOption[] = [
   { value: "Unknown", label: "Bilinmiyor" }
 ];
 
-// Fit translations (updated)
+// Updated fit translations
 export const fitOptions: LocalizedOption[] = [
   { value: "Slim", label: "Dar Kesim" },
   { value: "Regular", label: "Normal Kesim" },
@@ -207,12 +214,37 @@ export const fitOptions: LocalizedOption[] = [
   { value: "Tapered", label: "Daralan Kesim" }
 ];
 
-// Sleeve length options (updated)
+// Updated sleeve length options
 export const sleeveLengthOptions: LocalizedOption[] = [
   { value: "Short", label: "Kısa Kol" },
   { value: "Long", label: "Uzun Kol" },
   { value: "Sleeveless", label: "Kolsuz" },
   { value: "ThreeQuarter", label: "3/4 Kol" }
+];
+
+// Updated neckline options with T-shirt focus
+export const necklineOptions: LocalizedOption[] = [
+  { value: "CrewNeck", label: "Bisiklet Yaka" },
+  { value: "VNeck", label: "V Yaka" },
+  { value: "Henley", label: "Henley Yaka" },
+  { value: "Polo", label: "Polo Yaka" },
+  { value: "ButtonDown", label: "Düğmeli Yaka" },
+  { value: "Spread", label: "Geniş Yaka" },
+  { value: "Mandarin", label: "Çin Yakası" },
+  { value: "Classic", label: "Klasik Yaka" },
+  { value: "None", label: "Yakasız" }
+];
+
+// NEW: Design details options
+export const designDetailsOptions: LocalizedOption[] = [
+  { value: "LogoPrint", label: "Logo Baskı" },
+  { value: "Embroidered", label: "Nakışlı" },
+  { value: "ChestPrint", label: "Göğüs Baskı" },
+  { value: "BackPrint", label: "Sırt Baskı" },
+  { value: "NoDesign", label: "Desensiz" },
+  { value: "GraphicPrint", label: "Grafik Baskı" },
+  { value: "TextPrint", label: "Yazı Baskı" },
+  { value: "AllOverPrint", label: "Tam Baskı" }
 ];
 
 // Collar style options (updated)
@@ -224,7 +256,6 @@ export const collarStyleOptions: LocalizedOption[] = [
   { value: "None", label: "Yakasız" }
 ];
 
-// Closure type translations (updated)
 export const closureTypeOptions: LocalizedOption[] = [
   { value: "Buttons", label: "Düğme" },
   { value: "Zipper", label: "Fermuar" },
@@ -233,7 +264,6 @@ export const closureTypeOptions: LocalizedOption[] = [
   { value: "None", label: "Yok" }
 ];
 
-// Cuff style options (updated)
 export const cuffStyleOptions: LocalizedOption[] = [
   { value: "Button", label: "Düğmeli Manşet" },
   { value: "French", label: "Fransız Manşet" },
@@ -241,7 +271,6 @@ export const cuffStyleOptions: LocalizedOption[] = [
   { value: "None", label: "Manşetsiz" }
 ];
 
-// Pocket style translations (updated)
 export const pocketStyleOptions: LocalizedOption[] = [
   { value: "SingleChest", label: "Tek Göğüs Cebi" },
   { value: "DoubleChest", label: "Çift Göğüs Cebi" },
@@ -253,7 +282,6 @@ export const pocketStyleOptions: LocalizedOption[] = [
   { value: "None", label: "Cep Yok" }
 ];
 
-// Waist style translations
 export const waistStyleOptions: LocalizedOption[] = [
   { value: "Elastic", label: "Lastikli Bel" },
   { value: "Drawstring", label: "Bağcıklı Bel" },
@@ -262,7 +290,6 @@ export const waistStyleOptions: LocalizedOption[] = [
   { value: "Belted", label: "Kemerli" }
 ];
 
-// Hem style translations
 export const hemStyleOptions: LocalizedOption[] = [
   { value: "Straight", label: "Düz Paça" },
   { value: "Elastic", label: "Lastikli Paça" },
@@ -270,7 +297,7 @@ export const hemStyleOptions: LocalizedOption[] = [
   { value: "Drawstring", label: "Bağcıklı Paça" }
 ];
 
-// Color tone translations (updated)
+// Updated color tone translations
 export const colorToneOptions: LocalizedOption[] = [
   { value: "Light", label: "Açık Ton" },
   { value: "Medium", label: "Orta Ton" },
@@ -279,10 +306,12 @@ export const colorToneOptions: LocalizedOption[] = [
   { value: "Bright", label: "Canlı" }
 ];
 
-// Pattern translations (updated)
+// Updated pattern translations with T-shirt focus
 export const patternOptions: LocalizedOption[] = [
   { value: "Solid", label: "Düz" },
+  { value: "Printed", label: "Baskılı" },
   { value: "Striped", label: "Çizgili" },
+  { value: "Graphic", label: "Grafik Desenli" },
   { value: "Checked", label: "Ekose" },
   { value: "Checkered", label: "Ekose" },
   { value: "Polka Dot", label: "Puantiyeli" },
@@ -290,11 +319,10 @@ export const patternOptions: LocalizedOption[] = [
   { value: "Geometric", label: "Geometrik" },
   { value: "Leopard", label: "Leopar" },
   { value: "Zebra", label: "Zebra" },
-  { value: "Printed", label: "Baskılı" },
   { value: "None", label: "Desensiz" }
 ];
 
-// Season translations (updated)
+// Updated season translations with T-shirt focus
 export const seasonOptions: LocalizedOption[] = [
   { value: "Spring", label: "İlkbahar" },
   { value: "Summer", label: "Yaz" },
@@ -303,15 +331,16 @@ export const seasonOptions: LocalizedOption[] = [
   { value: "All Seasons", label: "Tüm Mevsimler" }
 ];
 
-// Occasion translations (updated)
+// Updated occasion translations with T-shirt focus
 export const occasionOptions: LocalizedOption[] = [
   { value: "Casual", label: "Günlük" },
+  { value: "Sport", label: "Spor" },
+  { value: "Outdoor", label: "Açık Hava" },
+  { value: "Home", label: "Ev Rahatlığı" },
+  { value: "Travel", label: "Seyahat" },
   { value: "Work", label: "Ofis" },
   { value: "Party", label: "Parti" },
   { value: "Formal", label: "Resmi" },
-  { value: "Outdoor", label: "Açık Hava" },
-  { value: "Travel", label: "Seyahat" },
-  { value: "Sport", label: "Spor" },
   { value: "Evening", label: "Gece" },
   { value: "Holiday", label: "Tatil" }
 ];
@@ -354,6 +383,10 @@ export const getOptionsForCategory = (category: string): LocalizedOption[] => {
       return fitOptions;
     case 'sleeveLength':
       return sleeveLengthOptions;
+    case 'neckline':
+      return necklineOptions;
+    case 'designDetails':
+      return designDetailsOptions;
     case 'collarStyle':
       return collarStyleOptions;
     case 'cuffStyle':

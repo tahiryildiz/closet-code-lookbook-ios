@@ -23,6 +23,7 @@ export type Database = {
           context_tags: string[] | null
           created_at: string | null
           cuff_style: string | null
+          design_details: string[] | null
           fit: string | null
           has_lining: boolean | null
           hem_style: string | null
@@ -66,6 +67,7 @@ export type Database = {
           context_tags?: string[] | null
           created_at?: string | null
           cuff_style?: string | null
+          design_details?: string[] | null
           fit?: string | null
           has_lining?: boolean | null
           hem_style?: string | null
@@ -109,6 +111,7 @@ export type Database = {
           context_tags?: string[] | null
           created_at?: string | null
           cuff_style?: string | null
+          design_details?: string[] | null
           fit?: string | null
           has_lining?: boolean | null
           hem_style?: string | null

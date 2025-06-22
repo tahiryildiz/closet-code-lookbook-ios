@@ -147,11 +147,12 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
             fit: 'Regular Fit',
             collar: 'Unknown',
             sleeve: 'Unknown',
+            neckline: 'CrewNeck',
+            design_details: ['NoDesign'],
             closure_type: 'Unknown',
             waist_style: 'Not Applicable',
             pocket_style: 'Unknown',
             hem_style: 'Regular',
-            neckline: 'Not Applicable',
             lapel_style: 'Not Applicable',
             has_lining: false,
             button_count: 'Unknown',
@@ -231,7 +232,7 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
       // Store English values in database
       const categoryToSave = currentResult?.category || 'Tops';
 
-      // Create base item data with all fields including new ones
+      // Create base item data with all fields including new design_details
       const itemData = {
         name: formData.name || currentResult?.name || 'Clothing Item',
         brand: formData.brand || currentResult?.brand || null,
@@ -246,6 +247,8 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
         fit: currentResult?.fit || null,
         collar: currentResult?.collar || null,
         sleeve: currentResult?.sleeve || null,
+        neckline: currentResult?.neckline || null,
+        design_details: currentResult?.design_details || [],
         waist_style: currentResult?.waist_style || null,
         closure_type: currentResult?.closure_type || null,
         pocket_style: currentResult?.pocket_style || null,
