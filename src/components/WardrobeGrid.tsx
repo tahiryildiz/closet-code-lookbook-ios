@@ -190,7 +190,8 @@ const WardrobeGrid = ({ viewMode, searchQuery, selectedCategory, refreshTrigger 
       'T-Shirt': 'Tişört',
       'Shirt': 'Gömlek',
       'Blouse': 'Bluz',
-      'Polo Shirt': 'Polo Tişört',
+      'Polo Shirt': 'Polo Yaka',
+      'Polo': 'Polo Yaka',
       'Sweatshirt': 'Sweatshirt'
     };
 
@@ -222,8 +223,11 @@ const WardrobeGrid = ({ viewMode, searchQuery, selectedCategory, refreshTrigger 
     
     // If no direct translation, build from category/subcategory
     if (!translatedName) {
-      // Try to get base item type from subcategory or category
-      if (subcategory) {
+      // Special handling for polo shirts first
+      if (subcategory === 'Polo Shirt' || subcategory === 'Polo' || 
+          name.toLowerCase().includes('polo')) {
+        translatedName = 'Polo Yaka';
+      } else if (subcategory) {
         const subcategoryLabel = getTurkishLabel(subcategory, subcategoryOptions);
         if (subcategoryLabel && subcategoryLabel !== subcategory) {
           translatedName = subcategoryLabel;
@@ -242,7 +246,7 @@ const WardrobeGrid = ({ viewMode, searchQuery, selectedCategory, refreshTrigger 
       if (!translatedName) {
         if (name.toLowerCase().includes('jean') || name.toLowerCase().includes('denim')) {
           translatedName = 'Kot Pantolon';
-        } else if (name.toLowerCase().includes('shirt')) {
+        } else if (name.toLowerCase().includes('shirt') && !name.toLowerCase().includes('polo')) {
           translatedName = 'Gömlek';
         } else if (name.toLowerCase().includes('t-shirt') || name.toLowerCase().includes('tshirt')) {
           translatedName = 'Tişört';

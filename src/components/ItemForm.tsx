@@ -44,7 +44,8 @@ const ItemForm = ({ formData, analysisResult, onFormDataChange }: ItemFormProps)
       'T-Shirt': 'Tişört',
       'Shirt': 'Gömlek',
       'Blouse': 'Bluz',
-      'Polo Shirt': 'Polo Tişört',
+      'Polo Shirt': 'Polo Yaka',
+      'Polo': 'Polo Yaka',
       'Sweatshirt': 'Sweatshirt',
       'Trousers': 'Pantolon',
       'Rust Colored Trousers': 'Kahverengi Pantolon'
@@ -79,9 +80,13 @@ const ItemForm = ({ formData, analysisResult, onFormDataChange }: ItemFormProps)
     
     // If no direct translation, try to extract base item type
     if (!translatedName) {
-      if (name.toLowerCase().includes('jean') || name.toLowerCase().includes('denim')) {
+      // Special handling for polo shirts
+      if (subcategory === 'Polo Shirt' || subcategory === 'Polo' || 
+          name.toLowerCase().includes('polo')) {
+        translatedName = 'Polo Yaka';
+      } else if (name.toLowerCase().includes('jean') || name.toLowerCase().includes('denim')) {
         translatedName = 'Kot Pantolon';
-      } else if (name.toLowerCase().includes('shirt') && !name.toLowerCase().includes('t-shirt')) {
+      } else if (name.toLowerCase().includes('shirt') && !name.toLowerCase().includes('t-shirt') && !name.toLowerCase().includes('polo')) {
         translatedName = 'Gömlek';
       } else if (name.toLowerCase().includes('t-shirt') || name.toLowerCase().includes('tshirt')) {
         translatedName = 'Tişört';
@@ -98,6 +103,7 @@ const ItemForm = ({ formData, analysisResult, onFormDataChange }: ItemFormProps)
           else if (subcategory === 'T-Shirt') translatedName = 'Tişört';
           else if (subcategory === 'Shirt') translatedName = 'Gömlek';
           else if (subcategory === 'Jeans') translatedName = 'Kot Pantolon';
+          else if (subcategory === 'Polo Shirt' || subcategory === 'Polo') translatedName = 'Polo Yaka';
           else translatedName = subcategory;
         } else if (category && category !== 'Unknown') {
           if (category === 'Tops') translatedName = 'Üst';

@@ -18,9 +18,9 @@ export const categoryOptions: LocalizedOption[] = [
   { value: "Activewear", label: "Spor Giyim" }
 ];
 
-// Comprehensive subcategory translations (updated with shirts)
+// Comprehensive subcategory translations (updated with polo shirt)
 export const subcategoryOptions: LocalizedOption[] = [
-  // Tops subcategories (updated)
+  // Tops subcategories (updated with proper polo handling)
   { value: "T-Shirt", label: "Tişört" },
   { value: "TShirt", label: "Tişört" },
   { value: "Polo Shirt", label: "Polo Yaka" },
@@ -36,6 +36,8 @@ export const subcategoryOptions: LocalizedOption[] = [
   { value: "Bustier", label: "Büstiy" },
   { value: "Kimono", label: "Kimono" },
   
+  // ... keep existing code (bottoms subcategories and rest)
+  
   // Bottoms subcategories
   { value: "Jeans", label: "Kot Pantolon" },
   { value: "Chinos", label: "Chino Pantolon" },
@@ -48,8 +50,6 @@ export const subcategoryOptions: LocalizedOption[] = [
   { value: "Culottes", label: "Bol Etek" },
   { value: "Leggings", label: "Tayt" },
   { value: "Cargo Pants", label: "Kargo Pantolon" },
-  
-  // ... keep existing code (other subcategories)
   
   // Outerwear subcategories
   { value: "Blazer", label: "Blazer" },
@@ -162,7 +162,7 @@ export const fitOptions: LocalizedOption[] = [
   { value: "Tapered", label: "Daralan Kesim" }
 ];
 
-// Sleeve length options (new)
+// Sleeve length options (updated)
 export const sleeveLengthOptions: LocalizedOption[] = [
   { value: "Short", label: "Kısa Kol" },
   { value: "Long", label: "Uzun Kol" },
@@ -170,7 +170,7 @@ export const sleeveLengthOptions: LocalizedOption[] = [
   { value: "ThreeQuarter", label: "3/4 Kol" }
 ];
 
-// Collar style options (new)
+// Collar style options (updated)
 export const collarStyleOptions: LocalizedOption[] = [
   { value: "ButtonDown", label: "Düğmeli Yaka" },
   { value: "Spread", label: "Geniş Yaka" },
@@ -188,7 +188,7 @@ export const closureTypeOptions: LocalizedOption[] = [
   { value: "None", label: "Yok" }
 ];
 
-// Cuff style options (new)
+// Cuff style options (updated)
 export const cuffStyleOptions: LocalizedOption[] = [
   { value: "Button", label: "Düğmeli Manşet" },
   { value: "French", label: "Fransız Manşet" },
