@@ -19,7 +19,7 @@ interface ItemFormProps {
 
 const ItemForm = ({ formData, analysisResult, onFormDataChange }: ItemFormProps) => {
   // Helper function to translate product names and add color
-  const translateProductName = (name: string, color: string) => {
+  const translateProductName = (name: string, category: string, subcategory: string, color: string) => {
     if (!name) return '';
     
     const nameTranslations: Record<string, string> = {
@@ -35,7 +35,7 @@ const ItemForm = ({ formData, analysisResult, onFormDataChange }: ItemFormProps)
       'Leather Jacket': 'Deri Ceket',
       'Canvas Sneakers': 'Kanvas Spor Ayakkabı',
       'Light Blue Straight Leg Jeans': 'Açık Mavi Düz Paça Kot Pantolon',
-      'Lacoste Cargo Pants': 'Lacoste Kargo Pantolon',
+      'Lacoste Cargo Pants': 'Kargo Pantolon',
       'Cargo Pants': 'Kargo Pantolon',
       'Chino Pants': 'Chino Pantolon',
       'Dress Pants': 'Klasik Pantolon',
@@ -45,7 +45,9 @@ const ItemForm = ({ formData, analysisResult, onFormDataChange }: ItemFormProps)
       'Shirt': 'Gömlek',
       'Blouse': 'Bluz',
       'Polo Shirt': 'Polo Tişört',
-      'Sweatshirt': 'Sweatshirt'
+      'Sweatshirt': 'Sweatshirt',
+      'Trousers': 'Pantolon',
+      'Rust Colored Trousers': 'Kahverengi Pantolon'
     };
     
     // Color translations
@@ -68,7 +70,8 @@ const ItemForm = ({ formData, analysisResult, onFormDataChange }: ItemFormProps)
       'Beige': 'Bej',
       'Cream': 'Krem',
       'Olive': 'Zeytin Yeşili',
-      'Khaki': 'Haki'
+      'Khaki': 'Haki',
+      'Rust': 'Kahverengi'
     };
     
     // First try to find direct translation
@@ -76,23 +79,40 @@ const ItemForm = ({ formData, analysisResult, onFormDataChange }: ItemFormProps)
     
     // If no direct translation, try to extract base item type
     if (!translatedName) {
-      if (name.includes('Jeans')) {
+      if (name.toLowerCase().includes('jean') || name.toLowerCase().includes('denim')) {
         translatedName = 'Kot Pantolon';
-      } else if (name.includes('Shirt')) {
+      } else if (name.toLowerCase().includes('shirt') && !name.toLowerCase().includes('t-shirt')) {
         translatedName = 'Gömlek';
-      } else if (name.includes('T-Shirt')) {
+      } else if (name.toLowerCase().includes('t-shirt') || name.toLowerCase().includes('tshirt')) {
         translatedName = 'Tişört';
-      } else if (name.includes('Pants')) {
+      } else if (name.toLowerCase().includes('trouser') || name.toLowerCase().includes('pant')) {
         translatedName = 'Pantolon';
+      } else if (name.toLowerCase().includes('sweater')) {
+        translatedName = 'Kazak';
+      } else if (name.toLowerCase().includes('jacket')) {
+        translatedName = 'Ceket';
       } else {
-        translatedName = name; // Fallback to original
+        // Try to build from category/subcategory
+        if (subcategory && subcategory !== 'Unknown') {
+          if (subcategory === 'Trousers') translatedName = 'Pantolon';
+          else if (subcategory === 'T-Shirt') translatedName = 'Tişört';
+          else if (subcategory === 'Shirt') translatedName = 'Gömlek';
+          else if (subcategory === 'Jeans') translatedName = 'Kot Pantolon';
+          else translatedName = subcategory;
+        } else if (category && category !== 'Unknown') {
+          if (category === 'Tops') translatedName = 'Üst';
+          else if (category === 'Bottoms') translatedName = 'Alt';
+          else translatedName = category;
+        } else {
+          translatedName = name; // Fallback to original
+        }
       }
     }
     
     const translatedColor = colorTranslations[color] || color;
     
     // Add color to the product name if color exists and is not already in the name
-    if (translatedColor && translatedColor !== 'Unknown' && !translatedName.includes(translatedColor)) {
+    if (translatedColor && translatedColor !== 'Unknown' && !translatedName.toLowerCase().includes(translatedColor.toLowerCase())) {
       return `${translatedColor} ${translatedName}`;
     }
     
@@ -100,14 +120,16 @@ const ItemForm = ({ formData, analysisResult, onFormDataChange }: ItemFormProps)
   };
 
   // Get the color for the product name
-  const productColor = formData.primaryColor || analysisResult?.primary_color || analysisResult?.primaryColor || '';
+  const productColor = analysisResult?.primary_color || '';
+  const productCategory = analysisResult?.category || '';
+  const productSubcategory = analysisResult?.subcategory || '';
   
   return (
     <div className="space-y-5">
       <div>
         <label className="block text-sm font-semibold text-gray-900 mb-2">Ürün Adı</label>
         <Input
-          value={formData.name || translateProductName(analysisResult?.name || '', productColor) || ''}
+          value={formData.name || translateProductName(analysisResult?.name || '', productCategory, productSubcategory, productColor) || ''}
           onChange={(e) => onFormDataChange({ name: e.target.value })}
           className="bg-gray-50 border-gray-200 focus:border-blue-400 rounded-xl text-base py-3"
           placeholder="Ürün adını girin"
@@ -117,9 +139,9 @@ const ItemForm = ({ formData, analysisResult, onFormDataChange }: ItemFormProps)
       <div>
         <label className="block text-sm font-semibold text-gray-900 mb-2">Marka</label>
         <Input
-          value={formData.brand || analysisResult?.brand || ''}
+          value={formData.brand || (analysisResult?.brand && analysisResult.brand !== 'Unknown' ? analysisResult.brand : '')}
           onChange={(e) => onFormDataChange({ brand: e.target.value })}
-          placeholder="Marka girin"
+          placeholder="Ürün markasını girebilirsiniz"
           className="bg-gray-50 border-gray-200 focus:border-blue-400 rounded-xl text-base py-3"
         />
       </div>
