@@ -206,7 +206,7 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
         return false;
       }
 
-      console.log('Saving detailed item to database:', {
+      console.log('Saving comprehensive item to database:', {
         name: formData.name || currentResult?.name,
         category: formData.category || currentResult?.category,
         subcategory: currentResult?.subcategory,
@@ -218,6 +218,12 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
         fit: currentResult?.fit,
         collar: currentResult?.collar,
         sleeve: currentResult?.sleeve,
+        button_count: currentResult?.button_count,
+        has_lining: currentResult?.has_lining,
+        closure: currentResult?.closure,
+        lapel_style: currentResult?.lapel_style,
+        structure: currentResult?.structure,
+        formality_level: currentResult?.formality_level,
         seasons: currentResult?.seasons,
         occasions: currentResult?.occasions,
         image_url: currentResult?.imageUrl
@@ -239,6 +245,12 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
           fit: currentResult?.fit,
           collar: currentResult?.collar,
           sleeve: currentResult?.sleeve,
+          button_count: currentResult?.button_count,
+          has_lining: currentResult?.has_lining,
+          closure: currentResult?.closure,
+          lapel_style: currentResult?.lapel_style,
+          structure: currentResult?.structure,
+          formality_level: currentResult?.formality_level,
           seasons: currentResult?.seasons,
           occasions: currentResult?.occasions,
           style_tags: formData.tags ? formData.tags.split(', ') : currentResult?.tags,
@@ -260,7 +272,7 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
         return false;
       }
 
-      console.log('Item saved successfully with all details!');
+      console.log('Item saved successfully with comprehensive details!');
       return true;
     } catch (error) {
       console.error('Error saving item:', error);
