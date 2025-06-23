@@ -1,5 +1,4 @@
 
-
 export const generateOutfitImage = async (outfit: any, wardrobeItems: any[], occasion: string, timeOfDay: string, weather: string, openAIApiKey: string, index: number) => {
   console.log(`🖼️  [DEBUG] Starting image generation for outfit ${index + 1}`);
   console.log(`🖼️  [DEBUG] Outfit items:`, outfit.items);
@@ -170,9 +169,10 @@ OUTPUT REQUIREMENT: Single unified professional flatlay photograph in vertical 1
     // Extract and properly format the base64 image data
     const generatedImageData = imageData.data[0];
     let generatedImageUrl = null;
+    let base64Data = null; // Initialize base64Data variable
     
     if (generatedImageData && generatedImageData.b64_json) {
-      const base64Data = generatedImageData.b64_json;
+      base64Data = generatedImageData.b64_json; // Assign to the declared variable
       generatedImageUrl = `data:image/png;base64,${base64Data}`;
       
       // Enhanced logging for debugging
@@ -222,7 +222,7 @@ OUTPUT REQUIREMENT: Single unified professional flatlay photograph in vertical 1
       aspect_ratio: '1024x1536',
       debug_reason: 'success',
       debug_info: {
-        base64_size: base64Data.length,
+        base64_size: base64Data?.length || 0, // Use optional chaining to prevent errors
         exact_items_used: matchedItems.length,
         vertical_canvas: true
       }
@@ -247,4 +247,3 @@ OUTPUT REQUIREMENT: Single unified professional flatlay photograph in vertical 1
     };
   }
 };
-
