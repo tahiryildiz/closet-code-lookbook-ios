@@ -47,7 +47,7 @@ export const processValidatedOutfits = async (
   console.log(`📝 Removed ${duplicateIndices.length} duplicate outfits`);
   console.log(`📝 Processing ${uniqueOutfits.length} unique, validated outfits`);
   
-  // Step 3: Process final outfits with exact wardrobe matching and REAL product images
+  // Step 3: Process final outfits with complete product image collection
   const processedOutfits = await Promise.all(
     uniqueOutfits.slice(0, 3).map(async (outfit: any, index: number) => {
       console.log(`\n🎨 Processing final outfit ${index + 1}:`, outfit.items);
@@ -68,13 +68,11 @@ export const processValidatedOutfits = async (
       
       const itemIds = exactMatches.map(item => item.id);
       const exactItemNames = exactMatches.map(item => item.name || item.subcategory);
-      const itemImages = exactMatches.map(item => item.image_url).filter(Boolean);
       
       console.log(`✅ Exact matches found:`, exactItemNames);
-      console.log(`🖼️  Product images found:`, itemImages.length);
       
-      // Use actual product image instead of generating new one
-      const actualProductImage = await generateOutfitImage(
+      // Collect ALL product images for complete outfit visualization
+      const outfitImageData = await generateOutfitImage(
         { ...outfit, items: exactItemNames }, 
         wardrobeItems, 
         occasion, 
@@ -84,23 +82,33 @@ export const processValidatedOutfits = async (
         index
       );
       
+      console.log(`🖼️  Complete outfit images collected: ${outfitImageData.item_count} items`);
+      
       return {
         ...outfit,
         items: exactItemNames,
         item_ids: itemIds,
-        images: actualProductImage ? [actualProductImage] : itemImages,
+        images: outfitImageData.all_images, // ALL product images for complete outfit
+        primary_image: outfitImageData.primary_image, // Primary image for backwards compatibility
+        product_images: outfitImageData.all_images, // Complete set of product images
+        item_details: outfitImageData.item_details, // Full item details with images
         occasion: occasion,
-        generated_image: actualProductImage,
-        product_images: itemImages, // Store all individual product images for reference
+        generated_image: outfitImageData.primary_image, // For backwards compatibility
         validated: true,
         validation_passed: true,
-        uses_real_images: true // Flag to indicate we're using actual product images
+        uses_real_images: true,
+        complete_outfit_images: true, // Flag indicating we have all item images
+        image_count: outfitImageData.item_count
       };
     })
   );
   
   const finalOutfits = processedOutfits.filter(Boolean);
   
-  console.log(`🎉 Successfully processed ${finalOutfits.length} validated outfits with real product images`);
+  console.log(`🎉 Successfully processed ${finalOutfits.length} validated outfits with complete product image sets`);
+  finalOutfits.forEach((outfit, index) => {
+    console.log(`   Outfit ${index + 1}: ${outfit.image_count} product images collected`);
+  });
+  
   return finalOutfits;
 };

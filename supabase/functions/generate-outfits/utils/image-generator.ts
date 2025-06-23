@@ -1,6 +1,6 @@
 
 export const generateOutfitImage = async (outfit: any, wardrobeItems: any[], occasion: string, timeOfDay: string, weather: string, openAIApiKey: string, index: number) => {
-  console.log(`🖼️  Generating outfit image ${index + 1} using actual product images`);
+  console.log(`🖼️  Processing outfit image ${index + 1} - collecting all product images`);
   
   // Find actual wardrobe items that match the outfit items
   const matchedItems = outfit.items.map((itemName: string) => {
@@ -25,16 +25,20 @@ export const generateOutfitImage = async (outfit: any, wardrobeItems: any[], occ
 
   if (matchedItems.length === 0) {
     console.log('❌ No actual product images found for outfit items');
-    return null;
+    return {
+      primary_image: null,
+      all_images: [],
+      item_count: 0
+    };
   }
 
-  // For now, return the first available product image as the main outfit image
-  // In a more advanced implementation, you could create a composite flatlay image
-  // by combining multiple product images using a separate image processing service
+  console.log(`🎯 Found ${matchedItems.length} product images for complete outfit visualization`);
   
-  console.log(`🎯 Using primary product image: ${matchedItems[0].image_url}`);
-  
-  // Return the URL of the first matched item's image
-  // This ensures we're showing actual wardrobe items, not AI-generated images
-  return matchedItems[0].image_url;
+  // Return all product images for the complete outfit
+  return {
+    primary_image: matchedItems[0].image_url, // Keep primary for backward compatibility
+    all_images: matchedItems.map(item => item.image_url),
+    item_details: matchedItems,
+    item_count: matchedItems.length
+  };
 };

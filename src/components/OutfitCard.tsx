@@ -15,13 +15,18 @@ interface OutfitCardProps {
     occasion?: string;
     images?: string[];
     generated_image?: string;
+    product_images?: string[];
+    complete_outfit_images?: boolean;
+    image_count?: number;
   };
 }
 
 const OutfitCard = ({ outfit }: OutfitCardProps) => {
-  // Use generated image if available, otherwise fall back to individual item images
-  const displayImage = outfit.generated_image || 
-    (outfit.images && outfit.images.length > 0 ? outfit.images[0] : 
+  // Use all product images if available for complete outfit visualization
+  const hasCompleteImages = outfit.complete_outfit_images && outfit.product_images && outfit.product_images.length > 0;
+  const displayImages = hasCompleteImages ? outfit.product_images : outfit.images;
+  const primaryImage = outfit.generated_image || 
+    (displayImages && displayImages.length > 0 ? displayImages[0] : 
      'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=500&fit=crop');
 
   return (
@@ -29,11 +34,32 @@ const OutfitCard = ({ outfit }: OutfitCardProps) => {
       <CardContent className="p-0">
         {/* Outfit Preview */}
         <div className="aspect-[4/5] relative overflow-hidden">
-          <img
-            src={displayImage}
-            alt={outfit.name}
-            className="w-full h-full object-cover"
-          />
+          {hasCompleteImages && displayImages!.length > 1 ? (
+            // Display multiple product images in a grid layout for complete outfit visualization
+            <div className="w-full h-full grid grid-cols-2 gap-1 p-2 bg-gray-50">
+              {displayImages!.slice(0, 4).map((imageUrl, index) => (
+                <div 
+                  key={index} 
+                  className={`relative overflow-hidden rounded-lg bg-white shadow-sm ${
+                    displayImages!.length === 3 && index === 0 ? 'col-span-2' : ''
+                  }`}
+                >
+                  <img
+                    src={imageUrl}
+                    alt={`${outfit.items[index] || 'Outfit item'}`}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              ))}
+            </div>
+          ) : (
+            // Single image fallback
+            <img
+              src={primaryImage}
+              alt={outfit.name}
+              className="w-full h-full object-cover"
+            />
+          )}
           
           <div className="absolute top-4 right-4 flex space-x-2">
             <Button size="sm" variant="ghost" className="h-10 w-10 p-0 bg-white/90 hover:bg-white rounded-full shadow-sm">
@@ -44,14 +70,22 @@ const OutfitCard = ({ outfit }: OutfitCardProps) => {
             </Button>
           </div>
           
-          <div className="absolute top-4 left-4">
+          <div className="absolute top-4 left-4 flex space-x-2">
             <Badge className="bg-blue-500 text-white rounded-full font-semibold">
               {outfit.confidence}% uyumlu
             </Badge>
+            {hasCompleteImages && (
+              <Badge className="bg-green-500 text-white rounded-full font-semibold">
+                {outfit.image_count} ürün
+              </Badge>
+            )}
           </div>
           
           <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent p-4">
             <h3 className="text-white font-bold text-xl mb-1">{outfit.name}</h3>
+            {hasCompleteImages && (
+              <p className="text-white/80 text-sm">Gerçek ürün görselleri</p>
+            )}
           </div>
         </div>
 
