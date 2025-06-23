@@ -6,8 +6,11 @@ import { Sparkles, Wand2, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSubscription } from "@/hooks/useSubscription";
 import OutfitCard from "./OutfitCard";
 import OutfitLoadingProgress from "./OutfitLoadingProgress";
+import PaywallModal from "./PaywallModal";
+import AdModal from "./AdModal";
 
 interface Outfit {
   id: number;
@@ -27,12 +30,15 @@ interface Outfit {
 const OutfitGenerator = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { limits, updateUsage, addAdBonus } = useSubscription();
   const [occasion, setOccasion] = useState("casual");
   const [timeOfDay, setTimeOfDay] = useState("day");
   const [weather, setWeather] = useState("mild");
   const [loading, setLoading] = useState(false);
   const [outfits, setOutfits] = useState<Outfit[]>([]);
   const [hasItems, setHasItems] = useState(false);
+  const [showPaywall, setShowPaywall] = useState(false);
+  const [showAdModal, setShowAdModal] = useState(false);
 
   // Load existing outfits from localStorage on component mount
   useEffect(() => {
@@ -72,7 +78,7 @@ const OutfitGenerator = () => {
           user_id: user.id,
           name: outfit.name,
           clothing_item_ids: outfit.item_ids || [],
-          ai_styling_tips: outfit.styling_tips,
+          ai_styling_tips: limits.isPremium ? outfit.styling_tips : outfit.styling_tips?.substring(0, 100) + "...",
           occasion: outfit.occasion || occasion,
           time_of_day: timeOfDay,
           weather_type: weather,
@@ -100,6 +106,12 @@ const OutfitGenerator = () => {
         description: "Lütfen giriş yapın",
         variant: "destructive"
       });
+      return;
+    }
+
+    // Check limits before proceeding
+    if (!limits.canGenerateOutfit && !limits.isPremium) {
+      setShowPaywall(true);
       return;
     }
 
@@ -136,7 +148,8 @@ const OutfitGenerator = () => {
           occasion,
           timeOfDay,
           weather,
-          userGender: userProfile?.gender
+          userGender: userProfile?.gender,
+          isPremium: limits.isPremium
         }
       });
 
@@ -155,17 +168,28 @@ const OutfitGenerator = () => {
         return;
       }
 
-      setOutfits(generatedOutfits);
+      // Process styling tips based on subscription
+      const processedOutfits = generatedOutfits.map((outfit: Outfit) => ({
+        ...outfit,
+        styling_tips: limits.isPremium 
+          ? outfit.styling_tips 
+          : outfit.styling_tips?.substring(0, 100) + "..."
+      }));
+
+      setOutfits(processedOutfits);
       
       // Save to localStorage
-      localStorage.setItem('generatedOutfits', JSON.stringify(generatedOutfits));
+      localStorage.setItem('generatedOutfits', JSON.stringify(processedOutfits));
       
       // Save to database
-      await saveOutfitsToDatabase(generatedOutfits);
+      await saveOutfitsToDatabase(processedOutfits);
+
+      // Update usage for free users
+      await updateUsage('outfit');
 
       toast({
         title: "Başarılı!",
-        description: `${generatedOutfits.length} kombin oluşturuldu!`,
+        description: `${processedOutfits.length} kombin oluşturuldu!`,
       });
 
     } catch (error) {
@@ -178,6 +202,16 @@ const OutfitGenerator = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleAdComplete = async () => {
+    await addAdBonus('generations');
+    setShowAdModal(false);
+  };
+
+  const handleWatchAd = () => {
+    setShowPaywall(false);
+    setShowAdModal(true);
   };
 
   if (!hasItems) {
@@ -205,96 +239,121 @@ const OutfitGenerator = () => {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Controls */}
-      <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-sm rounded-2xl">
-        <CardContent className="p-6 space-y-4">
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium text-gray-700 mb-2 block">Durum</label>
-              <Select value={occasion} onValueChange={setOccasion}>
-                <SelectTrigger className="w-full bg-white border-gray-200 rounded-xl">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="casual">Günlük</SelectItem>
-                  <SelectItem value="work">İş</SelectItem>
-                  <SelectItem value="formal">Resmi</SelectItem>
-                  <SelectItem value="party">Parti</SelectItem>
-                  <SelectItem value="sport">Spor</SelectItem>
-                  <SelectItem value="travel">Seyahat</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <label className="text-sm font-medium text-gray-700 mb-2 block">Zaman</label>
-              <Select value={timeOfDay} onValueChange={setTimeOfDay}>
-                <SelectTrigger className="w-full bg-white border-gray-200 rounded-xl">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="morning">Sabah</SelectItem>
-                  <SelectItem value="day">Gündüz</SelectItem>
-                  <SelectItem value="evening">Akşam</SelectItem>
-                  <SelectItem value="night">Gece</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <label className="text-sm font-medium text-gray-700 mb-2 block">Hava Durumu</label>
-              <Select value={weather} onValueChange={setWeather}>
-                <SelectTrigger className="w-full bg-white border-gray-200 rounded-xl">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="hot">Sıcak</SelectItem>
-                  <SelectItem value="warm">Ilık</SelectItem>
-                  <SelectItem value="mild">Orta</SelectItem>
-                  <SelectItem value="cool">Serin</SelectItem>
-                  <SelectItem value="cold">Soğuk</SelectItem>
-                  <SelectItem value="rainy">Yağmurlu</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <Button
-            onClick={generateOutfits}
-            disabled={loading}
-            className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-3 rounded-xl transition-all duration-200"
-          >
-            {loading ? (
-              <>
-                <RefreshCw className="h-5 w-5 mr-2 animate-spin" />
-                Oluşturuluyor...
-              </>
-            ) : (
-              <>
-                <Wand2 className="h-5 w-5 mr-2" />
-                Kombin Önerisi Oluştur
-              </>
+    <>
+      <div className="space-y-6">
+        {/* Controls */}
+        <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-sm rounded-2xl">
+          <CardContent className="p-6 space-y-4">
+            {!limits.isPremium && (
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 text-center">
+                <p className="text-blue-700 text-sm font-medium">
+                  Kalan kombin hakkı: {limits.remainingOutfits}
+                </p>
+              </div>
             )}
-          </Button>
-        </CardContent>
-      </Card>
 
-      {/* Loading Progress */}
-      <OutfitLoadingProgress isVisible={loading} />
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-2 block">Durum</label>
+                <Select value={occasion} onValueChange={setOccasion}>
+                  <SelectTrigger className="w-full bg-white border-gray-200 rounded-xl">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="casual">Günlük</SelectItem>
+                    <SelectItem value="work">İş</SelectItem>
+                    <SelectItem value="formal">Resmi</SelectItem>
+                    <SelectItem value="party">Parti</SelectItem>
+                    <SelectItem value="sport">Spor</SelectItem>
+                    <SelectItem value="travel">Seyahat</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-      {/* Generated Outfits */}
-      {outfits.length > 0 && !loading && (
-        <div className="space-y-4">
-          <h2 className="text-xl font-semibold text-gray-900 px-2">Önerilen Kombinler</h2>
-          <div className="grid gap-6">
-            {outfits.map((outfit) => (
-              <OutfitCard key={outfit.id} outfit={outfit} />
-            ))}
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-2 block">Zaman</label>
+                <Select value={timeOfDay} onValueChange={setTimeOfDay}>
+                  <SelectTrigger className="w-full bg-white border-gray-200 rounded-xl">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="morning">Sabah</SelectItem>
+                    <SelectItem value="day">Gündüz</SelectItem>
+                    <SelectItem value="evening">Akşam</SelectItem>
+                    <SelectItem value="night">Gece</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-2 block">Hava Durumu</label>
+                <Select value={weather} onValueChange={setWeather}>
+                  <SelectTrigger className="w-full bg-white border-gray-200 rounded-xl">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="hot">Sıcak</SelectItem>
+                    <SelectItem value="warm">Ilık</SelectItem>
+                    <SelectItem value="mild">Orta</SelectItem>
+                    <SelectItem value="cool">Serin</SelectItem>
+                    <SelectItem value="cold">Soğuk</SelectItem>
+                    <SelectItem value="rainy">Yağmurlu</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <Button
+              onClick={generateOutfits}
+              disabled={loading}
+              className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-3 rounded-xl transition-all duration-200"
+            >
+              {loading ? (
+                <>
+                  <RefreshCw className="h-5 w-5 mr-2 animate-spin" />
+                  Oluşturuluyor...
+                </>
+              ) : (
+                <>
+                  <Wand2 className="h-5 w-5 mr-2" />
+                  Kombin Önerisi Oluştur
+                </>
+              )}
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Loading Progress */}
+        <OutfitLoadingProgress isVisible={loading} />
+
+        {/* Generated Outfits */}
+        {outfits.length > 0 && !loading && (
+          <div className="space-y-4">
+            <h2 className="text-xl font-semibold text-gray-900 px-2">Önerilen Kombinler</h2>
+            <div className="grid gap-6">
+              {outfits.map((outfit) => (
+                <OutfitCard key={outfit.id} outfit={outfit} />
+              ))}
+            </div>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
+
+      {/* Paywall Modal */}
+      <PaywallModal
+        isOpen={showPaywall}
+        onClose={() => setShowPaywall(false)}
+        reason="outfits"
+      />
+
+      {/* Ad Modal */}
+      <AdModal
+        isOpen={showAdModal}
+        onClose={() => setShowAdModal(false)}
+        onComplete={handleAdComplete}
+        type="generations"
+      />
+    </>
   );
 };
 

@@ -194,36 +194,54 @@ export type Database = {
       }
       user_profiles: {
         Row: {
+          ad_bonus_generations: number | null
+          ad_bonus_items: number | null
           body_measurements: Json | null
           created_at: string | null
+          daily_outfit_generations: number | null
           full_name: string | null
           gender: string | null
           id: string
+          last_ad_bonus_date: string | null
+          last_generation_date: string | null
           location: string | null
           preferred_brands: string[] | null
           style_preferences: string[] | null
+          subscription_type: string | null
           updated_at: string | null
         }
         Insert: {
+          ad_bonus_generations?: number | null
+          ad_bonus_items?: number | null
           body_measurements?: Json | null
           created_at?: string | null
+          daily_outfit_generations?: number | null
           full_name?: string | null
           gender?: string | null
           id: string
+          last_ad_bonus_date?: string | null
+          last_generation_date?: string | null
           location?: string | null
           preferred_brands?: string[] | null
           style_preferences?: string[] | null
+          subscription_type?: string | null
           updated_at?: string | null
         }
         Update: {
+          ad_bonus_generations?: number | null
+          ad_bonus_items?: number | null
           body_measurements?: Json | null
           created_at?: string | null
+          daily_outfit_generations?: number | null
           full_name?: string | null
           gender?: string | null
           id?: string
+          last_ad_bonus_date?: string | null
+          last_generation_date?: string | null
           location?: string | null
           preferred_brands?: string[] | null
           style_preferences?: string[] | null
+          subscription_type?: string | null
           updated_at?: string | null
         }
         Relationships: []

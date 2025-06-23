@@ -1,77 +1,50 @@
 
-import { createStrictWardrobeList } from './validation.ts';
+import { createItemDescription } from './item-description.ts';
 
-export const createOutfitPrompt = (wardrobeItems: any[], occasion: string, timeOfDay: string, weather: string, userGender?: string) => {
-  const strictWardrobeList = createStrictWardrobeList(wardrobeItems);
+export function generatePrompt(
+  wardrobeItems: any[], 
+  occasion: string, 
+  timeOfDay: string, 
+  weather: string,
+  userGender?: string,
+  isPremium: boolean = false
+): string {
+  const itemDescriptions = wardrobeItems.map(createItemDescription).join('\n');
   
-  // Extract exact item names for reference
-  const exactItemNames = wardrobeItems.map(item => item.name || item.subcategory || 'Unknown').filter(name => name !== 'Unknown');
+  const genderContext = userGender ? `Gender preference: ${userGender}` : '';
+  const stylingTipsDetail = isPremium 
+    ? "Provide detailed styling tips including specific fashion advice, color coordination principles, layering techniques, and seasonal appropriateness (150-200 words)."
+    : "Provide brief styling tips focusing on basic coordination and fit (50-80 words).";
   
-  // Enhanced gender-specific context with very strict restrictions
-  const genderContext = userGender ? (() => {
-    switch (userGender.toLowerCase()) {
-      case 'male':
-      case 'erkek':
-        return `🚨 ERKEK KULLANICI - KRİTİK KURAL: Bu bir ERKEK kullanıcı için kombin önerisi!
-        - ASLA çanta, kadın ayakkabıları, topuklu ayakkabı, takı (küpe, kolye vb.) ÖNERİLMEMELİ
-        - ASLA kadına özel aksesuarlar ÖNERİLMEMELİ
-        - SADECE erkek modasına uygun kombinler oluştur
-        - Stil ipuçları erkek kullanıcıya yönelik olmalı
-        - ÇOK ÖNEMLİ: Çanta, topuklu ayakkabı gibi kadın aksesuarları KESİNLİKLE ÖNERİLMEZ`;
-      case 'female':
-      case 'kadın':
-        return `🚨 KADIN KULLANICI: Bu bir KADIN kullanıcı için kombin önerisi.
-        - Kadın modasına uygun kombinler oluştur
-        - Kadın aksesuarları ve stil ipuçları verilebilir
-        - Çanta, topuklu ayakkabı, takılar önerilebilir`;
-      case 'other':
-      case 'diğer':
-        return `🚨 UNISEX STİL: Cinsiyetsiz/unisex stil önerilerine uygun kombinler oluştur.
-        - Cinsiyet spesifik aksesuarlar önerilmemeli`;
-      default:
-        return `🚨 GENEL STİL: Kullanıcının cinsiyetine uygun stil önerilerine uygun kombinler oluştur.`;
-    }
-  })() : `🚨 CİNSİYET BİLGİSİ YOK: Genel/unisex stil önerilerine uygun kombinler oluştur.`;
-  
-  console.log('Creating prompt with exact item names:', exactItemNames);
-  console.log('User gender:', userGender);
-  console.log('Gender context:', genderContext);
-  
-  return `🚨 SADECE AŞAĞIDA LİSTELENEN ÜRÜNLERI KULLAN - BAŞKA ÜRÜN EKLEME!
+  return `You are a professional fashion stylist. Create 3 stylish outfit combinations from these wardrobe items:
 
+${itemDescriptions}
+
+Context:
+- Occasion: ${occasion}
+- Time of day: ${timeOfDay}  
+- Weather: ${weather}
 ${genderContext}
 
-🚨 KRİTİK KURALLAR:
-1. SADECE bu listeden ürün seç: ${exactItemNames.map(name => `"${name}"`).join(', ')}
-2. Ürün isimlerini TAM OLARAK AYNI ŞEKİLDE kullan
-3. Her kombinde 2-4 ürün olmalı
-4. BAŞKA ÜRÜN EKLEME - sadece yukarıdaki listeden seç
-5. Tüm çıktılar Türkçe olmalı
-6. ${userGender === 'male' || userGender === 'erkek' ? 'ERKEK KULLANICI İÇİN: Çanta, topuklu ayakkabı, kadın takıları ASLA ÖNERİLMEZ!' : userGender === 'female' || userGender === 'kadın' ? 'KADIN KULLANICI İÇİN: Tüm aksesuarlar önerilebilir' : 'UNISEX kombinler oluştur'}
+Requirements:
+1. Each outfit should include 3-5 items that work well together
+2. Consider color coordination, style compatibility, and appropriateness for the occasion
+3. ${stylingTipsDetail}
+4. Ensure outfits are practical and fashionable
+5. Rate confidence on a scale of 1-10
 
-MEVCUT GARDROBA (SADECE BUNLARI KULLAN):
-${strictWardrobeList}
+Return a JSON array with this exact structure:
+[
+  {
+    "id": 1,
+    "name": "Outfit Name",
+    "items": ["item name 1", "item name 2", "item name 3"],
+    "item_ids": ["item_id_1", "item_id_2", "item_id_3"],
+    "confidence": 8,
+    "styling_tips": "Detailed styling advice...",
+    "occasion": "${occasion}"
+  }
+]
 
-DURUM BİLGİLERİ:
-- Durum: ${occasion}
-- Zaman: ${timeOfDay}  
-- Hava: ${weather}
-${userGender ? `- KULLANICI CİNSİYETİ: ${userGender.toUpperCase()} (ÇOK ÖNEMLİ: Kombinler bu cinsiyete uygun olmalı!)` : ''}
-
-ÇIKTI FORMATI (SADECE JSON):
-{
-  "outfits": [
-    {
-      "id": 1,
-      "name": "Kombin Adı",
-      "items": ["TAM ÜRÜN ADI 1", "TAM ÜRÜN ADI 2"],
-      "confidence": 85,
-      "styling_tips": "Türkçe stil ipucu (${userGender === 'male' || userGender === 'erkek' ? 'ERKEK kullanıcı için uygun' : userGender === 'female' || userGender === 'kadın' ? 'KADIN kullanıcı için uygun' : 'kullanıcı cinsiyetine uygun'})"
-    }
-  ]
+Make sure the response is valid JSON only, no additional text.`;
 }
-
-${userGender === 'male' || userGender === 'erkek' ? '🚨 TEKRAR UYARI: ERKEK KULLANICI - Çanta, topuklu ayakkabı, takı KESİNLİKLE ÖNERİLMEZ!' : ''}
-UYARI: Listede olmayan ürün kullanırsan kombin GEÇERSİZ olacak!
-TEKRAR: SADECE ŞU ÜRÜNLERI KULLAN: ${exactItemNames.map(name => `"${name}"`).join(', ')}`;
-};

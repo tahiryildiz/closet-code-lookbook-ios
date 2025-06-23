@@ -1,22 +1,25 @@
-
 import { useState, useEffect } from "react";
-import { User, LogOut, Settings, Heart, Star, Edit } from "lucide-react";
+import { User, LogOut, Settings, Heart, Star, Edit, Crown, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useSubscription } from "@/hooks/useSubscription";
+import PaywallModal from "@/components/PaywallModal";
 
 const Profile = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { limits } = useSubscription();
   const [loading, setLoading] = useState(false);
   const [itemCount, setItemCount] = useState(0);
   const [outfitCount, setOutfitCount] = useState(0);
   const [favoriteItems, setFavoriteItems] = useState<any[]>([]);
   const [userProfile, setUserProfile] = useState<any>(null);
+  const [showPaywall, setShowPaywall] = useState(false);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -103,10 +106,20 @@ const Profile = () => {
       <div className="bg-gradient-to-br from-blue-600 to-indigo-700 text-white shadow-xl">
         <div className="px-6 pt-12 pb-8">
           <div className="text-left">
-            <div className="w-20 h-20 bg-white/20 rounded-full mb-4 flex items-center justify-center backdrop-blur-sm">
+            <div className="w-20 h-20 bg-white/20 rounded-full mb-4 flex items-center justify-center backdrop-blur-sm relative">
               <User className="h-10 w-10 text-white" />
+              {limits.isPremium && (
+                <div className="absolute -top-1 -right-1 bg-yellow-400 rounded-full p-1">
+                  <Crown className="h-4 w-4 text-yellow-800" />
+                </div>
+              )}
             </div>
-            <h1 className="text-2xl font-semibold">Profil</h1>
+            <h1 className="text-2xl font-semibold">
+              Profil
+              {limits.isPremium && (
+                <span className="text-yellow-300 text-sm ml-2">Premium</span>
+              )}
+            </h1>
             <p className="text-blue-100 text-base mt-1">{user?.email}</p>
             {userProfile?.gender && (
               <p className="text-blue-200 text-sm mt-1">{getGenderDisplay(userProfile.gender)}</p>
@@ -121,17 +134,50 @@ const Profile = () => {
         <div className="grid grid-cols-2 gap-4">
           <Card className="bg-white/90 backdrop-blur-sm border-0 shadow-lg rounded-2xl hover:shadow-xl transition-all duration-300">
             <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-blue-600 mb-1">{itemCount}</div>
-              <div className="text-sm text-gray-600">Toplam Ürün</div>
+              <div className="text-2xl font-bold text-blue-600 mb-1">
+                {limits.isPremium ? itemCount : `${itemCount}/${limits.remainingItems + itemCount}`}
+              </div>
+              <div className="text-sm text-gray-600">
+                {limits.isPremium ? 'Sınırsız Ürün' : 'Ürün Limiti'}
+              </div>
             </CardContent>
           </Card>
           <Card className="bg-white/90 backdrop-blur-sm border-0 shadow-lg rounded-2xl hover:shadow-xl transition-all duration-300">
             <CardContent className="p-4 text-center">
               <div className="text-2xl font-bold text-indigo-600 mb-1">{outfitCount}</div>
-              <div className="text-sm text-gray-600">Kombinler</div>
+              <div className="text-sm text-gray-600">
+                {limits.isPremium ? 'Sınırsız Kombin' : `Günlük: ${3 - limits.remainingOutfits}/3`}
+              </div>
             </CardContent>
           </Card>
         </div>
+
+        {/* Upgrade to Premium Card - Only show for free users */}
+        {!limits.isPremium && (
+          <Card className="bg-gradient-to-br from-purple-500 to-blue-600 text-white border-0 shadow-lg rounded-2xl hover:shadow-xl transition-all duration-300">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="flex items-center mb-2">
+                    <Crown className="h-6 w-6 text-yellow-300 mr-2" />
+                    <h3 className="text-lg font-semibold">Premium'a Geç</h3>
+                  </div>
+                  <p className="text-purple-100 text-sm mb-4">
+                    Sınırsız ürün, kombin ve reklamsız deneyim
+                  </p>
+                  <Button
+                    onClick={() => setShowPaywall(true)}
+                    className="bg-white text-purple-600 hover:bg-gray-100 rounded-xl font-semibold"
+                  >
+                    <Zap className="h-4 w-4 mr-2" />
+                    Yükselt
+                  </Button>
+                </div>
+                <div className="text-6xl opacity-20">👑</div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Menu Items */}
         <div className="space-y-3">
@@ -196,6 +242,13 @@ const Profile = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Paywall Modal */}
+      <PaywallModal
+        isOpen={showPaywall}
+        onClose={() => setShowPaywall(false)}
+        reason="upgrade"
+      />
     </div>
   );
 };

@@ -1,441 +1,124 @@
 
-import { useState } from "react";
-import { Sparkles } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import { useState, useEffect } from "react";
+import { X } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 import UploadStep from "./UploadStep";
 import AnalysisStep from "./AnalysisStep";
+import { useSubscription } from "@/hooks/useSubscription";
+import PaywallModal from "./PaywallModal";
+import AdModal from "./AdModal";
 
 interface AddItemModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-interface FormData {
-  name: string;
-  brand: string;
-  category: string;
-  primaryColor: string;
-  tags: string;
-  notes: string;
-}
-
-// Category translations from English to Turkish
-const categoryTranslations: Record<string, string> = {
-  'Tops': 'Üstler',
-  'Bottoms': 'Altlar',
-  'Dresses & Suits': 'Elbise & Takım',
-  'Outerwear': 'Dış Giyim',
-  'Footwear': 'Ayakkabı',
-  'Accessories': 'Aksesuar',
-  'Bags': 'Çanta',
-  'Underwear & Loungewear': 'İç Giyim',
-  'Swimwear': 'Mayo & Bikini',
-  'Activewear': 'Spor Giyim'
-};
-
 const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
-  const [step, setStep] = useState<'upload' | 'details'>('upload');
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const [analysisResults, setAnalysisResults] = useState<any[]>([]);
-  const [currentItemIndex, setCurrentItemIndex] = useState(0);
-  const [formData, setFormData] = useState<FormData>({
-    name: '',
-    brand: '',
-    category: '',
-    primaryColor: '',
-    tags: '',
-    notes: ''
-  });
-  const { toast } = useToast();
+  const { limits, updateUsage, addAdBonus } = useSubscription();
+  const [step, setStep] = useState<'upload' | 'analysis'>('upload');
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [showPaywall, setShowPaywall] = useState(false);
+  const [showAdModal, setShowAdModal] = useState(false);
 
-  console.log('AddItemModal render - step:', step, 'isAnalyzing:', isAnalyzing, 'analysisResults:', analysisResults.length);
-
-  const handleFileSelect = (files: File[]) => {
-    console.log('Files received in modal:', files.length);
-    setSelectedFiles(files);
-  };
-
-  const handleRemoveFile = (index: number) => {
-    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
-  };
-
-  const createBetterFallbackAnalysis = (file: File, publicUrl: string) => {
-    // Create a more intelligent fallback based on file name
-    const fileName = file.name.toLowerCase();
-    let category = 'Tops';
-    let subcategory = 'T-Shirt';
-    let name = 'Giyim Eşyası';
-
-    // Better category detection based on common keywords
-    if (fileName.includes('jacket') || fileName.includes('blazer') || fileName.includes('coat')) {
-      category = 'Outerwear';
-      subcategory = 'Blazer';
-      name = 'Ceket';
-    } else if (fileName.includes('shirt') && !fileName.includes('t-shirt')) {
-      category = 'Tops';
-      subcategory = 'Shirt';
-      name = 'Gömlek';
-    } else if (fileName.includes('pant') || fileName.includes('trouser') || fileName.includes('jean')) {
-      category = 'Bottoms';
-      subcategory = 'Jeans';
-      name = 'Pantolon';
-    } else if (fileName.includes('dress')) {
-      category = 'Dresses & Suits';
-      subcategory = 'Dress';
-      name = 'Elbise';
-    } else if (fileName.includes('shoe') || fileName.includes('sneaker') || fileName.includes('boot')) {
-      category = 'Footwear';
-      subcategory = 'Sneakers';
-      name = 'Ayakkabı';
+  useEffect(() => {
+    if (isOpen && !limits.canAddItem && !limits.isPremium) {
+      setShowPaywall(true);
     }
+  }, [isOpen, limits.canAddItem, limits.isPremium]);
 
-    return {
-      name: name,
-      brand: 'Unknown',
-      category: category,
-      subcategory: subcategory,
-      primary_color: 'Unknown',
-      secondary_colors: [],
-      color_tone: 'Medium',
-      pattern: 'Solid',
-      pattern_type: null,
-      material: 'Unknown',
-      fit: 'Regular',
-      collar: 'Unknown',
-      sleeve: 'Unknown',
-      neckline: 'Unknown',
-      design_details: [],
-      closure_type: 'Unknown',
-      waist_style: null,
-      pocket_style: 'Unknown',
-      hem_style: 'Regular',
-      lapel_style: null,
-      has_lining: false,
-      button_count: 'Unknown',
-      accessories: [],
-      season_suitability: ['All Seasons'],
-      occasions: ['Casual'],
-      image_description: `${name} - AI analizi başarısız oldu`,
-      style_tags: ['basic'],
-      confidence: 20
-    };
-  };
-
-  const processFiles = async () => {
-    if (selectedFiles.length === 0) {
-      toast({
-        title: "Hata",
-        description: "Lütfen en az bir fotoğraf seçin",
-        variant: "destructive"
-      });
+  const handleImageSelect = async (file: File) => {
+    // Check limits before proceeding
+    if (!limits.canAddItem && !limits.isPremium) {
+      setShowPaywall(true);
       return;
     }
 
-    console.log('Starting file processing...');
-    setIsAnalyzing(true);
-    const results: any[] = [];
-
-    try {
-      for (let i = 0; i < selectedFiles.length; i++) {
-        const file = selectedFiles[i];
-        console.log(`Processing file ${i + 1}/${selectedFiles.length}:`, file.name);
-
-        // Upload file to Supabase Storage
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${Math.random()}.${fileExt}`;
-        const filePath = `clothing/${fileName}`;
-
-        console.log('Uploading to storage:', filePath);
-        const { error: uploadError } = await supabase.storage
-          .from('clothing-images')
-          .upload(filePath, file);
-
-        if (uploadError) {
-          console.error('Upload error for file', file.name, ':', uploadError);
-          toast({
-            title: "Yükleme hatası",
-            description: `${file.name} yüklenirken hata oluştu: ${uploadError.message}`,
-            variant: "destructive"
-          });
-          continue;
-        }
-
-        // Get public URL
-        const { data: { publicUrl } } = supabase.storage
-          .from('clothing-images')
-          .getPublicUrl(filePath);
-
-        console.log('File uploaded successfully:', publicUrl);
-
-        // Call OpenAI analysis through Supabase Edge Function
-        try {
-          console.log('Calling OpenAI analysis for:', publicUrl);
-          
-          const { data: analysisData, error: analysisError } = await supabase.functions
-            .invoke('analyze-clothing', {
-              body: { imageUrl: publicUrl }
-            });
-
-          if (analysisError) {
-            console.error('Analysis error:', analysisError);
-            throw new Error(analysisError.message);
-          }
-
-          console.log('Analysis successful:', analysisData);
-
-          results.push({
-            ...analysisData,
-            imageUrl: publicUrl,
-            originalFile: file
-          });
-
-        } catch (analysisError) {
-          console.error('AI analysis failed for', file.name, ':', analysisError);
-          
-          // Use improved fallback analysis
-          const fallbackAnalysis = createBetterFallbackAnalysis(file, publicUrl);
-
-          results.push({
-            ...fallbackAnalysis,
-            imageUrl: publicUrl,
-            originalFile: file
-          });
-
-          toast({
-            title: "AI Analizi Başarısız",
-            description: `${file.name} için AI analizi başarısız oldu. Lütfen ürün bilgilerini manuel olarak düzenleyin.`,
-            variant: "destructive"
-          });
-        }
-      }
-
-      console.log('Processing complete. Results:', results);
-
-      if (results.length > 0) {
-        setAnalysisResults(results);
-        setCurrentItemIndex(0);
-        console.log('Moving to details step with results:', results[0]);
-        setStep('details');
-        toast({
-          title: "Tamamlandı!",
-          description: `${results.length} ürün işlendi. Bilgileri kontrol edip kaydedin.`,
-        });
-      } else {
-        console.log('No results to display');
-        toast({
-          title: "Hata",
-          description: "Hiçbir ürün başarıyla işlenmedi",
-          variant: "destructive"
-        });
-      }
-    } catch (error) {
-      console.error('Error processing files:', error);
-      toast({
-        title: "İşlem hatası",
-        description: "Fotoğraflar işlenirken bir hata oluştu",
-        variant: "destructive"
-      });
-    } finally {
-      setIsAnalyzing(false);
-    }
+    setSelectedImage(file);
+    setStep('analysis');
   };
 
-  const handleFormDataChange = (data: Partial<FormData>) => {
-    setFormData(prev => ({ ...prev, ...data }));
-  };
-
-  const handleSaveCurrentItem = async () => {
-    const currentResult = analysisResults[currentItemIndex];
-    
-    try {
-      // Get current user session
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session?.user) {
-        toast({
-          title: "Kimlik doğrulama hatası",
-          description: "Ürün kaydetmek için giriş yapmanız gerekiyor",
-          variant: "destructive"
-        });
-        return false;
-      }
-
-      // Store English values in database
-      const categoryToSave = currentResult?.category || 'Tops';
-
-      // Create base item data with all fields including new design_details
-      const itemData = {
-        name: formData.name || currentResult?.name || 'Giyim Eşyası',
-        brand: formData.brand || (currentResult?.brand && currentResult.brand !== 'Unknown' ? currentResult.brand : null),
-        category: categoryToSave,
-        subcategory: currentResult?.subcategory || null,
-        primary_color: currentResult?.primary_color || 'Unknown',
-        secondary_colors: currentResult?.secondary_colors || [],
-        color_tone: currentResult?.color_tone || null,
-        pattern: currentResult?.pattern || null,
-        pattern_type: currentResult?.pattern_type || null,
-        material: currentResult?.material || null,
-        fit: currentResult?.fit || null,
-        collar: currentResult?.collar || null,
-        sleeve: currentResult?.sleeve || null,
-        neckline: currentResult?.neckline || null,
-        design_details: currentResult?.design_details || [],
-        waist_style: currentResult?.waist_style || null,
-        closure_type: currentResult?.closure_type || null,
-        pocket_style: currentResult?.pocket_style || null,
-        hem_style: currentResult?.hem_style || null,
-        seasons: currentResult?.season_suitability || [],
-        occasions: currentResult?.occasions || [],
-        style_tags: formData.tags ? formData.tags.split(', ') : currentResult?.style_tags || [],
-        context_tags: currentResult?.contextTags || [],
-        user_notes: formData.notes || null,
-        image_url: currentResult?.imageUrl,
-        prompt_description: currentResult?.image_description || currentResult?.style || null,
-        user_id: session.user.id,
-        ai_analysis: currentResult || null,
-        confidence: currentResult?.confidence || 0
-      };
-
-      console.log('Saving item to database:', itemData);
-
-      const { error } = await supabase
-        .from('clothing_items')
-        .insert(itemData);
-
-      if (error) {
-        console.error('Save error:', error);
-        toast({
-          title: "Kaydetme hatası",
-          description: `Ürün kaydedilirken hata oluştu: ${error.message}`,
-          variant: "destructive"
-        });
-        return false;
-      }
-
-      console.log('Item saved successfully!');
-      return true;
-    } catch (error) {
-      console.error('Error saving item:', error);
-      toast({
-        title: "Hata",
-        description: "Beklenmeyen bir hata oluştu",
-        variant: "destructive"
-      });
-      return false;
-    }
-  };
-
-  const handleSave = async () => {
-    const success = await handleSaveCurrentItem();
-    
-    if (success) {
-      // Check if there are more items to process
-      if (currentItemIndex < analysisResults.length - 1) {
-        setCurrentItemIndex(prev => prev + 1);
-        // Reset form for next item
-        setFormData({
-          name: '',
-          brand: '',
-          category: '',
-          primaryColor: '',
-          tags: '',
-          notes: ''
-        });
-        toast({
-          title: "Kaydedildi!",
-          description: `Ürün ${currentItemIndex + 1} kaydedildi. Sıradaki ürüne geçiliyor...`,
-        });
-      } else {
-        // All items processed
-        toast({
-          title: "Tamamlandı!",
-          description: `Tüm ürünler (${analysisResults.length}) gardırobunuza eklendi`,
-        });
-        handleClose();
-      }
-    }
+  const handleItemAdded = async () => {
+    await updateUsage('item');
+    handleClose();
   };
 
   const handleClose = () => {
-    onClose();
-    // Reset all state
     setStep('upload');
-    setSelectedFiles([]);
-    setAnalysisResults([]);
-    setCurrentItemIndex(0);
-    setFormData({
-      name: '',
-      brand: '',
-      category: '',
-      primaryColor: '',
-      tags: '',
-      notes: ''
-    });
+    setSelectedImage(null);
+    setShowPaywall(false);
+    setShowAdModal(false);
+    onClose();
   };
 
-  const handleBack = () => {
-    if (step === 'details' && currentItemIndex > 0) {
-      setCurrentItemIndex(prev => prev - 1);
-    } else {
-      setStep('upload');
-    }
+  const handleAdComplete = async () => {
+    await addAdBonus('items');
+    setShowAdModal(false);
   };
 
-  const currentAnalysisResult = analysisResults[currentItemIndex];
-  console.log('Current analysis result for step:', step, currentAnalysisResult);
+  const handleWatchAd = () => {
+    setShowPaywall(false);
+    setShowAdModal(true);
+  };
+
+  if (!isOpen) return null;
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md bg-white rounded-3xl border-0 shadow-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader className="pb-4">
-          <DialogTitle className="flex items-center space-x-3 text-xl font-bold">
-            <div className="bg-blue-100 rounded-full p-2">
-              <Sparkles className="h-5 w-5 text-blue-600" />
+    <>
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md bg-white rounded-3xl shadow-2xl max-h-[90vh] overflow-hidden">
+          <CardContent className="p-0">
+            {/* Header */}
+            <div className="bg-gradient-to-br from-blue-600 to-purple-600 text-white p-6 relative">
+              <button
+                onClick={handleClose}
+                className="absolute top-4 right-4 p-2 hover:bg-white/20 rounded-full transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+              
+              <h2 className="text-xl font-semibold text-center">
+                {step === 'upload' ? 'Yeni Ürün Ekle' : 'Ürün Analizi'}
+              </h2>
+              
+              {!limits.isPremium && (
+                <div className="text-center mt-2 text-blue-100 text-sm">
+                  Kalan hak: {limits.remainingItems}
+                </div>
+              )}
             </div>
-            <span>
-              {step === 'upload' ? 'Yeni Ürün Ekle' : 
-               `Ürün ${currentItemIndex + 1}/${analysisResults.length}`}
-            </span>
-          </DialogTitle>
-        </DialogHeader>
 
-        {step === 'upload' && (
-          <div className="space-y-6">
-            <UploadStep 
-              onFileSelect={handleFileSelect}
-              selectedFiles={selectedFiles}
-              onRemoveFile={handleRemoveFile}
-            />
-            
-            {selectedFiles.length > 0 && (
-              <div className="flex space-x-3">
-                <button
-                  onClick={processFiles}
-                  disabled={isAnalyzing}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-semibold py-3 px-6 rounded-2xl transition-colors"
-                >
-                  {isAnalyzing ? 'Analiz ediliyor...' : `${selectedFiles.length} Ürünü Analiz Et`}
-                </button>
-              </div>
-            )}
-          </div>
-        )}
+            {/* Content */}
+            <div className="max-h-[70vh] overflow-y-auto">
+              {step === 'upload' && (
+                <UploadStep onImageSelect={handleImageSelect} />
+              )}
+              
+              {step === 'analysis' && selectedImage && (
+                <AnalysisStep 
+                  image={selectedImage} 
+                  onComplete={handleItemAdded}
+                />
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
-        {step === 'details' && (
-          <AnalysisStep
-            isAnalyzing={isAnalyzing}
-            analysisResult={currentAnalysisResult}
-            formData={formData}
-            onFormDataChange={handleFormDataChange}
-            onSave={handleSave}
-            onBack={handleBack}
-          />
-        )}
-      </DialogContent>
-    </Dialog>
+      {/* Paywall Modal */}
+      <PaywallModal
+        isOpen={showPaywall}
+        onClose={() => setShowPaywall(false)}
+        reason="items"
+      />
+
+      {/* Ad Modal */}
+      <AdModal
+        isOpen={showAdModal}
+        onClose={() => setShowAdModal(false)}
+        onComplete={handleAdComplete}
+        type="items"
+      />
+    </>
   );
 };
 
