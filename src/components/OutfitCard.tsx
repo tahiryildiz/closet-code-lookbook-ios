@@ -1,4 +1,3 @@
-
 import { Heart, Share, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -17,6 +16,7 @@ interface OutfitCardProps {
     reference_images?: string[];
     composition_type?: string;
     item_count?: number;
+    aspect_ratio?: string;
     // Legacy support
     images?: string[];
     product_images?: string[];
