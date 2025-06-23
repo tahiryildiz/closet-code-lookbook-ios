@@ -1,9 +1,9 @@
-
 import { Heart, Share, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { useState } from "react";
 
 interface OutfitCardProps {
   outfit: {
@@ -28,6 +28,8 @@ interface OutfitCardProps {
 }
 
 const OutfitCard = ({ outfit }: OutfitCardProps) => {
+  const [isFavorite, setIsFavorite] = useState(false);
+  
   // Enhanced debug logging to track image data reception
   console.log(`🎯 [DEBUG] OutfitCard - outfit data:`, {
     name: outfit.name,
@@ -80,7 +82,12 @@ const OutfitCard = ({ outfit }: OutfitCardProps) => {
   const shouldShowGrid = !hasVerticalFlatlay && hasReferenceImages && outfit.reference_images!.length > 1;
 
   const handleFavorite = () => {
-    toast.success("Kombin favorilere eklendi!");
+    setIsFavorite(!isFavorite);
+    if (!isFavorite) {
+      toast.success("Kombin favorilere eklendi!");
+    } else {
+      toast.success("Kombin favorilerden çıkarıldı!");
+    }
   };
 
   const handleShare = () => {
@@ -154,7 +161,13 @@ const OutfitCard = ({ outfit }: OutfitCardProps) => {
               className="h-10 w-10 p-0 bg-white/90 hover:bg-white rounded-full shadow-sm"
               onClick={handleFavorite}
             >
-              <Heart className="h-5 w-5 text-gray-600" />
+              <Heart 
+                className={`h-5 w-5 transition-colors ${
+                  isFavorite 
+                    ? 'text-red-500 fill-red-500' 
+                    : 'text-gray-600 hover:text-red-400'
+                }`} 
+              />
             </Button>
             <Button 
               size="sm" 

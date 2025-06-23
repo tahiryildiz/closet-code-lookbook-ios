@@ -7,6 +7,7 @@ import OutfitCard from "./OutfitCard";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import OutfitLoadingProgress from "./OutfitLoadingProgress";
 
 interface WardrobeItem {
   id: string;
@@ -313,8 +314,11 @@ const OutfitGenerator = () => {
         </CardContent>
       </Card>
 
+      {/* Loading Progress */}
+      <OutfitLoadingProgress isVisible={isGenerating} />
+
       {/* Generated Outfits */}
-      {generatedOutfits.length > 0 && (
+      {generatedOutfits.length > 0 && !isGenerating && (
         <div className="space-y-4">
           <h2 className="text-xl font-semibold text-gray-900">Kombin Önerileriniz</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
