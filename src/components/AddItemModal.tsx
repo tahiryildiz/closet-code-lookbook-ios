@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Sparkles } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -59,6 +60,68 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
 
   const handleRemoveFile = (index: number) => {
     setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const createBetterFallbackAnalysis = (file: File, publicUrl: string) => {
+    // Create a more intelligent fallback based on file name
+    const fileName = file.name.toLowerCase();
+    let category = 'Tops';
+    let subcategory = 'T-Shirt';
+    let name = 'Giyim Eşyası';
+
+    // Better category detection based on common keywords
+    if (fileName.includes('jacket') || fileName.includes('blazer') || fileName.includes('coat')) {
+      category = 'Outerwear';
+      subcategory = 'Blazer';
+      name = 'Ceket';
+    } else if (fileName.includes('shirt') && !fileName.includes('t-shirt')) {
+      category = 'Tops';
+      subcategory = 'Shirt';
+      name = 'Gömlek';
+    } else if (fileName.includes('pant') || fileName.includes('trouser') || fileName.includes('jean')) {
+      category = 'Bottoms';
+      subcategory = 'Jeans';
+      name = 'Pantolon';
+    } else if (fileName.includes('dress')) {
+      category = 'Dresses & Suits';
+      subcategory = 'Dress';
+      name = 'Elbise';
+    } else if (fileName.includes('shoe') || fileName.includes('sneaker') || fileName.includes('boot')) {
+      category = 'Footwear';
+      subcategory = 'Sneakers';
+      name = 'Ayakkabı';
+    }
+
+    return {
+      name: name,
+      brand: 'Unknown',
+      category: category,
+      subcategory: subcategory,
+      primary_color: 'Unknown',
+      secondary_colors: [],
+      color_tone: 'Medium',
+      pattern: 'Solid',
+      pattern_type: null,
+      material: 'Unknown',
+      fit: 'Regular',
+      collar: 'Unknown',
+      sleeve: 'Unknown',
+      neckline: 'Unknown',
+      design_details: [],
+      closure_type: 'Unknown',
+      waist_style: null,
+      pocket_style: 'Unknown',
+      hem_style: 'Regular',
+      lapel_style: null,
+      has_lining: false,
+      button_count: 'Unknown',
+      accessories: [],
+      season_suitability: ['All Seasons'],
+      occasions: ['Casual'],
+      image_description: `${name} - AI analizi başarısız oldu`,
+      style_tags: ['basic'],
+      confidence: 20
+    };
   };
 
   const processFiles = async () => {
@@ -132,37 +195,8 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
         } catch (analysisError) {
           console.error('AI analysis failed for', file.name, ':', analysisError);
           
-          // Use fallback analysis with English values
-          const fallbackAnalysis = {
-            name: file.name.split('.')[0] || 'Clothing Item',
-            brand: 'Unknown',
-            category: 'Tops',
-            subcategory: 'T-Shirt',
-            primary_color: 'Unknown',
-            secondary_colors: [],
-            color_tone: 'Medium',
-            pattern: 'Solid',
-            pattern_type: null,
-            material: 'Unknown',
-            fit: 'Regular Fit',
-            collar: 'Unknown',
-            sleeve: 'Unknown',
-            neckline: 'CrewNeck',
-            design_details: ['NoDesign'],
-            closure_type: 'Unknown',
-            waist_style: 'Not Applicable',
-            pocket_style: 'Unknown',
-            hem_style: 'Regular',
-            lapel_style: 'Not Applicable',
-            has_lining: false,
-            button_count: 'Unknown',
-            accessories: [],
-            season_suitability: ['All Seasons'],
-            occasions: ['Casual'],
-            image_description: 'Automatic analysis failed',
-            style_tags: ['general'],
-            confidence: 30
-          };
+          // Use improved fallback analysis
+          const fallbackAnalysis = createBetterFallbackAnalysis(file, publicUrl);
 
           results.push({
             ...fallbackAnalysis,
@@ -171,8 +205,8 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
           });
 
           toast({
-            title: "Analiz Uyarısı",
-            description: `${file.name} için AI analizi başarısız oldu, varsayılan değerler kullanıldı`,
+            title: "AI Analizi Başarısız",
+            description: `${file.name} için AI analizi başarısız oldu. Lütfen ürün bilgilerini manuel olarak düzenleyin.`,
             variant: "destructive"
           });
         }
@@ -186,14 +220,14 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
         console.log('Moving to details step with results:', results[0]);
         setStep('details');
         toast({
-          title: "Başarılı!",
-          description: `${results.length} ürün analiz edildi`,
+          title: "Tamamlandı!",
+          description: `${results.length} ürün işlendi. Bilgileri kontrol edip kaydedin.`,
         });
       } else {
         console.log('No results to display');
         toast({
           title: "Hata",
-          description: "Hiçbir ürün başarıyla analiz edilemedi",
+          description: "Hiçbir ürün başarıyla işlenmedi",
           variant: "destructive"
         });
       }
@@ -234,8 +268,8 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
 
       // Create base item data with all fields including new design_details
       const itemData = {
-        name: formData.name || currentResult?.name || 'Clothing Item',
-        brand: formData.brand || currentResult?.brand || null,
+        name: formData.name || currentResult?.name || 'Giyim Eşyası',
+        brand: formData.brand || (currentResult?.brand && currentResult.brand !== 'Unknown' ? currentResult.brand : null),
         category: categoryToSave,
         subcategory: currentResult?.subcategory || null,
         primary_color: currentResult?.primary_color || 'Unknown',
@@ -261,7 +295,8 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
         image_url: currentResult?.imageUrl,
         prompt_description: currentResult?.image_description || currentResult?.style || null,
         user_id: session.user.id,
-        ai_analysis: currentResult || null
+        ai_analysis: currentResult || null,
+        confidence: currentResult?.confidence || 0
       };
 
       console.log('Saving item to database:', itemData);

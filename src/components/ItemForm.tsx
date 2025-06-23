@@ -27,7 +27,8 @@ const ItemForm = ({ formData, analysisResult, onFormDataChange }: ItemFormProps)
     
     // If analysis already provided a Turkish name, use it
     if (analysisName && (analysisName.includes('Polo Yaka') || analysisName.includes('Tişört') || 
-        analysisName.includes('Gömlek') || analysisName.includes('Pantolon'))) {
+        analysisName.includes('Gömlek') || analysisName.includes('Pantolon') || 
+        analysisName.includes('Ceket') || analysisName.includes('Ayakkabı'))) {
       return analysisName;
     }
     
@@ -57,6 +58,14 @@ const ItemForm = ({ formData, analysisResult, onFormDataChange }: ItemFormProps)
       'Polo': 'Polo Yaka',
       'Sweatshirt': 'Sweatshirt',
       'Trousers': 'Pantolon',
+      'Blazer': 'Blazer',
+      'Jacket': 'Ceket',
+      'Giyim Eşyası': 'Giyim Eşyası',
+      'Coat': 'Palto',
+      'Cardigan': 'Hırka',
+      'Vest': 'Yelek',
+      'Sweater': 'Kazak',
+      'Hoodie': 'Kapşonlu Sweatshirt',
       'Rust Colored Trousers': 'Pas Renkli Pantolon',
       'Olive Green Trousers': 'Zeytin Yeşili Pantolon'
     };
@@ -70,6 +79,8 @@ const ItemForm = ({ formData, analysisResult, onFormDataChange }: ItemFormProps)
       if (subcategory === 'Polo Shirt' || subcategory === 'Polo' || 
           analysisName.toLowerCase().includes('polo')) {
         translatedName = 'Polo Yaka';
+      } else if (subcategory === 'Blazer' || analysisName.toLowerCase().includes('blazer')) {
+        translatedName = 'Blazer';
       } else if (analysisName.toLowerCase().includes('jean') || analysisName.toLowerCase().includes('denim')) {
         translatedName = 'Kot Pantolon';
       } else if (analysisName.toLowerCase().includes('shirt') && !analysisName.toLowerCase().includes('t-shirt') && !analysisName.toLowerCase().includes('polo')) {
@@ -89,7 +100,19 @@ const ItemForm = ({ formData, analysisResult, onFormDataChange }: ItemFormProps)
           if (subcategoryTranslation && subcategoryTranslation !== subcategory) {
             translatedName = subcategoryTranslation;
           } else {
-            translatedName = subcategory;
+            // Fallback translations for common subcategories
+            const fallbackTranslations: Record<string, string> = {
+              'T-Shirt': 'Tişört',
+              'Shirt': 'Gömlek',
+              'Jeans': 'Kot Pantolon',
+              'Blazer': 'Blazer',
+              'Jacket': 'Ceket',
+              'Sneakers': 'Spor Ayakkabı',
+              'Dress': 'Elbise',
+              'Skirt': 'Etek',
+              'Shorts': 'Şort'
+            };
+            translatedName = fallbackTranslations[subcategory] || subcategory;
           }
         } else {
           translatedName = analysisName; // Fallback to original
@@ -102,7 +125,7 @@ const ItemForm = ({ formData, analysisResult, onFormDataChange }: ItemFormProps)
     console.log('Color translation:', color, '->', translatedColor);
     
     // Add color to the product name if color exists and is not already in the name
-    if (translatedColor && translatedColor !== 'Bilinmiyor' && translatedColor !== color && 
+    if (translatedColor && translatedColor !== 'Bilinmiyor' && translatedColor !== 'Unknown' && translatedColor !== color && 
         !translatedName.toLowerCase().includes(translatedColor.toLowerCase())) {
       const finalName = `${translatedColor} ${translatedName}`;
       console.log('Final translated name:', finalName);
@@ -137,7 +160,7 @@ const ItemForm = ({ formData, analysisResult, onFormDataChange }: ItemFormProps)
       <div>
         <label className="block text-sm font-semibold text-gray-900 mb-2">Marka</label>
         <Input
-          value={formData.brand || (analysisResult?.brand && analysisResult.brand !== 'Bilinmiyor' ? analysisResult.brand : '')}
+          value={formData.brand || (analysisResult?.brand && analysisResult.brand !== 'Unknown' ? analysisResult.brand : '')}
           onChange={(e) => onFormDataChange({ brand: e.target.value })}
           placeholder="Ürün markasını girebilirsiniz"
           className="bg-gray-50 border-gray-200 focus:border-blue-400 rounded-xl text-base py-3"
