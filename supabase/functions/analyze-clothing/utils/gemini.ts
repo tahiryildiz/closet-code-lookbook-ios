@@ -9,15 +9,27 @@ export async function callGeminiVision(imageUrl: string): Promise<string> {
   console.log('Starting Gemini analysis for image:', imageUrl);
 
   try {
-    // First, fetch the image to convert to base64
+    // Fetch the image with proper error handling
     console.log('Fetching image for Gemini analysis...');
-    const imageResponse = await fetch(imageUrl);
+    const imageResponse = await fetch(imageUrl, {
+      method: 'GET',
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; ClothingAnalyzer/1.0)'
+      }
+    });
+    
     if (!imageResponse.ok) {
       throw new Error(`Failed to fetch image: ${imageResponse.status} ${imageResponse.statusText}`);
     }
     
-    const imageBuffer = await imageResponse.arrayBuffer();
-    const base64Image = btoa(String.fromCharCode(...new Uint8Array(imageBuffer)));
+    const imageArrayBuffer = await imageResponse.arrayBuffer();
+    console.log('Image fetched, size:', imageArrayBuffer.byteLength);
+    
+    // Convert to base64 safely
+    const uint8Array = new Uint8Array(imageArrayBuffer);
+    const binaryString = Array.from(uint8Array, byte => String.fromCharCode(byte)).join('');
+    const base64Image = btoa(binaryString);
+    
     console.log('Image converted to base64, length:', base64Image.length);
     
     const requestBody = {
@@ -43,7 +55,9 @@ export async function callGeminiVision(imageUrl: string): Promise<string> {
     };
 
     console.log('Making request to Gemini API...');
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+    
+    const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -53,25 +67,37 @@ export async function callGeminiVision(imageUrl: string): Promise<string> {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Gemini API error:', response.status, errorText);
+      console.error('Gemini API error response:', response.status, errorText);
       throw new Error(`Gemini API error: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
-    console.log('Gemini API response received');
+    console.log('Gemini API response received, checking structure...');
     
-    if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
-      console.error('Invalid Gemini response structure:', data);
-      throw new Error('Invalid response from Gemini API');
+    if (!data.candidates || !Array.isArray(data.candidates) || data.candidates.length === 0) {
+      console.error('Invalid Gemini response - no candidates:', JSON.stringify(data, null, 2));
+      throw new Error('Invalid response from Gemini API - no candidates found');
     }
 
-    const content = data.candidates[0].content.parts[0].text;
-    console.log('Gemini analysis completed successfully');
+    const candidate = data.candidates[0];
+    if (!candidate.content || !candidate.content.parts || !Array.isArray(candidate.content.parts) || candidate.content.parts.length === 0) {
+      console.error('Invalid Gemini response - no content parts:', JSON.stringify(candidate, null, 2));
+      throw new Error('Invalid response from Gemini API - no content parts found');
+    }
+
+    const content = candidate.content.parts[0].text;
+    if (!content || typeof content !== 'string') {
+      console.error('Invalid Gemini response - no text content:', JSON.stringify(candidate.content.parts[0], null, 2));
+      throw new Error('Invalid response from Gemini API - no text content found');
+    }
+
+    console.log('Gemini analysis completed successfully, content length:', content.length);
     return content;
 
   } catch (error) {
-    console.error('Error in Gemini analysis:', error);
-    throw error;
+    console.error('Error in Gemini analysis:', error.message);
+    console.error('Stack trace:', error.stack);
+    throw new Error(`Gemini analysis failed: ${error.message}`);
   }
 }
 

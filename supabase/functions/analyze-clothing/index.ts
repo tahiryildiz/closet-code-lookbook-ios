@@ -25,15 +25,18 @@ serve(async (req) => {
     let analysisResult;
     let usedProvider = 'OpenAI';
 
+    // Try OpenAI first
     try {
-      // Try OpenAI first
       console.log('Attempting OpenAI analysis...')
       const openaiData = await callOpenAIVision(imageUrl)
       const content = openaiData.choices[0]?.message?.content
+      if (!content) {
+        throw new Error('No content received from OpenAI')
+      }
       analysisResult = parseAndValidateAnalysis(content)
       console.log('OpenAI analysis successful')
     } catch (openaiError) {
-      console.error('OpenAI analysis failed:', openaiError)
+      console.error('OpenAI analysis failed:', openaiError.message)
       
       // Check if it's a rate limit or other recoverable error
       const errorMessage = openaiError.message.toLowerCase();
@@ -50,20 +53,35 @@ serve(async (req) => {
         console.log('Falling back to Google Gemini due to OpenAI issue:', openaiError.message)
         
         try {
+          console.log('Starting Gemini fallback...')
           const geminiContent = await callGeminiVision(imageUrl)
+          console.log('Gemini content received, parsing...')
           analysisResult = parseAndValidateAnalysis(geminiContent)
           usedProvider = 'Gemini';
           console.log('Gemini fallback analysis successful')
         } catch (geminiError) {
-          console.error('Both OpenAI and Gemini failed:', { 
-            openaiError: openaiError.message, 
-            geminiError: geminiError.message 
-          })
-          throw new Error(`Analysis failed. OpenAI: ${openaiError.message}. Gemini fallback: ${geminiError.message}`)
+          console.error('Gemini fallback also failed:', geminiError.message)
+          console.error('Gemini error stack:', geminiError.stack)
+          
+          return createResponse(
+            { 
+              error: 'Both AI providers failed',
+              details: `OpenAI: ${openaiError.message}. Gemini: ${geminiError.message}`,
+              openaiError: openaiError.message,
+              geminiError: geminiError.message
+            },
+            500
+          )
         }
       } else {
-        // For non-recoverable OpenAI errors, don't try fallback
-        throw openaiError
+        console.error('Non-recoverable OpenAI error, not trying fallback:', openaiError.message)
+        return createResponse(
+          { 
+            error: openaiError.message,
+            details: 'OpenAI analysis failed with non-recoverable error. Please check your API key and quota.'
+          },
+          500
+        )
       }
     }
 
@@ -75,11 +93,12 @@ serve(async (req) => {
     return createResponse(analysisResult)
 
   } catch (error) {
-    console.error('Error analyzing clothing:', error)
+    console.error('Unexpected error in analyze-clothing function:', error.message)
+    console.error('Error stack:', error.stack)
     return createResponse(
       { 
-        error: error.message,
-        details: 'Analysis failed. Please ensure the image clearly shows a clothing item and try again with better lighting or angle.'
+        error: 'Unexpected error occurred',
+        details: error.message
       },
       500
     )
