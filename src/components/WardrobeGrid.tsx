@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
@@ -30,9 +29,10 @@ interface WardrobeGridProps {
   searchQuery: string;
   selectedCategory: string;
   refreshTrigger?: number;
+  showFavoritesOnly?: boolean;
 }
 
-const WardrobeGrid = ({ viewMode, searchQuery, selectedCategory, refreshTrigger }: WardrobeGridProps) => {
+const WardrobeGrid = ({ viewMode, searchQuery, selectedCategory, refreshTrigger, showFavoritesOnly = false }: WardrobeGridProps) => {
   const [items, setItems] = useState<ClothingItem[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
@@ -49,6 +49,11 @@ const WardrobeGrid = ({ viewMode, searchQuery, selectedCategory, refreshTrigger 
         .from('clothing_items')
         .select('*')
         .order('created_at', { ascending: false });
+
+      // Apply favorites filter if needed
+      if (showFavoritesOnly) {
+        query = query.eq('is_favorite', true);
+      }
 
       // Apply category filter
       if (selectedCategory !== 'all') {
@@ -178,7 +183,10 @@ const WardrobeGrid = ({ viewMode, searchQuery, selectedCategory, refreshTrigger 
     return (
       <div className="text-center py-12">
         <p className="text-gray-500 text-lg">
-          {searchQuery ? 'Arama kriterlerinize uygun ürün bulunamadı' : 'Henüz hiç ürün eklemediniz'}
+          {showFavoritesOnly 
+            ? (searchQuery ? 'Favori ürünlerinizde arama kriterlerinize uygun ürün bulunamadı' : 'Henüz hiç favori ürününüz yok')
+            : (searchQuery ? 'Arama kriterlerinize uygun ürün bulunamadı' : 'Henüz hiç ürün eklemediniz')
+          }
         </p>
       </div>
     );

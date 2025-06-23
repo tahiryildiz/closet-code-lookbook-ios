@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus, Search, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,19 +7,30 @@ import { Card, CardContent } from "@/components/ui/card";
 import WardrobeGrid from "@/components/WardrobeGrid";
 import CategoryFilter from "@/components/CategoryFilter";
 import AddItemModal from "@/components/AddItemModal";
+import { useLocation } from "react-router-dom";
 
 const Wardrobe = () => {
+  const location = useLocation();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [showFilters, setShowFilters] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+
+  useEffect(() => {
+    if (location.state?.showFavorites) {
+      setShowFavoritesOnly(true);
+    }
+  }, [location.state]);
 
   const handleModalClose = () => {
     setShowAddModal(false);
-    // Trigger a refresh of the wardrobe grid
     setRefreshTrigger(prev => prev + 1);
   };
+
+  const pageTitle = showFavoritesOnly ? "Favorilerim" : "Gardrobum";
+  const pageDescription = showFavoritesOnly ? "Favori ürünlerinizi görüntüleyin" : "Gardırobunu düzenle ve yönet";
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
@@ -27,28 +38,30 @@ const Wardrobe = () => {
       <div className="bg-gradient-to-br from-blue-900 to-blue-800 text-white">
         <div className="px-6 pt-12 pb-8">
           <div className="flex items-center justify-between mb-6">
-            <div>
-              <h1 className="text-2xl font-medium">Gardrobum</h1>
-              <p className="text-white/80 text-base mt-1">Gardırobunu düzenle ve yönet</p>
+            <div className="text-left">
+              <h1 className="text-2xl font-medium">{pageTitle}</h1>
+              <p className="text-white/80 text-base mt-1">{pageDescription}</p>
             </div>
-            <Button
-              onClick={() => setShowAddModal(true)}
-              className="bg-white/20 hover:bg-white/30 rounded-full h-12 w-12 p-0 backdrop-blur-sm border border-white/20"
-            >
-              <Plus className="h-6 w-6 text-white" />
-            </Button>
+            {!showFavoritesOnly && (
+              <Button
+                onClick={() => setShowAddModal(true)}
+                className="bg-white/20 hover:bg-white/30 rounded-full h-12 w-12 p-0 backdrop-blur-sm border border-white/20"
+              >
+                <Plus className="h-6 w-6 text-white" />
+              </Button>
+            )}
           </div>
         </div>
       </div>
 
       {/* Content */}
       <div className="px-4 py-6 space-y-6">
-        {/* Search and Filters in same line */}
+        {/* Search and Filters */}
         <div className="flex items-center space-x-3">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
-              placeholder="Gardırobunu ara..."
+              placeholder={showFavoritesOnly ? "Favorilerinizi ara..." : "Gardırobunu ara..."}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10 bg-white border-gray-200 focus:border-blue-400 rounded-2xl text-base py-3"
@@ -83,11 +96,14 @@ const Wardrobe = () => {
           searchQuery={searchQuery}
           selectedCategory={selectedCategory}
           refreshTrigger={refreshTrigger}
+          showFavoritesOnly={showFavoritesOnly}
         />
       </div>
 
       {/* Add Item Modal */}
-      <AddItemModal isOpen={showAddModal} onClose={handleModalClose} />
+      {!showFavoritesOnly && (
+        <AddItemModal isOpen={showAddModal} onClose={handleModalClose} />
+      )}
     </div>
   );
 };
