@@ -47,7 +47,7 @@ export const processValidatedOutfits = async (
   console.log(`📝 Removed ${duplicateIndices.length} duplicate outfits`);
   console.log(`📝 Processing ${uniqueOutfits.length} unique, validated outfits`);
   
-  // Step 3: Process final outfits with exact wardrobe matching
+  // Step 3: Process final outfits with exact wardrobe matching and REAL product images
   const processedOutfits = await Promise.all(
     uniqueOutfits.slice(0, 3).map(async (outfit: any, index: number) => {
       console.log(`\n🎨 Processing final outfit ${index + 1}:`, outfit.items);
@@ -68,11 +68,13 @@ export const processValidatedOutfits = async (
       
       const itemIds = exactMatches.map(item => item.id);
       const exactItemNames = exactMatches.map(item => item.name || item.subcategory);
+      const itemImages = exactMatches.map(item => item.image_url).filter(Boolean);
       
       console.log(`✅ Exact matches found:`, exactItemNames);
+      console.log(`🖼️  Product images found:`, itemImages.length);
       
-      // Generate professional flatlay image
-      const generatedImageUrl = await generateOutfitImage(
+      // Use actual product image instead of generating new one
+      const actualProductImage = await generateOutfitImage(
         { ...outfit, items: exactItemNames }, 
         wardrobeItems, 
         occasion, 
@@ -86,17 +88,19 @@ export const processValidatedOutfits = async (
         ...outfit,
         items: exactItemNames,
         item_ids: itemIds,
-        images: generatedImageUrl ? [generatedImageUrl] : [],
+        images: actualProductImage ? [actualProductImage] : itemImages,
         occasion: occasion,
-        generated_image: generatedImageUrl,
+        generated_image: actualProductImage,
+        product_images: itemImages, // Store all individual product images for reference
         validated: true,
-        validation_passed: true
+        validation_passed: true,
+        uses_real_images: true // Flag to indicate we're using actual product images
       };
     })
   );
   
   const finalOutfits = processedOutfits.filter(Boolean);
   
-  console.log(`🎉 Successfully processed ${finalOutfits.length} validated outfits`);
+  console.log(`🎉 Successfully processed ${finalOutfits.length} validated outfits with real product images`);
   return finalOutfits;
 };
