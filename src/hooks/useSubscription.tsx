@@ -4,12 +4,14 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
+type SubscriptionType = 'free' | 'monthly' | 'yearly';
+
 interface SubscriptionLimits {
   canAddItem: boolean;
   canGenerateOutfit: boolean;
   remainingItems: number;
   remainingOutfits: number;
-  subscriptionType: 'free' | 'monthly' | 'yearly';
+  subscriptionType: SubscriptionType;
   isPremium: boolean;
 }
 
@@ -39,7 +41,8 @@ export const useSubscription = () => {
 
       if (!profile) return;
 
-      const isPremium = profile.subscription_type === 'monthly' || profile.subscription_type === 'yearly';
+      const subscriptionType = (profile.subscription_type as SubscriptionType) || 'free';
+      const isPremium = subscriptionType === 'monthly' || subscriptionType === 'yearly';
 
       if (isPremium) {
         setLimits({
@@ -47,7 +50,7 @@ export const useSubscription = () => {
           canGenerateOutfit: true,
           remainingItems: -1, // unlimited
           remainingOutfits: -1, // unlimited
-          subscriptionType: profile.subscription_type,
+          subscriptionType,
           isPremium: true
         });
         return;

@@ -7,16 +7,40 @@ import AnalysisStep from "./AnalysisStep";
 import { useSubscription } from "@/hooks/useSubscription";
 import PaywallModal from "./PaywallModal";
 import AdModal from "./AdModal";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 interface AddItemModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
+interface FormData {
+  name: string;
+  brand: string;
+  category: string;
+  primaryColor: string;
+  tags: string;
+  notes: string;
+}
+
 const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
+  const { user } = useAuth();
+  const { toast } = useToast();
   const { limits, updateUsage, addAdBonus } = useSubscription();
   const [step, setStep] = useState<'upload' | 'analysis'>('upload');
-  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysisResult, setAnalysisResult] = useState<any>(null);
+  const [formData, setFormData] = useState<FormData>({
+    name: '',
+    brand: '',
+    category: '',
+    primaryColor: '',
+    tags: '',
+    notes: ''
+  });
   const [showPaywall, setShowPaywall] = useState(false);
   const [showAdModal, setShowAdModal] = useState(false);
 
@@ -26,25 +50,138 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
     }
   }, [isOpen, limits.canAddItem, limits.isPremium]);
 
-  const handleImageSelect = async (file: File) => {
+  const handleFileSelect = async (files: File[]) => {
     // Check limits before proceeding
     if (!limits.canAddItem && !limits.isPremium) {
       setShowPaywall(true);
       return;
     }
 
-    setSelectedImage(file);
-    setStep('analysis');
+    if (files.length === 0) return;
+
+    // Show ad modal for free users
+    if (!limits.isPremium) {
+      setSelectedFiles(files);
+      setShowAdModal(true);
+      return;
+    }
+
+    // Process files directly for premium users
+    await processFiles(files);
   };
 
-  const handleItemAdded = async () => {
-    await updateUsage('item');
-    handleClose();
+  const processFiles = async (files: File[]) => {
+    setSelectedFiles(files);
+    setStep('analysis');
+    setIsAnalyzing(true);
+
+    try {
+      // Process first file for now
+      const file = files[0];
+      const formData = new FormData();
+      formData.append('image', file);
+
+      const { data, error } = await supabase.functions.invoke('analyze-clothing', {
+        body: formData,
+      });
+
+      if (error) throw error;
+
+      setAnalysisResult({
+        ...data,
+        imageUrl: URL.createObjectURL(file)
+      });
+
+      // Update form data with analysis results
+      setFormData(prev => ({
+        ...prev,
+        name: data.name || '',
+        brand: data.brand || '',
+        category: data.category || '',
+        primaryColor: data.primaryColor || '',
+        tags: data.tags || '',
+        notes: data.notes || ''
+      }));
+
+    } catch (error) {
+      console.error('Analysis error:', error);
+      toast({
+        title: "Analiz Hatası",
+        description: "Ürün analizi sırasında bir hata oluştu",
+        variant: "destructive"
+      });
+      setAnalysisResult(null);
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
+  const handleRemoveFile = (index: number) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleFormDataChange = (data: Partial<FormData>) => {
+    setFormData(prev => ({ ...prev, ...data }));
+  };
+
+  const handleSave = async () => {
+    if (!user || !analysisResult) return;
+
+    try {
+      const { error } = await supabase
+        .from('clothing_items')
+        .insert({
+          user_id: user.id,
+          name: formData.name,
+          brand: formData.brand,
+          category: formData.category,
+          primary_color: formData.primaryColor,
+          style_tags: formData.tags ? formData.tags.split(',').map(tag => tag.trim()) : [],
+          user_notes: formData.notes,
+          image_url: analysisResult.imageUrl,
+          ai_analysis: analysisResult,
+          confidence: analysisResult.confidence
+        });
+
+      if (error) throw error;
+
+      await updateUsage('item');
+      
+      toast({
+        title: "Başarılı!",
+        description: "Ürün gardırobunuza eklendi",
+      });
+
+      handleClose();
+    } catch (error) {
+      console.error('Save error:', error);
+      toast({
+        title: "Hata",
+        description: "Ürün kaydedilirken bir hata oluştu",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleBack = () => {
+    setStep('upload');
+    setAnalysisResult(null);
+    setIsAnalyzing(false);
   };
 
   const handleClose = () => {
     setStep('upload');
-    setSelectedImage(null);
+    setSelectedFiles([]);
+    setAnalysisResult(null);
+    setIsAnalyzing(false);
+    setFormData({
+      name: '',
+      brand: '',
+      category: '',
+      primaryColor: '',
+      tags: '',
+      notes: ''
+    });
     setShowPaywall(false);
     setShowAdModal(false);
     onClose();
@@ -53,6 +190,8 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
   const handleAdComplete = async () => {
     await addAdBonus('items');
     setShowAdModal(false);
+    // Process files after ad
+    await processFiles(selectedFiles);
   };
 
   const handleWatchAd = () => {
@@ -88,15 +227,23 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
             </div>
 
             {/* Content */}
-            <div className="max-h-[70vh] overflow-y-auto">
+            <div className="max-h-[70vh] overflow-y-auto p-6">
               {step === 'upload' && (
-                <UploadStep onImageSelect={handleImageSelect} />
+                <UploadStep 
+                  onFileSelect={handleFileSelect}
+                  selectedFiles={selectedFiles}
+                  onRemoveFile={handleRemoveFile}
+                />
               )}
               
-              {step === 'analysis' && selectedImage && (
+              {step === 'analysis' && (
                 <AnalysisStep 
-                  image={selectedImage} 
-                  onComplete={handleItemAdded}
+                  isAnalyzing={isAnalyzing}
+                  analysisResult={analysisResult}
+                  formData={formData}
+                  onFormDataChange={handleFormDataChange}
+                  onSave={handleSave}
+                  onBack={handleBack}
                 />
               )}
             </div>
@@ -108,6 +255,7 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
       <PaywallModal
         isOpen={showPaywall}
         onClose={() => setShowPaywall(false)}
+        onWatchAd={handleWatchAd}
         reason="items"
       />
 
