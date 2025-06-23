@@ -26,9 +26,26 @@ interface OutfitCardProps {
 }
 
 const OutfitCard = ({ outfit }: OutfitCardProps) => {
+  // Debug logging to understand what we're receiving
+  console.log(`🎯 [DEBUG] OutfitCard - outfit data:`, {
+    name: outfit.name,
+    composition_type: outfit.composition_type,
+    has_generated_image: !!outfit.generated_image,
+    generated_image_preview: outfit.generated_image ? outfit.generated_image.substring(0, 50) + '...' : null,
+    has_reference_images: !!outfit.reference_images,
+    reference_count: outfit.reference_images?.length || 0
+  });
+  
   // Prioritize generated flatlay composition, fallback to reference images
-  const hasFlatlayComposition = outfit.generated_image && outfit.composition_type === 'flatlay';
+  const hasFlatlayComposition = outfit.generated_image && 
+    (outfit.composition_type === 'professional_flatlay' || outfit.composition_type === 'flatlay');
   const hasReferenceImages = outfit.reference_images && outfit.reference_images.length > 0;
+  
+  console.log(`🎯 [DEBUG] Display logic:`, {
+    hasFlatlayComposition,
+    hasReferenceImages,
+    final_composition_type: outfit.composition_type
+  });
   
   // Display logic based on available images
   const primaryImage = hasFlatlayComposition ? outfit.generated_image :
@@ -56,17 +73,30 @@ const OutfitCard = ({ outfit }: OutfitCardProps) => {
                     src={imageUrl}
                     alt={`${outfit.items[index] || 'Outfit item'}`}
                     className="w-full h-full object-cover"
+                    onError={(e) => {
+                      console.error(`Failed to load reference image: ${imageUrl}`);
+                      e.currentTarget.src = 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=500&fit=crop';
+                    }}
                   />
                 </div>
               ))}
             </div>
           ) : (
             // Show single flatlay composition or primary image
-            <img
-              src={primaryImage}
-              alt={outfit.name}
-              className="w-full h-full object-cover"
-            />
+            <div className="w-full h-full">
+              <img
+                src={primaryImage}
+                alt={outfit.name}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  console.error(`Failed to load primary image: ${primaryImage}`);
+                  e.currentTarget.src = 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=500&fit=crop';
+                }}
+                onLoad={() => {
+                  console.log(`✅ [DEBUG] Successfully loaded image for ${outfit.name}`);
+                }}
+              />
+            </div>
           )}
           
           <div className="absolute top-4 right-4 flex space-x-2">
