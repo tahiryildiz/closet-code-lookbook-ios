@@ -2,10 +2,10 @@
 export const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+};
 
 export function handleCorsPreflightRequest(): Response {
-  return new Response('ok', { headers: corsHeaders })
+  return new Response(null, { headers: corsHeaders });
 }
 
 export function createResponse(data: any, status: number = 200): Response {
@@ -15,5 +15,5 @@ export function createResponse(data: any, status: number = 200): Response {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status 
     }
-  )
+  );
 }
