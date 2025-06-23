@@ -137,8 +137,8 @@ OUTPUT REQUIREMENT: Single unified professional flatlay photograph in vertical 1
         prompt: flatlayPrompt,
         n: 1,
         size: '1024x1792', // Vertical canvas for better flatlay composition
-        quality: 'high',
-        response_format: 'b64_json'
+        quality: 'high'
+        // Note: gpt-image-1 doesn't support response_format parameter - always returns base64
       }),
     });
 
