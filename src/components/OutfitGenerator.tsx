@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Wand2, Clock, MapPin, Thermometer, Shuffle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -6,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import OutfitCard from "./OutfitCard";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface WardrobeItem {
   id: string;
@@ -25,17 +27,41 @@ interface WardrobeItem {
 }
 
 const OutfitGenerator = () => {
+  const { user } = useAuth();
   const [occasion, setOccasion] = useState('');
   const [timeOfDay, setTimeOfDay] = useState('');
   const [weather, setWeather] = useState('');
   const [generatedOutfits, setGeneratedOutfits] = useState<any[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [wardrobeItems, setWardrobeItems] = useState<WardrobeItem[]>([]);
+  const [userGender, setUserGender] = useState<string>('');
 
-  // Fetch user's wardrobe items with enhanced metadata
+  // Fetch user's wardrobe items and profile
   useEffect(() => {
     fetchWardrobeItems();
-  }, []);
+    fetchUserProfile();
+  }, [user]);
+
+  const fetchUserProfile = async () => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('gender')
+        .eq('id', user.id)
+        .single();
+
+      if (error) {
+        console.error('Error fetching user profile:', error);
+        return;
+      }
+
+      setUserGender(data?.gender || '');
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+    }
+  };
 
   const fetchWardrobeItems = async () => {
     try {
@@ -70,13 +96,14 @@ const OutfitGenerator = () => {
     setIsGenerating(true);
     
     try {
-      console.log('Generating outfits with enhanced wardrobe metadata:', wardrobeItems.length);
+      console.log('Generating outfits with user gender:', userGender);
       
       const { data, error } = await supabase.functions.invoke('generate-outfits', {
         body: { 
           occasion, 
           timeOfDay, 
           weather,
+          userGender,
           wardrobeItems: wardrobeItems.map(item => ({
             id: item.id,
             name: item.name,

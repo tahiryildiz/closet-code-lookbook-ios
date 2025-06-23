@@ -197,6 +197,7 @@ export type Database = {
           body_measurements: Json | null
           created_at: string | null
           full_name: string | null
+          gender: string | null
           id: string
           location: string | null
           preferred_brands: string[] | null
@@ -207,6 +208,7 @@ export type Database = {
           body_measurements?: Json | null
           created_at?: string | null
           full_name?: string | null
+          gender?: string | null
           id: string
           location?: string | null
           preferred_brands?: string[] | null
@@ -217,6 +219,7 @@ export type Database = {
           body_measurements?: Json | null
           created_at?: string | null
           full_name?: string | null
+          gender?: string | null
           id?: string
           location?: string | null
           preferred_brands?: string[] | null

@@ -18,10 +18,10 @@ serve(async (req) => {
   }
 
   try {
-    const { occasion, timeOfDay, weather, wardrobeItems } = await req.json();
+    const { occasion, timeOfDay, weather, wardrobeItems, userGender } = await req.json();
 
     console.log('🚀 KombinAI: STRICT outfit generation started');
-    console.log('📊 Parameters:', { occasion, timeOfDay, weather, wardrobeCount: wardrobeItems?.length });
+    console.log('📊 Parameters:', { occasion, timeOfDay, weather, userGender, wardrobeCount: wardrobeItems?.length });
     
     if (wardrobeItems && wardrobeItems.length > 0) {
       console.log('👕 Wardrobe items:', wardrobeItems.map(item => ({
@@ -53,11 +53,11 @@ serve(async (req) => {
       );
     }
 
-    // Create ULTRA-STRICT prompt with exact item names
-    const prompt = createOutfitPrompt(wardrobeItems, occasion, timeOfDay, weather);
+    // Create ULTRA-STRICT prompt with exact item names and gender context
+    const prompt = createOutfitPrompt(wardrobeItems, occasion, timeOfDay, weather, userGender);
     console.log('📝 Generated prompt (preview):', prompt.substring(0, 500) + '...');
 
-    console.log('🤖 Sending STRICT validation prompt to AI...');
+    console.log('🤖 Sending STRICT validation prompt to AI with gender context...');
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -70,7 +70,7 @@ serve(async (req) => {
         messages: [
           { 
             role: 'system', 
-            content: 'Sen KombinAI profesyonel stil danışmanısın. KESINLIKLE SADECE verilen gardroba ürünlerini kullan. Ürün isimlerini TAM OLARAK AYNI ŞEKİLDE yaz. Başka ürün EKLEME veya DEĞİŞTİRME. SADECE geçerli JSON döndür.' 
+            content: `Sen KombinAI profesyonel stil danışmanısın. KESINLIKLE SADECE verilen gardroba ürünlerini kullan. Ürün isimlerini TAM OLARAK AYNI ŞEKİLDE yaz. Başka ürün EKLEME veya DEĞİŞTİRME. Kullanıcının cinsiyetine uygun stil önerileri ver. SADECE geçerli JSON döndür.` 
           },
           { role: 'user', content: prompt }
         ],

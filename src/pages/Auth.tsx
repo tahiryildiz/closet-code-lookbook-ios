@@ -1,11 +1,14 @@
+
 import { useState } from "react";
-import { Eye, EyeOff, Mail, Lock, Sparkles } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, Sparkles, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -13,7 +16,8 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
-    password: ''
+    password: '',
+    gender: ''
   });
 
   const { signIn, signUp } = useAuth();
@@ -49,6 +53,16 @@ const Auth = () => {
           navigate('/');
         }
       } else {
+        if (!formData.gender) {
+          toast({
+            title: "Kayıt hatası",
+            description: "Lütfen cinsiyet seçimi yapın",
+            variant: "destructive"
+          });
+          setLoading(false);
+          return;
+        }
+
         const { error } = await signUp(formData.email, formData.password);
         if (error) {
           if (error.message.includes('User already registered')) {
@@ -65,6 +79,16 @@ const Auth = () => {
             });
           }
         } else {
+          // Update user profile with gender information
+          const { error: profileError } = await supabase
+            .from('user_profiles')
+            .update({ gender: formData.gender })
+            .eq('id', (await supabase.auth.getUser()).data.user?.id);
+
+          if (profileError) {
+            console.error('Error updating profile:', profileError);
+          }
+
           const loginResult = await signIn(formData.email, formData.password);
           if (loginResult.error) {
             toast({
@@ -96,6 +120,13 @@ const Auth = () => {
     setFormData(prev => ({
       ...prev,
       [e.target.name]: e.target.value
+    }));
+  };
+
+  const handleGenderChange = (value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      gender: value
     }));
   };
 
@@ -163,6 +194,28 @@ const Auth = () => {
                   </button>
                 </div>
               </div>
+
+              {!isLogin && (
+                <div className="space-y-2">
+                  <label htmlFor="gender" className="text-sm font-medium text-gray-700">
+                    Cinsiyet
+                  </label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5 z-10" />
+                    <Select value={formData.gender} onValueChange={handleGenderChange}>
+                      <SelectTrigger className="pl-10 h-12 bg-gray-50/50 border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 rounded-xl transition-all">
+                        <SelectValue placeholder="Cinsiyet seçin" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white/95 backdrop-blur-sm">
+                        <SelectItem value="male">Erkek</SelectItem>
+                        <SelectItem value="female">Kadın</SelectItem>
+                        <SelectItem value="other">Diğer</SelectItem>
+                        <SelectItem value="prefer_not_to_say">Belirtmek İstemiyorum</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              )}
 
               <Button
                 type="submit"

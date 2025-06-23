@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { User, LogOut, Settings, Heart, Star } from "lucide-react";
+import { User, LogOut, Settings, Heart, Star, Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
@@ -15,6 +15,7 @@ const Profile = () => {
   const [loading, setLoading] = useState(false);
   const [itemCount, setItemCount] = useState(0);
   const [outfitCount, setOutfitCount] = useState(0);
+  const [userProfile, setUserProfile] = useState<any>(null);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -32,8 +33,16 @@ const Profile = () => {
         .select('*', { count: 'exact', head: true })
         .eq('user_id', user.id);
 
+      // Fetch user profile
+      const { data: profileData } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
       setItemCount(clothingCount || 0);
       setOutfitCount(outfitsCount || 0);
+      setUserProfile(profileData);
     };
 
     fetchStats();
@@ -59,6 +68,21 @@ const Profile = () => {
     }
   };
 
+  const getGenderDisplay = (gender: string) => {
+    switch (gender) {
+      case 'male':
+        return 'Erkek';
+      case 'female':
+        return 'Kadın';
+      case 'other':
+        return 'Diğer';
+      case 'prefer_not_to_say':
+        return 'Belirtilmemiş';
+      default:
+        return 'Belirtilmemiş';
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 pb-20">
       {/* Header */}
@@ -70,6 +94,9 @@ const Profile = () => {
             </div>
             <h1 className="text-2xl font-semibold">Profil</h1>
             <p className="text-blue-100 text-base mt-1">{user?.email}</p>
+            {userProfile?.gender && (
+              <p className="text-blue-200 text-sm mt-1">{getGenderDisplay(userProfile.gender)}</p>
+            )}
           </div>
         </div>
       </div>
