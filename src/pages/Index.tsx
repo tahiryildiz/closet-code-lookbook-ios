@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import RecentItemsCarousel from "@/components/RecentItemsCarousel";
+import RecentOutfitsCarousel from "@/components/RecentOutfitsCarousel";
 
 interface WardrobeItem {
   id: string;
@@ -24,6 +25,7 @@ const Index = () => {
   const [temperature, setTemperature] = useState<number>(22);
   const [weatherCondition, setWeatherCondition] = useState<string>("Güneşli");
   const [recentItems, setRecentItems] = useState<WardrobeItem[]>([]);
+  const [recentOutfits, setRecentOutfits] = useState<any[]>([]);
   const [hasItems, setHasItems] = useState(false);
 
   useEffect(() => {
@@ -96,10 +98,11 @@ const Index = () => {
     }
   }, [user]);
 
-  // Fetch recent wardrobe items
+  // Fetch recent wardrobe items and outfits
   useEffect(() => {
     if (user) {
       fetchRecentItems();
+      loadRecentOutfits();
     }
   }, [user]);
 
@@ -120,6 +123,18 @@ const Index = () => {
       setHasItems((data || []).length > 0);
     } catch (error) {
       console.error('Error fetching recent items:', error);
+    }
+  };
+
+  const loadRecentOutfits = () => {
+    try {
+      const savedOutfits = localStorage.getItem('generatedOutfits');
+      if (savedOutfits) {
+        const outfits = JSON.parse(savedOutfits);
+        setRecentOutfits(outfits.slice(0, 6)); // Show max 6 outfits
+      }
+    } catch (error) {
+      console.error('Error loading recent outfits:', error);
     }
   };
 
@@ -175,22 +190,43 @@ const Index = () => {
 
           {/* Conditional Content Based on Items */}
           {hasItems ? (
-            // Show Recent Items with Carousel
-            <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-sm rounded-2xl">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-xl font-semibold text-gray-900">Son Eklenenler</h3>
-                  <Button
-                    variant="ghost"
-                    onClick={() => navigate('/wardrobe')}
-                    className="text-blue-600 hover:text-blue-700"
-                  >
-                    Tümünü Gör
-                  </Button>
-                </div>
-                <RecentItemsCarousel items={recentItems} />
-              </CardContent>
-            </Card>
+            <div className="space-y-6">
+              {/* Recent Items */}
+              <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-sm rounded-2xl">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-xl font-semibold text-gray-900">Son Eklenenler</h3>
+                    <Button
+                      variant="ghost"
+                      onClick={() => navigate('/wardrobe')}
+                      className="text-blue-600 hover:text-blue-700"
+                    >
+                      Tümünü Gör
+                    </Button>
+                  </div>
+                  <RecentItemsCarousel items={recentItems} />
+                </CardContent>
+              </Card>
+
+              {/* Recent Outfits */}
+              {recentOutfits.length > 0 && (
+                <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-sm rounded-2xl">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-xl font-semibold text-gray-900">Son Oluşturulan Kombinler</h3>
+                      <Button
+                        variant="ghost"
+                        onClick={() => navigate('/outfits')}
+                        className="text-blue-600 hover:text-blue-700"
+                      >
+                        Tümünü Gör
+                      </Button>
+                    </div>
+                    <RecentOutfitsCarousel outfits={recentOutfits} />
+                  </CardContent>
+                </Card>
+              )}
+            </div>
           ) : (
             // Show Add Products Section
             <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-sm rounded-2xl">

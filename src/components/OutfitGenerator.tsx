@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Wand2, Clock, MapPin, Thermometer, Shuffle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -40,7 +39,29 @@ const OutfitGenerator = () => {
   useEffect(() => {
     fetchWardrobeItems();
     fetchUserProfile();
+    // Load previously generated outfits from localStorage
+    loadPreviousOutfits();
   }, [user]);
+
+  const loadPreviousOutfits = () => {
+    try {
+      const savedOutfits = localStorage.getItem('generatedOutfits');
+      if (savedOutfits) {
+        const outfits = JSON.parse(savedOutfits);
+        setGeneratedOutfits(outfits);
+      }
+    } catch (error) {
+      console.error('Error loading previous outfits:', error);
+    }
+  };
+
+  const savePreviousOutfits = (outfits: any[]) => {
+    try {
+      localStorage.setItem('generatedOutfits', JSON.stringify(outfits));
+    } catch (error) {
+      console.error('Error saving outfits:', error);
+    }
+  };
 
   const fetchUserProfile = async () => {
     if (!user) return;
@@ -58,6 +79,7 @@ const OutfitGenerator = () => {
       }
 
       setUserGender(data?.gender || '');
+      console.log('Fetched user gender:', data?.gender);
     } catch (error) {
       console.error('Error fetching user profile:', error);
     }
@@ -134,10 +156,12 @@ const OutfitGenerator = () => {
         toast.warning(data.warning);
       }
 
-      setGeneratedOutfits(data.outfits || []);
+      const newOutfits = data.outfits || [];
+      setGeneratedOutfits(newOutfits);
+      savePreviousOutfits(newOutfits);
       
-      if (data.outfits && data.outfits.length > 0) {
-        toast.success(`${data.outfits.length} kombin önerisi oluşturuldu!`);
+      if (newOutfits.length > 0) {
+        toast.success(`${newOutfits.length} kombin önerisi oluşturuldu!`);
       }
     } catch (error) {
       console.error('Error generating outfits:', error);
@@ -146,6 +170,7 @@ const OutfitGenerator = () => {
       // Fallback: Generate outfits from user's actual items
       const fallbackOutfits = generateFallbackOutfits();
       setGeneratedOutfits(fallbackOutfits);
+      savePreviousOutfits(fallbackOutfits);
       
       if (fallbackOutfits.length > 0) {
         toast.warning('AI servisi kullanılamadı, rastgele kombinler oluşturuldu');
@@ -199,6 +224,7 @@ const OutfitGenerator = () => {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* ... keep existing code (grid with selects) */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-700 flex items-center">
@@ -274,7 +300,7 @@ const OutfitGenerator = () => {
             ) : (
               <>
                 <Wand2 className="h-4 w-4 mr-2" />
-                3 Kombin Önerisi Oluştur
+                Kombin Önerisi Oluştur
               </>
             )}
           </Button>
