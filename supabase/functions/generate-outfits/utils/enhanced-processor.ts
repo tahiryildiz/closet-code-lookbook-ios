@@ -10,7 +10,7 @@ export const processValidatedOutfits = async (
   weather: string, 
   openAIApiKey: string
 ) => {
-  console.log('🔍 Starting strict outfit validation process...');
+  console.log('🔍 Starting strict outfit validation and flatlay generation process...');
   console.log('Input outfits:', outfits.map(o => ({ name: o.name, items: o.items })));
   
   // Step 1: STRICT validation - reject ANY outfit with non-wardrobe items
@@ -29,7 +29,6 @@ export const processValidatedOutfits = async (
     } else {
       console.log(`❌ Outfit ${i + 1} REJECTED:`);
       validation.errors.forEach(error => console.log(`   - ${error}`));
-      // COMPLETELY REJECT invalid outfits - no partial fixes
     }
   }
   
@@ -47,7 +46,7 @@ export const processValidatedOutfits = async (
   console.log(`📝 Removed ${duplicateIndices.length} duplicate outfits`);
   console.log(`📝 Processing ${uniqueOutfits.length} unique, validated outfits`);
   
-  // Step 3: Process final outfits with complete product image collection
+  // Step 3: Process final outfits with flatlay generation
   const processedOutfits = await Promise.all(
     uniqueOutfits.slice(0, 3).map(async (outfit: any, index: number) => {
       console.log(`\n🎨 Processing final outfit ${index + 1}:`, outfit.items);
@@ -63,7 +62,7 @@ export const processValidatedOutfits = async (
       
       if (exactMatches.length !== outfit.items.length) {
         console.log(`⚠️  Warning: Could not find exact matches for all items in outfit ${index + 1}`);
-        return null; // Skip this outfit
+        return null;
       }
       
       const itemIds = exactMatches.map(item => item.id);
@@ -71,8 +70,8 @@ export const processValidatedOutfits = async (
       
       console.log(`✅ Exact matches found:`, exactItemNames);
       
-      // Collect ALL product images for complete outfit visualization
-      const outfitImageData = await generateOutfitImage(
+      // Generate flatlay composition using reference images
+      const flatlayData = await generateOutfitImage(
         { ...outfit, items: exactItemNames }, 
         wardrobeItems, 
         occasion, 
@@ -82,32 +81,34 @@ export const processValidatedOutfits = async (
         index
       );
       
-      console.log(`🖼️  Complete outfit images collected: ${outfitImageData.item_count} items`);
+      console.log(`🖼️  Flatlay generation result: ${flatlayData.composition_type}`);
       
       return {
         ...outfit,
         items: exactItemNames,
         item_ids: itemIds,
-        images: outfitImageData.all_images, // ALL product images for complete outfit
-        primary_image: outfitImageData.primary_image, // Primary image for backwards compatibility
-        product_images: outfitImageData.all_images, // Complete set of product images
-        item_details: outfitImageData.item_details, // Full item details with images
+        generated_image: flatlayData.generated_image, // Single flatlay composition
+        reference_images: flatlayData.reference_images, // Original product images used as reference
+        item_details: flatlayData.item_details,
         occasion: occasion,
-        generated_image: outfitImageData.primary_image, // For backwards compatibility
         validated: true,
         validation_passed: true,
-        uses_real_images: true,
-        complete_outfit_images: true, // Flag indicating we have all item images
-        image_count: outfitImageData.item_count
+        uses_reference_images: true,
+        composition_type: flatlayData.composition_type,
+        item_count: flatlayData.item_count,
+        // Legacy compatibility
+        images: flatlayData.generated_image ? [flatlayData.generated_image] : flatlayData.reference_images,
+        primary_image: flatlayData.generated_image,
+        product_images: flatlayData.reference_images
       };
     })
   );
   
   const finalOutfits = processedOutfits.filter(Boolean);
   
-  console.log(`🎉 Successfully processed ${finalOutfits.length} validated outfits with complete product image sets`);
+  console.log(`🎉 Successfully processed ${finalOutfits.length} validated outfits with flatlay compositions`);
   finalOutfits.forEach((outfit, index) => {
-    console.log(`   Outfit ${index + 1}: ${outfit.image_count} product images collected`);
+    console.log(`   Outfit ${index + 1}: ${outfit.composition_type} - ${outfit.item_count} items`);
   });
   
   return finalOutfits;

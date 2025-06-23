@@ -13,8 +13,12 @@ interface OutfitCardProps {
     confidence: number;
     styling_tips: string;
     occasion?: string;
-    images?: string[];
     generated_image?: string;
+    reference_images?: string[];
+    composition_type?: string;
+    item_count?: number;
+    // Legacy support
+    images?: string[];
     product_images?: string[];
     complete_outfit_images?: boolean;
     image_count?: number;
@@ -22,26 +26,30 @@ interface OutfitCardProps {
 }
 
 const OutfitCard = ({ outfit }: OutfitCardProps) => {
-  // Use all product images if available for complete outfit visualization
-  const hasCompleteImages = outfit.complete_outfit_images && outfit.product_images && outfit.product_images.length > 0;
-  const displayImages = hasCompleteImages ? outfit.product_images : outfit.images;
-  const primaryImage = outfit.generated_image || 
-    (displayImages && displayImages.length > 0 ? displayImages[0] : 
+  // Prioritize generated flatlay composition, fallback to reference images
+  const hasFlatlayComposition = outfit.generated_image && outfit.composition_type === 'flatlay';
+  const hasReferenceImages = outfit.reference_images && outfit.reference_images.length > 0;
+  
+  // Display logic based on available images
+  const primaryImage = hasFlatlayComposition ? outfit.generated_image :
+    (hasReferenceImages ? outfit.reference_images![0] : 
      'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=500&fit=crop');
+
+  const shouldShowGrid = !hasFlatlayComposition && hasReferenceImages && outfit.reference_images!.length > 1;
 
   return (
     <Card className="bg-white border-0 shadow-sm hover:shadow-lg transition-all duration-300 rounded-2xl overflow-hidden">
       <CardContent className="p-0">
         {/* Outfit Preview */}
         <div className="aspect-[4/5] relative overflow-hidden">
-          {hasCompleteImages && displayImages!.length > 1 ? (
-            // Display multiple product images in a grid layout for complete outfit visualization
+          {shouldShowGrid ? (
+            // Show reference images in grid when no flatlay composition is available
             <div className="w-full h-full grid grid-cols-2 gap-1 p-2 bg-gray-50">
-              {displayImages!.slice(0, 4).map((imageUrl, index) => (
+              {outfit.reference_images!.slice(0, 4).map((imageUrl, index) => (
                 <div 
                   key={index} 
                   className={`relative overflow-hidden rounded-lg bg-white shadow-sm ${
-                    displayImages!.length === 3 && index === 0 ? 'col-span-2' : ''
+                    outfit.reference_images!.length === 3 && index === 0 ? 'col-span-2' : ''
                   }`}
                 >
                   <img
@@ -53,7 +61,7 @@ const OutfitCard = ({ outfit }: OutfitCardProps) => {
               ))}
             </div>
           ) : (
-            // Single image fallback
+            // Show single flatlay composition or primary image
             <img
               src={primaryImage}
               alt={outfit.name}
@@ -74,17 +82,25 @@ const OutfitCard = ({ outfit }: OutfitCardProps) => {
             <Badge className="bg-blue-500 text-white rounded-full font-semibold">
               {outfit.confidence}% uyumlu
             </Badge>
-            {hasCompleteImages && (
+            {hasFlatlayComposition && (
               <Badge className="bg-green-500 text-white rounded-full font-semibold">
-                {outfit.image_count} ürün
+                AI Flatlay
+              </Badge>
+            )}
+            {hasReferenceImages && !hasFlatlayComposition && (
+              <Badge className="bg-orange-500 text-white rounded-full font-semibold">
+                {outfit.item_count || outfit.reference_images!.length} ürün
               </Badge>
             )}
           </div>
           
           <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent p-4">
             <h3 className="text-white font-bold text-xl mb-1">{outfit.name}</h3>
-            {hasCompleteImages && (
-              <p className="text-white/80 text-sm">Gerçek ürün görselleri</p>
+            {hasFlatlayComposition && (
+              <p className="text-white/80 text-sm">AI-generated flatlay composition</p>
+            )}
+            {hasReferenceImages && !hasFlatlayComposition && (
+              <p className="text-white/80 text-sm">Reference images from your wardrobe</p>
             )}
           </div>
         </div>
