@@ -15,6 +15,7 @@ const Profile = () => {
   const [loading, setLoading] = useState(false);
   const [itemCount, setItemCount] = useState(0);
   const [outfitCount, setOutfitCount] = useState(0);
+  const [favoriteItems, setFavoriteItems] = useState<any[]>([]);
   const [userProfile, setUserProfile] = useState<any>(null);
 
   useEffect(() => {
@@ -27,11 +28,19 @@ const Profile = () => {
         .select('*', { count: 'exact', head: true })
         .eq('user_id', user.id);
 
-      // Fetch outfits count
+      // Fetch outfits count from database
       const { count: outfitsCount } = await supabase
         .from('outfits')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', user.id);
+
+      // Fetch favorite clothing items
+      const { data: favoriteData } = await supabase
+        .from('clothing_items')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('is_favorite', true)
+        .limit(5);
 
       // Fetch user profile
       const { data: profileData } = await supabase
@@ -42,6 +51,7 @@ const Profile = () => {
 
       setItemCount(clothingCount || 0);
       setOutfitCount(outfitsCount || 0);
+      setFavoriteItems(favoriteData || []);
       setUserProfile(profileData);
     };
 
@@ -119,6 +129,38 @@ const Profile = () => {
           </Card>
         </div>
 
+        {/* Favorites Section */}
+        {favoriteItems.length > 0 && (
+          <Card className="bg-white/90 backdrop-blur-sm border-0 shadow-lg rounded-2xl">
+            <CardContent className="p-6">
+              <div className="flex items-center space-x-2 mb-4">
+                <Heart className="h-5 w-5 text-red-500" />
+                <h3 className="text-lg font-semibold text-gray-900">Favoriler</h3>
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                {favoriteItems.map((item) => (
+                  <div key={item.id} className="aspect-square bg-gray-50 rounded-xl overflow-hidden">
+                    <img
+                      src={item.image_url}
+                      alt={item.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                ))}
+              </div>
+              {favoriteItems.length >= 5 && (
+                <Button
+                  variant="ghost"
+                  className="w-full mt-3 text-blue-600 hover:text-blue-700"
+                  onClick={() => navigate('/wardrobe')}
+                >
+                  Tümünü Gör
+                </Button>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
         {/* Menu Items */}
         <div className="space-y-3">
           <Card className="bg-white/90 backdrop-blur-sm border-0 shadow-lg rounded-2xl hover:shadow-xl transition-all duration-300">
@@ -137,7 +179,10 @@ const Profile = () => {
 
           <Card className="bg-white/90 backdrop-blur-sm border-0 shadow-lg rounded-2xl hover:shadow-xl transition-all duration-300">
             <CardContent className="p-0">
-              <button className="w-full p-4 flex items-center justify-between hover:bg-red-50/50 rounded-2xl transition-colors">
+              <button 
+                className="w-full p-4 flex items-center justify-between hover:bg-red-50/50 rounded-2xl transition-colors"
+                onClick={() => navigate('/wardrobe')}
+              >
                 <div className="flex items-center space-x-3">
                   <div className="bg-red-100 rounded-full p-2">
                     <Heart className="h-5 w-5 text-red-600" />

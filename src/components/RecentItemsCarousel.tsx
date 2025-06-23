@@ -2,6 +2,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Shirt } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { getTurkishLabel, categoryOptions } from "@/utils/localization";
 
 interface WardrobeItem {
   id: string;
@@ -19,6 +20,8 @@ interface RecentItemsCarouselProps {
 
 const RecentItemsCarousel = ({ items }: RecentItemsCarouselProps) => {
   const navigate = useNavigate();
+
+  if (!items || items.length === 0) return null;
 
   return (
     <div className="overflow-x-auto scrollbar-hide">
@@ -45,7 +48,7 @@ const RecentItemsCarousel = ({ items }: RecentItemsCarouselProps) => {
                   )}
                 </div>
                 <p className="font-medium text-sm text-gray-900 truncate">{item.name}</p>
-                <p className="text-xs text-gray-500 capitalize">{item.category}</p>
+                <p className="text-xs text-gray-500">{getTurkishLabel(item.category, categoryOptions)}</p>
               </CardContent>
             </Card>
           </div>

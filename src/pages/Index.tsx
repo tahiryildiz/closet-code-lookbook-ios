@@ -111,8 +111,9 @@ const Index = () => {
       const { data, error } = await supabase
         .from('clothing_items')
         .select('id, name, category, primary_color, brand, image_url, created_at')
+        .eq('user_id', user?.id)
         .order('created_at', { ascending: false })
-        .limit(6); // Increased to 6 to show more items in carousel
+        .limit(6);
 
       if (error) {
         console.error('Error fetching recent items:', error);
@@ -131,7 +132,8 @@ const Index = () => {
       const savedOutfits = localStorage.getItem('generatedOutfits');
       if (savedOutfits) {
         const outfits = JSON.parse(savedOutfits);
-        setRecentOutfits(outfits.slice(0, 6)); // Show max 6 outfits
+        setRecentOutfits(outfits.slice(0, 6));
+        console.log('Loaded recent outfits:', outfits.length);
       }
     } catch (error) {
       console.error('Error loading recent outfits:', error);

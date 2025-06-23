@@ -1,333 +1,316 @@
+
 import { useState, useEffect } from "react";
-import { Wand2, Clock, MapPin, Thermometer, Shuffle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import OutfitCard from "./OutfitCard";
+import { Sparkles, Wand2, RefreshCw } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import OutfitCard from "./OutfitCard";
 import OutfitLoadingProgress from "./OutfitLoadingProgress";
 
-interface WardrobeItem {
-  id: string;
+interface Outfit {
+  id: number;
   name: string;
-  category: string;
-  image_url: string;
-  primary_color: string;
-  brand?: string;
-  fit?: string;
-  collar?: string;
-  sleeve?: string;
-  pattern?: string;
-  color_tone?: string;
-  context_tags?: string[];
-  prompt_description?: string;
-  material?: string;
+  items: string[];
+  item_ids?: string[];
+  confidence: number;
+  styling_tips: string;
+  occasion?: string;
+  generated_image?: string;
+  reference_images?: string[];
+  composition_type?: string;
+  item_count?: number;
+  aspect_ratio?: string;
 }
 
 const OutfitGenerator = () => {
   const { user } = useAuth();
-  const [occasion, setOccasion] = useState('');
-  const [timeOfDay, setTimeOfDay] = useState('');
-  const [weather, setWeather] = useState('');
-  const [generatedOutfits, setGeneratedOutfits] = useState<any[]>([]);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [wardrobeItems, setWardrobeItems] = useState<WardrobeItem[]>([]);
-  const [userGender, setUserGender] = useState<string>('');
+  const { toast } = useToast();
+  const [occasion, setOccasion] = useState("casual");
+  const [timeOfDay, setTimeOfDay] = useState("day");
+  const [weather, setWeather] = useState("mild");
+  const [loading, setLoading] = useState(false);
+  const [outfits, setOutfits] = useState<Outfit[]>([]);
+  const [hasItems, setHasItems] = useState(false);
 
-  // Fetch user's wardrobe items and profile
+  // Load existing outfits from localStorage on component mount
   useEffect(() => {
-    fetchWardrobeItems();
-    fetchUserProfile();
-    // Load previously generated outfits from localStorage
-    loadPreviousOutfits();
+    const savedOutfits = localStorage.getItem('generatedOutfits');
+    if (savedOutfits) {
+      try {
+        const parsedOutfits = JSON.parse(savedOutfits);
+        setOutfits(parsedOutfits);
+      } catch (error) {
+        console.error('Error loading saved outfits:', error);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    const checkItems = async () => {
+      if (user) {
+        const { count } = await supabase
+          .from('clothing_items')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', user.id);
+        
+        setHasItems((count || 0) > 0);
+      }
+    };
+
+    checkItems();
   }, [user]);
 
-  const loadPreviousOutfits = () => {
-    try {
-      const savedOutfits = localStorage.getItem('generatedOutfits');
-      if (savedOutfits) {
-        const outfits = JSON.parse(savedOutfits);
-        setGeneratedOutfits(outfits);
-      }
-    } catch (error) {
-      console.error('Error loading previous outfits:', error);
-    }
-  };
-
-  const savePreviousOutfits = (outfits: any[]) => {
-    try {
-      localStorage.setItem('generatedOutfits', JSON.stringify(outfits));
-    } catch (error) {
-      console.error('Error saving outfits:', error);
-    }
-  };
-
-  const fetchUserProfile = async () => {
+  const saveOutfitsToDatabase = async (outfitsData: Outfit[]) => {
     if (!user) return;
+
+    try {
+      // Save each outfit to the database
+      for (const outfit of outfitsData) {
+        const outfitToSave = {
+          user_id: user.id,
+          name: outfit.name,
+          clothing_item_ids: outfit.item_ids || [],
+          ai_styling_tips: outfit.styling_tips,
+          occasion: outfit.occasion || occasion,
+          time_of_day: timeOfDay,
+          weather_type: weather,
+        };
+
+        const { error } = await supabase
+          .from('outfits')
+          .insert([outfitToSave]);
+
+        if (error) {
+          console.error('Error saving outfit to database:', error);
+        }
+      }
+
+      console.log('Successfully saved outfits to database');
+    } catch (error) {
+      console.error('Error in saveOutfitsToDatabase:', error);
+    }
+  };
+
+  const generateOutfits = async () => {
+    if (!user) {
+      toast({
+        title: "Hata",
+        description: "Lütfen giriş yapın",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setLoading(true);
     
     try {
-      const { data, error } = await supabase
+      const { data: wardrobeItems, error: wardrobeError } = await supabase
+        .from('clothing_items')
+        .select('*')
+        .eq('user_id', user.id);
+
+      if (wardrobeError) throw wardrobeError;
+
+      if (!wardrobeItems || wardrobeItems.length === 0) {
+        toast({
+          title: "Uyarı",
+          description: "Gardırobunuzda henüz kıyafet bulunmuyor. Önce kıyafet ekleyin.",
+          variant: "destructive"
+        });
+        setLoading(false);
+        return;
+      }
+
+      // Get user profile for gender information
+      const { data: userProfile } = await supabase
         .from('user_profiles')
         .select('gender')
         .eq('id', user.id)
         .single();
 
-      if (error) {
-        console.error('Error fetching user profile:', error);
-        return;
-      }
-
-      setUserGender(data?.gender || '');
-      console.log('Fetched user gender:', data?.gender);
-    } catch (error) {
-      console.error('Error fetching user profile:', error);
-    }
-  };
-
-  const fetchWardrobeItems = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('clothing_items')
-        .select(`
-          id, name, category, image_url, primary_color, brand,
-          fit, collar, sleeve, pattern, color_tone, context_tags,
-          prompt_description, material
-        `)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching wardrobe items:', error);
-        return;
-      }
-
-      setWardrobeItems(data || []);
-    } catch (error) {
-      console.error('Error fetching wardrobe items:', error);
-    }
-  };
-
-  const generateOutfits = async () => {
-    if (!occasion || !timeOfDay || !weather) return;
-    
-    if (wardrobeItems.length === 0) {
-      toast.error('Kombinler oluşturmak için önce gardırobunuza ürün ekleyin');
-      return;
-    }
-    
-    setIsGenerating(true);
-    
-    try {
-      console.log('Generating outfits with user gender:', userGender);
-      
-      const { data, error } = await supabase.functions.invoke('generate-outfits', {
-        body: { 
-          occasion, 
-          timeOfDay, 
+      const response = await supabase.functions.invoke('generate-outfits', {
+        body: {
+          wardrobeItems,
+          occasion,
+          timeOfDay,
           weather,
-          userGender,
-          wardrobeItems: wardrobeItems.map(item => ({
-            id: item.id,
-            name: item.name,
-            category: item.category,
-            color: item.primary_color,
-            brand: item.brand,
-            image_url: item.image_url,
-            fit: item.fit,
-            collar: item.collar,
-            sleeve: item.sleeve,
-            pattern: item.pattern,
-            color_tone: item.color_tone,
-            context_tags: item.context_tags,
-            prompt_description: item.prompt_description,
-            material: item.material
-          }))
+          userGender: userProfile?.gender
         }
       });
 
-      if (error) {
-        console.error('Supabase function error:', error);
-        throw error;
+      if (response.error) {
+        throw new Error(response.error.message || 'API call failed');
       }
 
-      console.log('Generated outfits response:', data);
-
-      if (data.warning) {
-        toast.warning(data.warning);
-      }
-
-      const newOutfits = data.outfits || [];
-      setGeneratedOutfits(newOutfits);
-      savePreviousOutfits(newOutfits);
+      const { outfits: generatedOutfits } = response.data;
       
-      if (newOutfits.length > 0) {
-        toast.success(`${newOutfits.length} kombin önerisi oluşturuldu!`);
+      if (!generatedOutfits || generatedOutfits.length === 0) {
+        toast({
+          title: "Uyarı",
+          description: "Kombin oluşturulamadı. Lütfen tekrar deneyin.",
+          variant: "destructive"
+        });
+        return;
       }
+
+      setOutfits(generatedOutfits);
+      
+      // Save to localStorage
+      localStorage.setItem('generatedOutfits', JSON.stringify(generatedOutfits));
+      
+      // Save to database
+      await saveOutfitsToDatabase(generatedOutfits);
+
+      toast({
+        title: "Başarılı!",
+        description: `${generatedOutfits.length} kombin oluşturuldu!`,
+      });
+
     } catch (error) {
       console.error('Error generating outfits:', error);
-      toast.error('Kombin oluşturulurken hata oluştu');
-      
-      // Fallback: Generate outfits from user's actual items
-      const fallbackOutfits = generateFallbackOutfits();
-      setGeneratedOutfits(fallbackOutfits);
-      savePreviousOutfits(fallbackOutfits);
-      
-      if (fallbackOutfits.length > 0) {
-        toast.warning('AI servisi kullanılamadı, rastgele kombinler oluşturuldu');
-      }
+      toast({
+        title: "Hata",
+        description: "Kombin oluşturulurken bir hata oluştu",
+        variant: "destructive"
+      });
     } finally {
-      setIsGenerating(false);
+      setLoading(false);
     }
   };
 
-  const generateFallbackOutfits = () => {
-    if (wardrobeItems.length < 2) return [];
-
-    const shuffleArray = (array: any[]) => {
-      const shuffled = [...array];
-      for (let i = shuffled.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-      }
-      return shuffled;
-    };
-
-    const createOutfit = (items: WardrobeItem[], outfitNumber: number) => {
-      const selectedItems = shuffleArray(items).slice(0, Math.min(3, items.length));
-      return {
-        id: outfitNumber,
-        name: `Kombin ${outfitNumber}`,
-        items: selectedItems.map(item => item.name),
-        item_ids: selectedItems.map(item => item.id),
-        confidence: Math.floor(Math.random() * 20) + 80,
-        styling_tips: "Bu kombinasyon gardırobunuzdaki ürünlerden oluşturuldu",
-        occasion: occasion,
-        images: selectedItems.map(item => item.image_url).filter(Boolean)
-      };
-    };
-
-    return [
-      createOutfit(wardrobeItems, 1),
-      createOutfit(wardrobeItems, 2),
-      createOutfit(wardrobeItems, 3)
-    ];
-  };
+  if (!hasItems) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 pb-20 px-4 pt-6">
+        <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-sm rounded-2xl max-w-md mx-auto mt-20">
+          <CardContent className="p-8 text-center">
+            <div className="bg-blue-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+              <Sparkles className="h-8 w-8 text-blue-600" />
+            </div>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">Henüz Kıyafet Yok</h3>
+            <p className="text-gray-600 mb-6">
+              Kombin oluşturmak için önce gardırobunuza kıyafet eklemeniz gerekiyor.
+            </p>
+            <Button
+              onClick={() => window.location.href = '/wardrobe'}
+              className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-3 rounded-xl"
+            >
+              Kıyafet Ekle
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-6">
-      {/* Outfit Parameters */}
-      <Card className="bg-white/80 backdrop-blur-sm border-blue-200">
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <Wand2 className="h-5 w-5 text-blue-500" />
-            <span>Mükemmel Kombinini Oluştur</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {/* ... keep existing code (grid with selects) */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700 flex items-center">
-                <MapPin className="h-4 w-4 mr-1" />
-                Durum
-              </label>
-              <Select value={occasion} onValueChange={setOccasion}>
-                <SelectTrigger className="bg-white/80 border-blue-200">
-                  <SelectValue placeholder="Durum seçin" />
-                </SelectTrigger>
-                <SelectContent className="bg-white/95 backdrop-blur-sm">
-                  <SelectItem value="office">Ofis/İş</SelectItem>
-                  <SelectItem value="meeting">İş Toplantısı</SelectItem>
-                  <SelectItem value="casual">Günlük Gezinti</SelectItem>
-                  <SelectItem value="date">Romantik Akşam</SelectItem>
-                  <SelectItem value="party">Parti/Etkinlik</SelectItem>
-                  <SelectItem value="workout">Spor/Jimnastik</SelectItem>
-                  <SelectItem value="travel">Seyahat</SelectItem>
-                </SelectContent>
-              </Select>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 pb-20">
+      {/* Header */}
+      <div className="bg-gradient-to-br from-blue-600 to-indigo-700 text-white shadow-xl">
+        <div className="px-6 pt-12 pb-8">
+          <div className="text-center">
+            <div className="bg-white/20 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4 backdrop-blur-sm">
+              <Sparkles className="h-8 w-8 text-white" />
             </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700 flex items-center">
-                <Clock className="h-4 w-4 mr-1" />
-                Zaman
-              </label>
-              <Select value={timeOfDay} onValueChange={setTimeOfDay}>
-                <SelectTrigger className="bg-white/80 border-blue-200">
-                  <SelectValue placeholder="Zaman seçin" />
-                </SelectTrigger>
-                <SelectContent className="bg-white/95 backdrop-blur-sm">
-                  <SelectItem value="morning">Sabah</SelectItem>
-                  <SelectItem value="afternoon">Öğleden Sonra</SelectItem>
-                  <SelectItem value="evening">Akşam</SelectItem>
-                  <SelectItem value="night">Gece</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700 flex items-center">
-                <Thermometer className="h-4 w-4 mr-1" />
-                Hava Durumu
-              </label>
-              <Select value={weather} onValueChange={setWeather}>
-                <SelectTrigger className="bg-white/80 border-blue-200">
-                  <SelectValue placeholder="Hava durumu seçin" />
-                </SelectTrigger>
-                <SelectContent className="bg-white/95 backdrop-blur-sm">
-                  <SelectItem value="sunny">Güneşli/Sıcak</SelectItem>
-                  <SelectItem value="cool">Serin/Ilık</SelectItem>
-                  <SelectItem value="cold">Soğuk</SelectItem>
-                  <SelectItem value="rainy">Yağmurlu</SelectItem>
-                  <SelectItem value="windy">Rüzgarlı</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <Button
-            onClick={generateOutfits}
-            disabled={!occasion || !timeOfDay || !weather || isGenerating || wardrobeItems.length === 0}
-            className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white"
-          >
-            {isGenerating ? (
-              <>
-                <Shuffle className="h-4 w-4 mr-2 animate-spin" />
-                Kombinler Oluşturuluyor...
-              </>
-            ) : wardrobeItems.length === 0 ? (
-              "Önce gardırobunuza ürün ekleyin"
-            ) : (
-              <>
-                <Wand2 className="h-4 w-4 mr-2" />
-                Kombin Önerisi Oluştur
-              </>
-            )}
-          </Button>
-
-          {wardrobeItems.length === 0 && (
-            <p className="text-sm text-gray-500 text-center">
-              Kombin önerileri oluşturmak için gardırobunuzda en az 2 ürün olmalı
-            </p>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Loading Progress */}
-      <OutfitLoadingProgress isVisible={isGenerating} />
-
-      {/* Generated Outfits */}
-      {generatedOutfits.length > 0 && !isGenerating && (
-        <div className="space-y-4">
-          <h2 className="text-xl font-semibold text-gray-900">Kombin Önerileriniz</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {generatedOutfits.map((outfit) => (
-              <OutfitCard key={outfit.id} outfit={outfit} />
-            ))}
+            <h1 className="text-2xl font-semibold">AI Kombin Önerisi</h1>
+            <p className="text-blue-100 text-base mt-1">Size özel kombinler oluşturalım</p>
           </div>
         </div>
-      )}
+      </div>
+
+      {/* Content */}
+      <div className="px-4 py-6 space-y-6">
+        {/* Controls */}
+        <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-sm rounded-2xl">
+          <CardContent className="p-6 space-y-4">
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-2 block">Durum</label>
+                <Select value={occasion} onValueChange={setOccasion}>
+                  <SelectTrigger className="w-full bg-white border-gray-200 rounded-xl">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="casual">Günlük</SelectItem>
+                    <SelectItem value="work">İş</SelectItem>
+                    <SelectItem value="formal">Resmi</SelectItem>
+                    <SelectItem value="party">Parti</SelectItem>
+                    <SelectItem value="sport">Spor</SelectItem>
+                    <SelectItem value="travel">Seyahat</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-2 block">Zaman</label>
+                <Select value={timeOfDay} onValueChange={setTimeOfDay}>
+                  <SelectTrigger className="w-full bg-white border-gray-200 rounded-xl">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="morning">Sabah</SelectItem>
+                    <SelectItem value="day">Gündüz</SelectItem>
+                    <SelectItem value="evening">Akşam</SelectItem>
+                    <SelectItem value="night">Gece</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-2 block">Hava Durumu</label>
+                <Select value={weather} onValueChange={setWeather}>
+                  <SelectTrigger className="w-full bg-white border-gray-200 rounded-xl">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="hot">Sıcak</SelectItem>
+                    <SelectItem value="warm">Ilık</SelectItem>
+                    <SelectItem value="mild">Orta</SelectItem>
+                    <SelectItem value="cool">Serin</SelectItem>
+                    <SelectItem value="cold">Soğuk</SelectItem>
+                    <SelectItem value="rainy">Yağmurlu</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <Button
+              onClick={generateOutfits}
+              disabled={loading}
+              className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-3 rounded-xl transition-all duration-200"
+            >
+              {loading ? (
+                <>
+                  <RefreshCw className="h-5 w-5 mr-2 animate-spin" />
+                  Oluşturuluyor...
+                </>
+              ) : (
+                <>
+                  <Wand2 className="h-5 w-5 mr-2" />
+                  Kombin Önerisi Oluştur
+                </>
+              )}
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Loading Progress */}
+        <OutfitLoadingProgress isVisible={loading} />
+
+        {/* Generated Outfits */}
+        {outfits.length > 0 && !loading && (
+          <div className="space-y-4">
+            <h2 className="text-xl font-semibold text-gray-900 px-2">Önerilen Kombinler</h2>
+            <div className="grid gap-6">
+              {outfits.map((outfit) => (
+                <OutfitCard key={outfit.id} outfit={outfit} />
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
