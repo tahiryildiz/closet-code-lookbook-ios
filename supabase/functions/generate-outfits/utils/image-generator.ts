@@ -63,7 +63,7 @@ export const generateOutfitImage = async (outfit: any, wardrobeItems: any[], occ
   });
 
   try {
-    // Create ULTRA-STRICT flatlay prompt with precise item binding
+    // Create ENHANCED flatlay prompt with layered styling for tops
     const itemDescriptions = matchedItems.map((item, idx) => {
       return `${idx + 1}. ${item.name} - EXACT SPECIFICATIONS:
    - Color: ${item.color}
@@ -75,7 +75,7 @@ export const generateOutfitImage = async (outfit: any, wardrobeItems: any[], occ
    - Description: ${item.description}`;
     }).join('\n\n');
 
-    const flatlayPrompt = `CREATE PROFESSIONAL FLATLAY COMPOSITION - STRICT ITEM REPLICATION REQUIRED
+    const flatlayPrompt = `CREATE PROFESSIONAL LAYERED FLATLAY COMPOSITION - EXACT ITEM REPLICATION
 
 🚨 CRITICAL RULE: ONLY use the exact clothing items listed below. NO generic items, NO similar items, NO imagined items. You MUST replicate the EXACT items from the reference images provided.
 
@@ -89,39 +89,48 @@ MANDATORY REPLICATION REQUIREMENTS:
 - EXACT BRAND ELEMENTS: Include any visible branding, labels, or design elements
 - NO SUBSTITUTIONS: Do not use similar or generic versions
 
-VERTICAL FLATLAY COMPOSITION (1024x1536):
+VERTICAL LAYERED FLATLAY COMPOSITION (1024x1536):
 - Shot from perfect 90-degree overhead angle (bird's eye view)
 - Clean white background with professional studio lighting
 - Vertical arrangement to utilize the tall canvas effectively
 
-PRECISE SPATIAL LAYOUT:
-${categorizedItems.tops.length > 0 ? `- TOP SECTION (upper 1/3): ${categorizedItems.tops.map(t => t.name).join(', ')}
+PRECISE LAYERED LAYOUT:
+${categorizedItems.tops.length > 1 ? `- TOP SECTION: Layer ${categorizedItems.tops.map(t => t.name).join(' OVER ')}
+  Position: ${categorizedItems.tops[0]?.name} as base layer, ${categorizedItems.tops[1]?.name} layered on top showing both items naturally as they would be worn together` : 
+  categorizedItems.tops.length === 1 ? `- TOP SECTION: ${categorizedItems.tops[0].name}
   Position: Laid flat, shoulders aligned horizontally, centered` : ''}
-${categorizedItems.bottoms.length > 0 ? `- MIDDLE SECTION (center 1/3): ${categorizedItems.bottoms.map(b => b.name).join(', ')}
-  Position: Waistband touching or overlapping bottom of top item, legs extended downward` : ''}
-${categorizedItems.shoes.length > 0 ? `- BOTTOM SECTION (lower 1/3): ${categorizedItems.shoes.map(s => s.name).join(', ')}
+${categorizedItems.bottoms.length > 0 ? `- MIDDLE SECTION: ${categorizedItems.bottoms.map(b => b.name).join(', ')}
+  Position: Waistband touching or slightly overlapping the bottom edge of top items, legs extended downward` : ''}
+${categorizedItems.shoes.length > 0 ? `- BOTTOM SECTION: ${categorizedItems.shoes.map(s => s.name).join(', ')}
   Position: Placed at the bottom, parallel to each other, toes pointing up` : ''}
 ${categorizedItems.accessories.length > 0 ? `- SIDE PLACEMENT: ${categorizedItems.accessories.map(a => a.name).join(', ')}
   Position: Strategically placed alongside main items without overlapping` : ''}
 
-PROFESSIONAL FLATLAY PHOTOGRAPHY STYLE:
+PROFESSIONAL LAYERED FLATLAY PHOTOGRAPHY STYLE:
 - High-end fashion magazine quality with sharp focus
 - Soft, diffused lighting eliminating harsh shadows
 - Perfect white balance and color accuracy
-- Items laid completely flat with natural fabric draping
-- Professional styling showing items as if prepared by expert stylist
+- Show how items naturally layer together when worn
+- Professional styling demonstrating outfit coordination
+- Items should appear as if thoughtfully arranged by a stylist
+
+LAYERING TECHNIQUE:
+- When multiple tops are present, show them layered as they would be worn
+- Blazers/jackets should be positioned over shirts/t-shirts showing both items
+- Maintain natural fabric draping and realistic positioning
+- Create visual depth while keeping the overhead flatlay perspective
 
 COMPOSITION COHESION:
 - Items should touch or nearly touch to show they belong together
 - Maintain visual balance and harmony throughout the vertical space
-- Create natural flow from top to bottom
+- Create natural flow from top to bottom showing complete outfit
 - Utilize the full vertical canvas (1024x1536) effectively
 
 CONTEXT: ${occasion} occasion, ${timeOfDay} time, ${weather} weather
 
-OUTPUT REQUIREMENT: Single unified professional flatlay photograph in vertical 1024x1536 format showing ONLY the exact items specified above in perfect overhead composition.`;
+OUTPUT REQUIREMENT: Single unified professional layered flatlay photograph in vertical 1024x1536 format showing ONLY the exact items specified above in perfect overhead composition with natural layering.`;
 
-    console.log(`🤖 [DEBUG] Generated strict prompt (length: ${flatlayPrompt.length})`);
+    console.log(`🤖 [DEBUG] Generated enhanced layered prompt (length: ${flatlayPrompt.length})`);
     console.log(`🤖 [DEBUG] Prompt preview:`, flatlayPrompt.substring(0, 400) + '...');
 
     console.log(`📡 [DEBUG] Making OpenAI API call with supported vertical canvas...`);
@@ -210,8 +219,8 @@ OUTPUT REQUIREMENT: Single unified professional flatlay photograph in vertical 1
       };
     }
 
-    console.log(`✅ [DEBUG] Successfully generated vertical flatlay composition for outfit ${index + 1}`);
-    console.log(`🎯 [DEBUG] Final composition type: professional_flatlay_vertical`);
+    console.log(`✅ [DEBUG] Successfully generated vertical layered flatlay composition for outfit ${index + 1}`);
+    console.log(`🎯 [DEBUG] Final composition type: professional_flatlay_vertical_layered`);
 
     return {
       generated_image: generatedImageUrl,
@@ -224,7 +233,8 @@ OUTPUT REQUIREMENT: Single unified professional flatlay photograph in vertical 1
       debug_info: {
         base64_size: base64Data?.length || 0, // Use optional chaining to prevent errors
         exact_items_used: matchedItems.length,
-        vertical_canvas: true
+        vertical_canvas: true,
+        layered_composition: true
       }
     };
 

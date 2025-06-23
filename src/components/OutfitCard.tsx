@@ -3,6 +3,7 @@ import { Heart, Share, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
 
 interface OutfitCardProps {
   outfit: {
@@ -78,6 +79,22 @@ const OutfitCard = ({ outfit }: OutfitCardProps) => {
 
   const shouldShowGrid = !hasVerticalFlatlay && hasReferenceImages && outfit.reference_images!.length > 1;
 
+  const handleFavorite = () => {
+    toast.success("Kombin favorilere eklendi!");
+  };
+
+  const handleShare = () => {
+    if (navigator.share) {
+      navigator.share({
+        title: outfit.name,
+        text: `${outfit.name} - ${outfit.items.join(', ')}`,
+      }).catch(console.error);
+    } else {
+      navigator.clipboard.writeText(`${outfit.name} - ${outfit.items.join(', ')}`);
+      toast.success("Kombin panoya kopyalandı!");
+    }
+  };
+
   return (
     <Card className="bg-white border-0 shadow-sm hover:shadow-lg transition-all duration-300 rounded-2xl overflow-hidden">
       <CardContent className="p-0">
@@ -131,10 +148,20 @@ const OutfitCard = ({ outfit }: OutfitCardProps) => {
           )}
           
           <div className="absolute top-4 right-4 flex space-x-2">
-            <Button size="sm" variant="ghost" className="h-10 w-10 p-0 bg-white/90 hover:bg-white rounded-full shadow-sm">
+            <Button 
+              size="sm" 
+              variant="ghost" 
+              className="h-10 w-10 p-0 bg-white/90 hover:bg-white rounded-full shadow-sm"
+              onClick={handleFavorite}
+            >
               <Heart className="h-5 w-5 text-gray-600" />
             </Button>
-            <Button size="sm" variant="ghost" className="h-10 w-10 p-0 bg-white/90 hover:bg-white rounded-full shadow-sm">
+            <Button 
+              size="sm" 
+              variant="ghost" 
+              className="h-10 w-10 p-0 bg-white/90 hover:bg-white rounded-full shadow-sm"
+              onClick={handleShare}
+            >
               <Share className="h-5 w-5 text-gray-600" />
             </Button>
           </div>
@@ -155,8 +182,8 @@ const OutfitCard = ({ outfit }: OutfitCardProps) => {
             )}
           </div>
           
+          {/* Simplified overlay without titles */}
           <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent p-4">
-            <h3 className="text-white font-bold text-xl mb-1">{outfit.name}</h3>
             {hasVerticalFlatlay && (
               <p className="text-white/80 text-sm">
                 {outfit.aspect_ratio === '1024x1536' 
@@ -204,4 +231,3 @@ const OutfitCard = ({ outfit }: OutfitCardProps) => {
 };
 
 export default OutfitCard;
-
