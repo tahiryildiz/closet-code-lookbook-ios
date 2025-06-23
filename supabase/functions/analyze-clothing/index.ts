@@ -38,93 +38,104 @@ serve(async (req) => {
             content: [
               {
                 type: 'text',
-                text: `You are a professional fashion analyst. Analyze this clothing item image with extreme attention to detail.
+                text: `CRITICAL: You are analyzing clothing images with EXTREME PRECISION. Your accuracy directly impacts user experience.
 
-CRITICAL BRAND DETECTION:
-- Look for ANY visible logos, text, or brand markings on the clothing
-- Check labels, tags, embroidered logos, printed text
-- Common brands to look for: Nike, Adidas, Lacoste, Tommy Hilfiger, Ralph Lauren, H&M, Zara, Uniqlo, etc.
-- If you see ANY brand indication, identify it specifically
-- Pay special attention to small logos on chest, sleeves, or collar areas
-- Look for crocodile (Lacoste), swoosh (Nike), three stripes (Adidas), polo player (Ralph Lauren), etc.
+CLOTHING TYPE IDENTIFICATION RULES:
+1. JACKET vs T-SHIRT: Look for these SPECIFIC features:
+   - JACKET: Has collar, lapels, front opening (zipper/buttons), structured shoulders, thicker material, layering piece
+   - T-SHIRT: No collar (crew/v-neck only), pullover style, thin material, basic cut, casual wear
+   - BLAZER: Formal jacket with lapels, button closure, structured fit
+   - CARDIGAN: Knitted, button/zip front, often casual
 
-FIELD REQUIREMENTS:
+2. COLOR ANALYSIS - Look at the ACTUAL dominant color:
+   - PRIMARY COLOR: The most prominent color covering 50%+ of the garment
+   - SECONDARY COLORS: Any accent colors, patterns, or trim colors
+   - IGNORE lighting effects - focus on the actual fabric color
+   - Common colors: Navy Blue, Black, White, Grey, Brown, Beige, Red, Green, etc.
+
+3. MATERIAL DETECTION - Examine texture and appearance:
+   - DENIM: Woven cotton with characteristic texture
+   - WOOL: Smooth or textured, often for formal wear
+   - COTTON: Soft appearance, casual items
+   - POLYESTER: Smooth, often shiny finish
+   - LINEN: Loose weave, natural texture
+
+4. BRAND DETECTION - Look VERY carefully for:
+   - Chest logos (Nike swoosh, Adidas stripes, Lacoste crocodile)
+   - Label text or embroidery
+   - Distinctive design elements
+   - Check collar, sleeves, and chest areas thoroughly
+
+FIELD REQUIREMENTS - Fill every field accurately:
 
 **Basic Info:**
-- name: Descriptive Turkish name with color (e.g., "Kırmızı Polo Yaka Tişört")
-- brand: DETECTED BRAND (look carefully) or "Bilinmiyor" 
-- category: "Tops", "Bottoms", "Dresses & Suits", "Outerwear", "Footwear", "Accessories", "Bags", "Underwear & Loungewear", "Swimwear", "Activewear"
-- subcategory: Specific type - for T-shirts: "TShirt", "Polo", "LongSleeve", "Henley"
+- name: Descriptive Turkish name (e.g., "Lacivert Denim Ceket", "Beyaz Polo Yaka Tişört")
+- brand: DETECTED BRAND or "Bilinmiyor" (look carefully for logos/labels)
+- category: "Tops", "Bottoms", "Outerwear", "Dresses & Suits", "Footwear", "Accessories"
+- subcategory: SPECIFIC type - "Blazer", "Denim Jacket", "Bomber Jacket", "TShirt", "Polo", etc.
 
 **Colors & Patterns:**
-- primary_color: Main color in English ("Red", "Blue", "Black", etc.)
-- secondary_colors: Array of additional colors
-- color_tone: "Light", "Medium", or "Dark"
-- pattern: "Solid", "Printed", "Striped", "Graphic", "None"
-- pattern_type: Specific pattern details or null
+- primary_color: EXACT main color in English ("Navy Blue", "Black", "White", etc.)
+- secondary_colors: Array of additional colors if present
+- color_tone: "Light", "Medium", or "Dark" based on color intensity
+- pattern: "Solid", "Striped", "Printed", "Graphic", "Checkered"
 
-**Physical Attributes:**
-- material: Fabric type ("Cotton", "Polyester", "Modal", "Linen", "Elastane")
+**Physical Details:**
+- material: Primary fabric ("Denim", "Cotton", "Wool", "Polyester", "Linen")
 - fit: "Slim", "Regular", "Relaxed", "Oversize"
-- sleeve: "Short Sleeve", "Long Sleeve", "Sleeveless"
-- neckline: "Crew Neck", "V Neck", "Henley", "Polo"
-- collar: Collar style or null
-- design_details: Array from ["Logo Print", "Embroidered", "Chest Print", "Back Print", "No Design", "Graphic Print", "Text Print", "All Over Print"]
+- sleeve: "Long Sleeve", "Short Sleeve", "Sleeveless"
+- collar: "No Collar", "Crew Neck", "V Neck", "Button Down", "Spread Collar"
+- closure_type: "Pullover", "Button-Up", "Zip", "Snap"
 
-**Construction Details:**
-- closure_type: "Pullover", "Button-Up", "Zip", "Snap", etc. or null
-- waist_style: "Straight", "Fitted", "Loose", "Elastic" or null
-- pocket_style: "No Pockets", "Chest Pocket", "Side Pockets", etc. or null
-- hem_style: "Straight", "Curved", "High-Low", "Raw Edge" or null
-- lapel_style: Style if applicable or null
-- has_lining: true/false
-- button_count: Number or "Unknown"
+**Construction:**
+- design_details: ["Logo Print", "Embroidered", "Plain", "Graphic Print", etc.]
+- pocket_style: "No Pockets", "Chest Pocket", "Side Pockets", "Patch Pockets"
+- hem_style: "Straight", "Curved", "Raw Edge"
 
-**Style & Usage:**
-- accessories: Array of any visible accessories
-- season_suitability: Array from ["Spring", "Summer", "Autumn", "Winter"]
-- occasions: Array from ["Casual", "Sport", "Outdoor", "Home", "Travel", "Office", "Evening", "Formal"]
-- style_tags: Array of style descriptors (e.g., ["Modern", "Classic", "Sporty", "Minimalist"])
+**Usage:**
+- season_suitability: ["Spring", "Summer", "Autumn", "Winter"] based on material/style
+- occasions: ["Casual", "Formal", "Sport", "Business", "Evening"] based on style
+- style_tags: ["Classic", "Modern", "Vintage", "Sporty", "Formal"]
 
-**AI Analysis:**
-- image_description: Detailed description of the item and its styling
-- confidence: 1-100 confidence score
+**Analysis:**
+- image_description: Detailed description of the garment's appearance
+- confidence: 1-100 (be honest about uncertainty)
 
-IMPORTANT: 
-- Look VERY carefully for brand logos and markings
-- Use Turkish naming convention for the main name field
-- Fill every possible field based on image analysis
-- Be thorough in brand detection
+CRITICAL REMINDERS:
+- NAVY BLUE jackets are NOT t-shirts - check the garment structure carefully
+- Look at the actual color, not lighting effects
+- A jacket has structure, collar, and opening - very different from a t-shirt
+- Brand detection is crucial - examine logos thoroughly
 
-Return ONLY valid JSON in this exact format:
+Return ONLY valid JSON in this format:
 {
-  "name": "Turkish descriptive name with color",
+  "name": "Turkish name with color and type",
   "brand": "detected brand or Bilinmiyor",
-  "category": "main category",
-  "subcategory": "specific subcategory",
-  "primary_color": "main color in English",
-  "secondary_colors": ["array", "of", "secondary", "colors"],
+  "category": "category",
+  "subcategory": "specific type",
+  "primary_color": "exact color in English",
+  "secondary_colors": ["array of colors"],
   "color_tone": "Light|Medium|Dark",
   "pattern": "pattern type",
   "pattern_type": "specific pattern details or null",
   "material": "fabric type",
   "fit": "fit type",
-  "collar": "collar style or null",
+  "collar": "collar style",
   "sleeve": "sleeve type",
   "neckline": "neckline style",
-  "design_details": ["array", "of", "design", "elements"],
-  "closure_type": "closure type or null",
+  "design_details": ["array of design elements"],
+  "closure_type": "closure type",
   "waist_style": "waist style or null",
-  "pocket_style": "pocket style or null",
-  "hem_style": "hem style or null",
+  "pocket_style": "pocket style",
+  "hem_style": "hem style",
   "lapel_style": "lapel style or null",
   "has_lining": false,
   "button_count": "number or Unknown",
-  "accessories": ["array", "of", "accessories"],
-  "season_suitability": ["array", "of", "seasons"],
-  "occasions": ["array", "of", "occasions"],
-  "image_description": "detailed description of the item",
-  "style_tags": ["array", "of", "style", "tags"],
+  "accessories": [],
+  "season_suitability": ["seasons"],
+  "occasions": ["occasions"],
+  "image_description": "detailed description",
+  "style_tags": ["style tags"],
   "confidence": 85
 }`
               },
@@ -137,12 +148,15 @@ Return ONLY valid JSON in this exact format:
             ]
           }
         ],
-        max_tokens: 1500
+        max_tokens: 1500,
+        temperature: 0.1  // Lower temperature for more consistent analysis
       })
     })
 
     if (!openaiResponse.ok) {
-      throw new Error(`OpenAI API error: ${openaiResponse.statusText}`)
+      const errorText = await openaiResponse.text()
+      console.error('OpenAI API error:', openaiResponse.status, errorText)
+      throw new Error(`OpenAI API error: ${openaiResponse.status} - ${errorText}`)
     }
 
     const openaiData = await openaiResponse.json()
@@ -152,18 +166,31 @@ Return ONLY valid JSON in this exact format:
       throw new Error('No content received from OpenAI')
     }
 
-    // Parse the JSON response
+    // Parse the JSON response with better error handling
     let analysisResult
     try {
-      analysisResult = JSON.parse(content)
-    } catch (parseError) {
-      // If JSON parsing fails, try to extract JSON from the response
-      const jsonMatch = content.match(/\{[\s\S]*\}/)
-      if (jsonMatch) {
-        analysisResult = JSON.parse(jsonMatch[0])
-      } else {
-        throw new Error('Failed to parse JSON response from OpenAI')
+      // Remove any potential markdown formatting
+      const cleanContent = content.replace(/```json\s?|\s?```/g, '').trim()
+      analysisResult = JSON.parse(cleanContent)
+      
+      // Validate critical fields
+      if (!analysisResult.name || !analysisResult.category || !analysisResult.primary_color) {
+        console.error('Missing critical fields in analysis result:', analysisResult)
+        throw new Error('Incomplete analysis - missing critical fields')
       }
+      
+      console.log('Analysis completed successfully:', {
+        name: analysisResult.name,
+        category: analysisResult.category,
+        subcategory: analysisResult.subcategory,
+        color: analysisResult.primary_color,
+        confidence: analysisResult.confidence
+      })
+      
+    } catch (parseError) {
+      console.error('Failed to parse analysis result:', parseError)
+      console.error('Raw content:', content)
+      throw new Error('Failed to parse AI analysis result')
     }
 
     return new Response(
@@ -177,7 +204,10 @@ Return ONLY valid JSON in this exact format:
   } catch (error) {
     console.error('Error analyzing clothing:', error)
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        details: 'Please try uploading the image again. If the problem persists, check the image quality and try a clearer photo.'
+      }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500 
