@@ -1,4 +1,5 @@
 
+
 export const generateOutfitImage = async (outfit: any, wardrobeItems: any[], occasion: string, timeOfDay: string, weather: string, openAIApiKey: string, index: number) => {
   console.log(`🖼️  [DEBUG] Starting image generation for outfit ${index + 1}`);
   console.log(`🖼️  [DEBUG] Outfit items:`, outfit.items);
@@ -89,7 +90,7 @@ MANDATORY REPLICATION REQUIREMENTS:
 - EXACT BRAND ELEMENTS: Include any visible branding, labels, or design elements
 - NO SUBSTITUTIONS: Do not use similar or generic versions
 
-VERTICAL FLATLAY COMPOSITION (1024x1792):
+VERTICAL FLATLAY COMPOSITION (1024x1536):
 - Shot from perfect 90-degree overhead angle (bird's eye view)
 - Clean white background with professional studio lighting
 - Vertical arrangement to utilize the tall canvas effectively
@@ -115,16 +116,16 @@ COMPOSITION COHESION:
 - Items should touch or nearly touch to show they belong together
 - Maintain visual balance and harmony throughout the vertical space
 - Create natural flow from top to bottom
-- Utilize the full vertical canvas (1024x1792) effectively
+- Utilize the full vertical canvas (1024x1536) effectively
 
 CONTEXT: ${occasion} occasion, ${timeOfDay} time, ${weather} weather
 
-OUTPUT REQUIREMENT: Single unified professional flatlay photograph in vertical 1024x1792 format showing ONLY the exact items specified above in perfect overhead composition.`;
+OUTPUT REQUIREMENT: Single unified professional flatlay photograph in vertical 1024x1536 format showing ONLY the exact items specified above in perfect overhead composition.`;
 
     console.log(`🤖 [DEBUG] Generated strict prompt (length: ${flatlayPrompt.length})`);
     console.log(`🤖 [DEBUG] Prompt preview:`, flatlayPrompt.substring(0, 400) + '...');
 
-    console.log(`📡 [DEBUG] Making OpenAI API call with vertical canvas...`);
+    console.log(`📡 [DEBUG] Making OpenAI API call with supported vertical canvas...`);
 
     const response = await fetch('https://api.openai.com/v1/images/generations', {
       method: 'POST',
@@ -136,7 +137,7 @@ OUTPUT REQUIREMENT: Single unified professional flatlay photograph in vertical 1
         model: 'gpt-image-1',
         prompt: flatlayPrompt,
         n: 1,
-        size: '1024x1792', // Vertical canvas for better flatlay composition
+        size: '1024x1536', // Supported vertical canvas
         quality: 'high'
         // Note: gpt-image-1 doesn't support response_format parameter - always returns base64
       }),
@@ -218,7 +219,7 @@ OUTPUT REQUIREMENT: Single unified professional flatlay photograph in vertical 1
       item_details: matchedItems,
       item_count: matchedItems.length,
       composition_type: 'professional_flatlay_vertical',
-      aspect_ratio: '1024x1792',
+      aspect_ratio: '1024x1536',
       debug_reason: 'success',
       debug_info: {
         base64_size: base64Data.length,
@@ -246,3 +247,4 @@ OUTPUT REQUIREMENT: Single unified professional flatlay photograph in vertical 1
     };
   }
 };
+

@@ -1,3 +1,4 @@
+
 import { Heart, Share, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -82,8 +83,8 @@ const OutfitCard = ({ outfit }: OutfitCardProps) => {
       <CardContent className="p-0">
         {/* Outfit Preview - Enhanced for vertical compositions */}
         <div className={`relative overflow-hidden ${
-          hasVerticalFlatlay && outfit.aspect_ratio === '1024x1792' 
-            ? 'aspect-[4/7]' // Vertical aspect ratio for 1024x1792
+          hasVerticalFlatlay && (outfit.aspect_ratio === '1024x1536' || outfit.aspect_ratio === '1024x1792')
+            ? 'aspect-[2/3]' // Vertical aspect ratio for supported dimensions
             : 'aspect-[4/5]' // Default aspect ratio
         }`}>
           {shouldShowGrid ? (
@@ -144,7 +145,7 @@ const OutfitCard = ({ outfit }: OutfitCardProps) => {
             </Badge>
             {hasVerticalFlatlay && (
               <Badge className="bg-green-500 text-white rounded-full font-semibold">
-                {outfit.aspect_ratio === '1024x1792' ? 'AI Vertical Flatlay' : 'AI Flatlay'}
+                {outfit.aspect_ratio === '1024x1536' ? 'AI Vertical Flatlay' : 'AI Flatlay'}
               </Badge>
             )}
             {hasReferenceImages && !hasVerticalFlatlay && (
@@ -158,7 +159,7 @@ const OutfitCard = ({ outfit }: OutfitCardProps) => {
             <h3 className="text-white font-bold text-xl mb-1">{outfit.name}</h3>
             {hasVerticalFlatlay && (
               <p className="text-white/80 text-sm">
-                {outfit.aspect_ratio === '1024x1792' 
+                {outfit.aspect_ratio === '1024x1536' 
                   ? 'AI-generated vertical flatlay composition' 
                   : 'AI-generated flatlay composition'}
               </p>
@@ -203,3 +204,4 @@ const OutfitCard = ({ outfit }: OutfitCardProps) => {
 };
 
 export default OutfitCard;
+
