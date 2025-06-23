@@ -36,14 +36,15 @@ serve(async (req) => {
       console.error('OpenAI analysis failed:', openaiError)
       
       // Check if it's a rate limit or other recoverable error
-      const isRateLimit = openaiError.message.includes('429') || 
-                         openaiError.message.includes('quota') ||
-                         openaiError.message.includes('rate limit');
+      const errorMessage = openaiError.message.toLowerCase();
+      const isRateLimit = errorMessage.includes('429') || 
+                         errorMessage.includes('quota') ||
+                         errorMessage.includes('rate limit');
       
-      const isServerError = openaiError.message.includes('500') ||
-                           openaiError.message.includes('502') ||
-                           openaiError.message.includes('503') ||
-                           openaiError.message.includes('timeout');
+      const isServerError = errorMessage.includes('500') ||
+                           errorMessage.includes('502') ||
+                           errorMessage.includes('503') ||
+                           errorMessage.includes('timeout');
 
       if (isRateLimit || isServerError) {
         console.log('Falling back to Google Gemini due to OpenAI issue:', openaiError.message)
@@ -54,7 +55,10 @@ serve(async (req) => {
           usedProvider = 'Gemini';
           console.log('Gemini fallback analysis successful')
         } catch (geminiError) {
-          console.error('Both OpenAI and Gemini failed:', { openaiError: openaiError.message, geminiError: geminiError.message })
+          console.error('Both OpenAI and Gemini failed:', { 
+            openaiError: openaiError.message, 
+            geminiError: geminiError.message 
+          })
           throw new Error(`Analysis failed. OpenAI: ${openaiError.message}. Gemini fallback: ${geminiError.message}`)
         }
       } else {
