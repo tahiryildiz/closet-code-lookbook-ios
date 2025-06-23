@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -206,111 +205,95 @@ const OutfitGenerator = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 pb-20">
-      {/* Header */}
-      <div className="bg-gradient-to-br from-blue-600 to-indigo-700 text-white shadow-xl">
-        <div className="px-6 pt-12 pb-8">
-          <div className="text-center">
-            <div className="bg-white/20 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4 backdrop-blur-sm">
-              <Sparkles className="h-8 w-8 text-white" />
+    <div className="space-y-6">
+      {/* Controls */}
+      <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-sm rounded-2xl">
+        <CardContent className="p-6 space-y-4">
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-2 block">Durum</label>
+              <Select value={occasion} onValueChange={setOccasion}>
+                <SelectTrigger className="w-full bg-white border-gray-200 rounded-xl">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="casual">Günlük</SelectItem>
+                  <SelectItem value="work">İş</SelectItem>
+                  <SelectItem value="formal">Resmi</SelectItem>
+                  <SelectItem value="party">Parti</SelectItem>
+                  <SelectItem value="sport">Spor</SelectItem>
+                  <SelectItem value="travel">Seyahat</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-            <h1 className="text-2xl font-semibold">AI Kombin Önerisi</h1>
-            <p className="text-blue-100 text-base mt-1">Size özel kombinler oluşturalım</p>
+
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-2 block">Zaman</label>
+              <Select value={timeOfDay} onValueChange={setTimeOfDay}>
+                <SelectTrigger className="w-full bg-white border-gray-200 rounded-xl">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="morning">Sabah</SelectItem>
+                  <SelectItem value="day">Gündüz</SelectItem>
+                  <SelectItem value="evening">Akşam</SelectItem>
+                  <SelectItem value="night">Gece</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-2 block">Hava Durumu</label>
+              <Select value={weather} onValueChange={setWeather}>
+                <SelectTrigger className="w-full bg-white border-gray-200 rounded-xl">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="hot">Sıcak</SelectItem>
+                  <SelectItem value="warm">Ilık</SelectItem>
+                  <SelectItem value="mild">Orta</SelectItem>
+                  <SelectItem value="cool">Serin</SelectItem>
+                  <SelectItem value="cold">Soğuk</SelectItem>
+                  <SelectItem value="rainy">Yağmurlu</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <Button
+            onClick={generateOutfits}
+            disabled={loading}
+            className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-3 rounded-xl transition-all duration-200"
+          >
+            {loading ? (
+              <>
+                <RefreshCw className="h-5 w-5 mr-2 animate-spin" />
+                Oluşturuluyor...
+              </>
+            ) : (
+              <>
+                <Wand2 className="h-5 w-5 mr-2" />
+                Kombin Önerisi Oluştur
+              </>
+            )}
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* Loading Progress */}
+      <OutfitLoadingProgress isVisible={loading} />
+
+      {/* Generated Outfits */}
+      {outfits.length > 0 && !loading && (
+        <div className="space-y-4">
+          <h2 className="text-xl font-semibold text-gray-900 px-2">Önerilen Kombinler</h2>
+          <div className="grid gap-6">
+            {outfits.map((outfit) => (
+              <OutfitCard key={outfit.id} outfit={outfit} />
+            ))}
           </div>
         </div>
-      </div>
-
-      {/* Content */}
-      <div className="px-4 py-6 space-y-6">
-        {/* Controls */}
-        <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-sm rounded-2xl">
-          <CardContent className="p-6 space-y-4">
-            <div className="space-y-4">
-              <div>
-                <label className="text-sm font-medium text-gray-700 mb-2 block">Durum</label>
-                <Select value={occasion} onValueChange={setOccasion}>
-                  <SelectTrigger className="w-full bg-white border-gray-200 rounded-xl">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="casual">Günlük</SelectItem>
-                    <SelectItem value="work">İş</SelectItem>
-                    <SelectItem value="formal">Resmi</SelectItem>
-                    <SelectItem value="party">Parti</SelectItem>
-                    <SelectItem value="sport">Spor</SelectItem>
-                    <SelectItem value="travel">Seyahat</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-gray-700 mb-2 block">Zaman</label>
-                <Select value={timeOfDay} onValueChange={setTimeOfDay}>
-                  <SelectTrigger className="w-full bg-white border-gray-200 rounded-xl">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="morning">Sabah</SelectItem>
-                    <SelectItem value="day">Gündüz</SelectItem>
-                    <SelectItem value="evening">Akşam</SelectItem>
-                    <SelectItem value="night">Gece</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-gray-700 mb-2 block">Hava Durumu</label>
-                <Select value={weather} onValueChange={setWeather}>
-                  <SelectTrigger className="w-full bg-white border-gray-200 rounded-xl">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="hot">Sıcak</SelectItem>
-                    <SelectItem value="warm">Ilık</SelectItem>
-                    <SelectItem value="mild">Orta</SelectItem>
-                    <SelectItem value="cool">Serin</SelectItem>
-                    <SelectItem value="cold">Soğuk</SelectItem>
-                    <SelectItem value="rainy">Yağmurlu</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <Button
-              onClick={generateOutfits}
-              disabled={loading}
-              className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-3 rounded-xl transition-all duration-200"
-            >
-              {loading ? (
-                <>
-                  <RefreshCw className="h-5 w-5 mr-2 animate-spin" />
-                  Oluşturuluyor...
-                </>
-              ) : (
-                <>
-                  <Wand2 className="h-5 w-5 mr-2" />
-                  Kombin Önerisi Oluştur
-                </>
-              )}
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Loading Progress */}
-        <OutfitLoadingProgress isVisible={loading} />
-
-        {/* Generated Outfits */}
-        {outfits.length > 0 && !loading && (
-          <div className="space-y-4">
-            <h2 className="text-xl font-semibold text-gray-900 px-2">Önerilen Kombinler</h2>
-            <div className="grid gap-6">
-              {outfits.map((outfit) => (
-                <OutfitCard key={outfit.id} outfit={outfit} />
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
+      )}
     </div>
   );
 };
