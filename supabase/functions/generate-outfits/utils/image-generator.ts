@@ -70,18 +70,27 @@ Style: Professional fashion flatlay photography, clean white background, even li
         prompt: flatlayPrompt,
         n: 1,
         size: '1024x1024',
-        quality: 'high',
-        style: 'natural'
+        quality: 'high'
       }),
     });
 
     if (!response.ok) {
-      console.error('❌ OpenAI Image API error:', response.status, await response.text());
+      const errorText = await response.text();
+      console.error('❌ OpenAI Image API error:', response.status, errorText);
       throw new Error(`OpenAI Image API error: ${response.status}`);
     }
 
     const imageData = await response.json();
-    const generatedImageUrl = imageData.data[0].url;
+    
+    // gpt-image-1 returns base64 data, not URL
+    const generatedImageData = imageData.data[0];
+    let generatedImageUrl = null;
+    
+    if (generatedImageData.b64_json) {
+      generatedImageUrl = `data:image/png;base64,${generatedImageData.b64_json}`;
+    } else if (generatedImageData.url) {
+      generatedImageUrl = generatedImageData.url;
+    }
 
     console.log(`✅ Successfully generated flatlay composition for outfit ${index + 1}`);
 
