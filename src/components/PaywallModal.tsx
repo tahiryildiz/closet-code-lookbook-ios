@@ -8,10 +8,11 @@ import { useToast } from "@/hooks/use-toast";
 interface PaywallModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onWatchAd?: () => void;
   reason?: 'items' | 'outfits' | 'upgrade';
 }
 
-const PaywallModal = ({ isOpen, onClose, reason = 'upgrade' }: PaywallModalProps) => {
+const PaywallModal = ({ isOpen, onClose, onWatchAd, reason = 'upgrade' }: PaywallModalProps) => {
   const { toast } = useToast();
   const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'yearly'>('monthly');
 
@@ -188,10 +189,10 @@ const PaywallModal = ({ isOpen, onClose, reason = 'upgrade' }: PaywallModalProps
                 Premium'a Başla
               </Button>
 
-              {(reason === 'items' || reason === 'outfits') && (
+              {(reason === 'items' || reason === 'outfits') && onWatchAd && (
                 <Button
                   variant="outline"
-                  onClick={onClose}
+                  onClick={onWatchAd}
                   className="w-full py-3 rounded-2xl font-semibold border-gray-300 hover:bg-gray-50"
                 >
                   Reklam İzleyerek Devam Et
