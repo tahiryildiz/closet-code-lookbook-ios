@@ -26,39 +26,66 @@ interface OutfitCardProps {
 }
 
 const OutfitCard = ({ outfit }: OutfitCardProps) => {
-  // Debug logging to understand what we're receiving
+  // Enhanced debug logging to track image data reception
   console.log(`🎯 [DEBUG] OutfitCard - outfit data:`, {
     name: outfit.name,
     composition_type: outfit.composition_type,
+    aspect_ratio: outfit.aspect_ratio,
     has_generated_image: !!outfit.generated_image,
+    generated_image_type: outfit.generated_image ? (
+      outfit.generated_image.startsWith('data:image') ? 'base64_data_url' : 'url'
+    ) : null,
+    generated_image_size: outfit.generated_image ? outfit.generated_image.length : 0,
     generated_image_preview: outfit.generated_image ? outfit.generated_image.substring(0, 50) + '...' : null,
     has_reference_images: !!outfit.reference_images,
     reference_count: outfit.reference_images?.length || 0
   });
+
+  // Validate base64 data if present
+  if (outfit.generated_image && outfit.generated_image.startsWith('data:image')) {
+    const base64Part = outfit.generated_image.split(',')[1];
+    if (base64Part) {
+      console.log(`📊 [DEBUG] Base64 validation:`, {
+        valid_format: true,
+        base64_length: base64Part.length,
+        estimated_file_size_kb: Math.round(base64Part.length * 0.75 / 1024),
+        base64_start: base64Part.substring(0, 30),
+        base64_end: base64Part.substring(base64Part.length - 30)
+      });
+    } else {
+      console.error(`❌ [DEBUG] Invalid base64 data URL format`);
+    }
+  }
   
-  // Prioritize generated flatlay composition, fallback to reference images
-  const hasFlatlayComposition = outfit.generated_image && 
-    (outfit.composition_type === 'professional_flatlay' || outfit.composition_type === 'flatlay');
+  // Prioritize generated vertical flatlay composition, fallback to reference images
+  const hasVerticalFlatlay = outfit.generated_image && 
+    (outfit.composition_type === 'professional_flatlay_vertical' || 
+     outfit.composition_type === 'professional_flatlay');
   const hasReferenceImages = outfit.reference_images && outfit.reference_images.length > 0;
   
   console.log(`🎯 [DEBUG] Display logic:`, {
-    hasFlatlayComposition,
+    hasVerticalFlatlay,
     hasReferenceImages,
-    final_composition_type: outfit.composition_type
+    final_composition_type: outfit.composition_type,
+    aspect_ratio: outfit.aspect_ratio
   });
   
   // Display logic based on available images
-  const primaryImage = hasFlatlayComposition ? outfit.generated_image :
+  const primaryImage = hasVerticalFlatlay ? outfit.generated_image :
     (hasReferenceImages ? outfit.reference_images![0] : 
      'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=500&fit=crop');
 
-  const shouldShowGrid = !hasFlatlayComposition && hasReferenceImages && outfit.reference_images!.length > 1;
+  const shouldShowGrid = !hasVerticalFlatlay && hasReferenceImages && outfit.reference_images!.length > 1;
 
   return (
     <Card className="bg-white border-0 shadow-sm hover:shadow-lg transition-all duration-300 rounded-2xl overflow-hidden">
       <CardContent className="p-0">
-        {/* Outfit Preview */}
-        <div className="aspect-[4/5] relative overflow-hidden">
+        {/* Outfit Preview - Enhanced for vertical compositions */}
+        <div className={`relative overflow-hidden ${
+          hasVerticalFlatlay && outfit.aspect_ratio === '1024x1792' 
+            ? 'aspect-[4/7]' // Vertical aspect ratio for 1024x1792
+            : 'aspect-[4/5]' // Default aspect ratio
+        }`}>
           {shouldShowGrid ? (
             // Show reference images in grid when no flatlay composition is available
             <div className="w-full h-full grid grid-cols-2 gap-1 p-2 bg-gray-50">
@@ -94,6 +121,9 @@ const OutfitCard = ({ outfit }: OutfitCardProps) => {
                 }}
                 onLoad={() => {
                   console.log(`✅ [DEBUG] Successfully loaded image for ${outfit.name}`);
+                  if (hasVerticalFlatlay) {
+                    console.log(`🎨 [DEBUG] Vertical flatlay composition loaded successfully`);
+                  }
                 }}
               />
             </div>
@@ -112,12 +142,12 @@ const OutfitCard = ({ outfit }: OutfitCardProps) => {
             <Badge className="bg-blue-500 text-white rounded-full font-semibold">
               {outfit.confidence}% uyumlu
             </Badge>
-            {hasFlatlayComposition && (
+            {hasVerticalFlatlay && (
               <Badge className="bg-green-500 text-white rounded-full font-semibold">
-                AI Flatlay
+                {outfit.aspect_ratio === '1024x1792' ? 'AI Vertical Flatlay' : 'AI Flatlay'}
               </Badge>
             )}
-            {hasReferenceImages && !hasFlatlayComposition && (
+            {hasReferenceImages && !hasVerticalFlatlay && (
               <Badge className="bg-orange-500 text-white rounded-full font-semibold">
                 {outfit.item_count || outfit.reference_images!.length} ürün
               </Badge>
@@ -126,10 +156,14 @@ const OutfitCard = ({ outfit }: OutfitCardProps) => {
           
           <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent p-4">
             <h3 className="text-white font-bold text-xl mb-1">{outfit.name}</h3>
-            {hasFlatlayComposition && (
-              <p className="text-white/80 text-sm">AI-generated flatlay composition</p>
+            {hasVerticalFlatlay && (
+              <p className="text-white/80 text-sm">
+                {outfit.aspect_ratio === '1024x1792' 
+                  ? 'AI-generated vertical flatlay composition' 
+                  : 'AI-generated flatlay composition'}
+              </p>
             )}
-            {hasReferenceImages && !hasFlatlayComposition && (
+            {hasReferenceImages && !hasVerticalFlatlay && (
               <p className="text-white/80 text-sm">Reference images from your wardrobe</p>
             )}
           </div>
@@ -150,7 +184,7 @@ const OutfitCard = ({ outfit }: OutfitCardProps) => {
             </div>
           </div>
 
-          {/* Styling Tips */}
+          {/* Enhanced Styling Tips */}
           <div className="bg-blue-50 rounded-xl p-4">
             <div className="flex items-start space-x-3">
               <div className="bg-blue-100 rounded-full p-2">

@@ -1,5 +1,4 @@
 
-
 export const generateOutfitImage = async (outfit: any, wardrobeItems: any[], occasion: string, timeOfDay: string, weather: string, openAIApiKey: string, index: number) => {
   console.log(`🖼️  [DEBUG] Starting image generation for outfit ${index + 1}`);
   console.log(`🖼️  [DEBUG] Outfit items:`, outfit.items);
@@ -20,6 +19,9 @@ export const generateOutfitImage = async (outfit: any, wardrobeItems: any[], occ
         image_url: wardrobeItem.image_url,
         category: wardrobeItem.category,
         color: wardrobeItem.primary_color || wardrobeItem.color,
+        brand: wardrobeItem.brand,
+        material: wardrobeItem.material,
+        pattern: wardrobeItem.pattern,
         description: wardrobeItem.prompt_description || `${wardrobeItem.category} in ${wardrobeItem.primary_color || wardrobeItem.color}`
       };
     } else {
@@ -61,51 +63,68 @@ export const generateOutfitImage = async (outfit: any, wardrobeItems: any[], occ
   });
 
   try {
-    // Create ultra-specific flatlay prompt with precise spatial instructions
-    const flatlayPrompt = `Create a PROFESSIONAL FLATLAY COMPOSITION - single unified image photographed from directly overhead (bird's eye view) showing these clothing items arranged as one complete outfit:
+    // Create ULTRA-STRICT flatlay prompt with precise item binding
+    const itemDescriptions = matchedItems.map((item, idx) => {
+      return `${idx + 1}. ${item.name} - EXACT SPECIFICATIONS:
+   - Color: ${item.color}
+   - Category: ${item.category}
+   ${item.brand ? `- Brand: ${item.brand}` : ''}
+   ${item.material ? `- Material: ${item.material}` : ''}
+   ${item.pattern ? `- Pattern: ${item.pattern}` : ''}
+   - Reference Image: ${item.image_url}
+   - Description: ${item.description}`;
+    }).join('\n\n');
 
-ITEMS TO ARRANGE IN FLATLAY STYLE:
-${matchedItems.map((item, idx) => `${idx + 1}. ${item.name} (${item.color}) - ${item.category}`).join('\n')}
+    const flatlayPrompt = `CREATE PROFESSIONAL FLATLAY COMPOSITION - STRICT ITEM REPLICATION REQUIRED
 
-CRITICAL SPATIAL ARRANGEMENT REQUIREMENTS:
-- SINGLE UNIFIED IMAGE - all items must appear in ONE cohesive photograph
-- Shot from 90-degree overhead angle (top-down bird's eye view)
-- Clean white background with soft, even lighting
-- All items laid completely flat on surface (no 3D perspective)
+🚨 CRITICAL RULE: ONLY use the exact clothing items listed below. NO generic items, NO similar items, NO imagined items. You MUST replicate the EXACT items from the reference images provided.
 
-PRECISE LAYOUT STRUCTURE:
-${categorizedItems.tops.length > 0 ? `- TOP SECTION: ${categorizedItems.tops.map(t => t.name).join(', ')} positioned in upper portion of frame` : ''}
-${categorizedItems.bottoms.length > 0 ? `- MIDDLE SECTION: ${categorizedItems.bottoms.map(b => b.name).join(', ')} positioned below tops, legs extended downward` : ''}
-${categorizedItems.shoes.length > 0 ? `- BOTTOM SECTION: ${categorizedItems.shoes.map(s => s.name).join(', ')} positioned at bottom of frame` : ''}
-${categorizedItems.accessories.length > 0 ? `- SIDE PLACEMENT: ${categorizedItems.accessories.map(a => a.name).join(', ')} positioned alongside main items` : ''}
+EXACT WARDROBE ITEMS TO REPLICATE:
+${itemDescriptions}
 
-VISUAL REPLICATION REQUIREMENTS:
-- Replicate exact colors: ${matchedItems.map(item => `${item.name} in ${item.color}`).join(', ')}
-- Maintain authentic fabric textures and patterns from reference items
-- Show realistic wrinkles and fabric draping as items would naturally lay flat
-- Ensure items touch or nearly touch to show they belong together as one outfit
+MANDATORY REPLICATION REQUIREMENTS:
+- EXACT COLOR MATCHING: Replicate the precise colors from reference images
+- EXACT SHAPE & CUT: Match the silhouette, fit, and proportions exactly
+- EXACT TEXTURE & PATTERN: Reproduce fabric texture, prints, logos, details
+- EXACT BRAND ELEMENTS: Include any visible branding, labels, or design elements
+- NO SUBSTITUTIONS: Do not use similar or generic versions
+
+VERTICAL FLATLAY COMPOSITION (1024x1792):
+- Shot from perfect 90-degree overhead angle (bird's eye view)
+- Clean white background with professional studio lighting
+- Vertical arrangement to utilize the tall canvas effectively
+
+PRECISE SPATIAL LAYOUT:
+${categorizedItems.tops.length > 0 ? `- TOP SECTION (upper 1/3): ${categorizedItems.tops.map(t => t.name).join(', ')}
+  Position: Laid flat, shoulders aligned horizontally, centered` : ''}
+${categorizedItems.bottoms.length > 0 ? `- MIDDLE SECTION (center 1/3): ${categorizedItems.bottoms.map(b => b.name).join(', ')}
+  Position: Waistband touching or overlapping bottom of top item, legs extended downward` : ''}
+${categorizedItems.shoes.length > 0 ? `- BOTTOM SECTION (lower 1/3): ${categorizedItems.shoes.map(s => s.name).join(', ')}
+  Position: Placed at the bottom, parallel to each other, toes pointing up` : ''}
+${categorizedItems.accessories.length > 0 ? `- SIDE PLACEMENT: ${categorizedItems.accessories.map(a => a.name).join(', ')}
+  Position: Strategically placed alongside main items without overlapping` : ''}
 
 PROFESSIONAL FLATLAY PHOTOGRAPHY STYLE:
-- High-end fashion magazine quality
-- Soft, diffused lighting with no harsh shadows
+- High-end fashion magazine quality with sharp focus
+- Soft, diffused lighting eliminating harsh shadows
 - Perfect white balance and color accuracy
-- Sharp focus across entire composition
-- Professional styling with attention to detail
+- Items laid completely flat with natural fabric draping
+- Professional styling showing items as if prepared by expert stylist
 
-COMPOSITION GUIDELINES:
-- Items should form a cohesive visual flow from top to bottom
-- Maintain proportional sizing between items
-- Create visual balance and harmony
-- Style as if prepared by professional fashion stylist
+COMPOSITION COHESION:
+- Items should touch or nearly touch to show they belong together
+- Maintain visual balance and harmony throughout the vertical space
+- Create natural flow from top to bottom
+- Utilize the full vertical canvas (1024x1792) effectively
 
-OCCASION CONTEXT: ${occasion} | TIME: ${timeOfDay} | WEATHER: ${weather}
+CONTEXT: ${occasion} occasion, ${timeOfDay} time, ${weather} weather
 
-OUTPUT: One unified professional flatlay photograph showing complete outfit arrangement in perfect overhead composition.`;
+OUTPUT REQUIREMENT: Single unified professional flatlay photograph in vertical 1024x1792 format showing ONLY the exact items specified above in perfect overhead composition.`;
 
-    console.log(`🤖 [DEBUG] Generated prompt (length: ${flatlayPrompt.length})`);
-    console.log(`🤖 [DEBUG] Prompt preview:`, flatlayPrompt.substring(0, 300) + '...');
+    console.log(`🤖 [DEBUG] Generated strict prompt (length: ${flatlayPrompt.length})`);
+    console.log(`🤖 [DEBUG] Prompt preview:`, flatlayPrompt.substring(0, 400) + '...');
 
-    console.log(`📡 [DEBUG] Making OpenAI API call to generate flatlay image...`);
+    console.log(`📡 [DEBUG] Making OpenAI API call with vertical canvas...`);
 
     const response = await fetch('https://api.openai.com/v1/images/generations', {
       method: 'POST',
@@ -117,8 +136,9 @@ OUTPUT: One unified professional flatlay photograph showing complete outfit arra
         model: 'gpt-image-1',
         prompt: flatlayPrompt,
         n: 1,
-        size: '1024x1024',
-        quality: 'high'
+        size: '1024x1792', // Vertical canvas for better flatlay composition
+        quality: 'high',
+        response_format: 'b64_json'
       }),
     });
 
@@ -144,55 +164,67 @@ OUTPUT: One unified professional flatlay photograph showing complete outfit arra
     }
 
     const imageData = await response.json();
-    console.log(`🎨 [DEBUG] OpenAI response received`);
+    console.log(`🎨 [DEBUG] OpenAI response received successfully`);
     
     // Extract and properly format the base64 image data
     const generatedImageData = imageData.data[0];
     let generatedImageUrl = null;
     
     if (generatedImageData && generatedImageData.b64_json) {
-      // Properly format the base64 data as data URL
       const base64Data = generatedImageData.b64_json;
       generatedImageUrl = `data:image/png;base64,${base64Data}`;
-      console.log(`✅ [DEBUG] Successfully converted base64 image (size: ${base64Data.length} chars)`);
-      console.log(`✅ [DEBUG] Data URL preview: ${generatedImageUrl.substring(0, 100)}...`);
-    } else if (generatedImageData && generatedImageData.url) {
-      generatedImageUrl = generatedImageData.url;
-      console.log(`✅ [DEBUG] Received image URL: ${generatedImageUrl}`);
+      
+      // Enhanced logging for debugging
+      console.log(`✅ [DEBUG] Successfully converted base64 image`);
+      console.log(`📊 [DEBUG] Base64 data stats:`, {
+        size: base64Data.length,
+        start: base64Data.substring(0, 50),
+        end: base64Data.substring(base64Data.length - 50),
+        checksum: base64Data.length + base64Data.charCodeAt(0) + base64Data.charCodeAt(base64Data.length - 1)
+      });
+      console.log(`🔗 [DEBUG] Data URL preview: ${generatedImageUrl.substring(0, 100)}...`);
+      
+      // Verify data URL format
+      if (!generatedImageUrl.startsWith('data:image/png;base64,')) {
+        console.error(`❌ [DEBUG] Invalid data URL format`);
+        return {
+          generated_image: null,
+          reference_images: matchedItems.map(item => item.image_url),
+          item_details: matchedItems,
+          item_count: matchedItems.length,
+          composition_type: 'reference_fallback',
+          debug_reason: 'invalid_data_url_format'
+        };
+      }
+      
     } else {
-      console.error(`❌ [DEBUG] No image data found in response:`, generatedImageData);
+      console.error(`❌ [DEBUG] No base64 data found in response:`, generatedImageData);
       return {
         generated_image: null,
         reference_images: matchedItems.map(item => item.image_url),
         item_details: matchedItems,
         item_count: matchedItems.length,
         composition_type: 'reference_fallback',
-        debug_reason: 'no_image_in_response'
+        debug_reason: 'no_base64_in_response'
       };
     }
 
-    if (!generatedImageUrl) {
-      console.error(`❌ [DEBUG] Failed to extract image from OpenAI response`);
-      return {
-        generated_image: null,
-        reference_images: matchedItems.map(item => item.image_url),
-        item_details: matchedItems,
-        item_count: matchedItems.length,
-        composition_type: 'reference_fallback',
-        debug_reason: 'no_image_url_generated'
-      };
-    }
-
-    console.log(`✅ [DEBUG] Successfully generated flatlay composition for outfit ${index + 1}`);
-    console.log(`🎯 [DEBUG] Final composition type: professional_flatlay`);
+    console.log(`✅ [DEBUG] Successfully generated vertical flatlay composition for outfit ${index + 1}`);
+    console.log(`🎯 [DEBUG] Final composition type: professional_flatlay_vertical`);
 
     return {
       generated_image: generatedImageUrl,
       reference_images: matchedItems.map(item => item.image_url),
       item_details: matchedItems,
       item_count: matchedItems.length,
-      composition_type: 'professional_flatlay',
-      debug_reason: 'success'
+      composition_type: 'professional_flatlay_vertical',
+      aspect_ratio: '1024x1792',
+      debug_reason: 'success',
+      debug_info: {
+        base64_size: base64Data.length,
+        exact_items_used: matchedItems.length,
+        vertical_canvas: true
+      }
     };
 
   } catch (error) {
@@ -214,4 +246,3 @@ OUTPUT: One unified professional flatlay photograph showing complete outfit arra
     };
   }
 };
-
