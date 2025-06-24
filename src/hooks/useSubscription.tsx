@@ -63,18 +63,49 @@ export const useSubscription = () => {
         .eq('user_id', user.id);
 
       const today = new Date().toISOString().split('T')[0];
-      const isToday = profile.last_generation_date === today;
-      const dailyGenerations = isToday ? (profile.daily_outfit_generations || 0) : 0;
+      
+      // Reset daily counters if it's a new day
+      let dailyGenerations = 0;
+      let adBonusItems = 0;
+      let adBonusGenerations = 0;
+      
+      if (profile.last_generation_date !== today) {
+        // Reset daily outfit generations for new day
+        await supabase
+          .from('user_profiles')
+          .update({
+            daily_outfit_generations: 0,
+            last_generation_date: today
+          })
+          .eq('id', user.id);
+        dailyGenerations = 0;
+      } else {
+        dailyGenerations = profile.daily_outfit_generations || 0;
+      }
 
-      // Calculate item limits
+      if (profile.last_ad_bonus_date !== today) {
+        // Reset ad bonuses for new day
+        await supabase
+          .from('user_profiles')
+          .update({
+            ad_bonus_items: 0,
+            ad_bonus_generations: 0,
+            last_ad_bonus_date: today
+          })
+          .eq('id', user.id);
+        adBonusItems = 0;
+        adBonusGenerations = 0;
+      } else {
+        adBonusItems = profile.ad_bonus_items || 0;
+        adBonusGenerations = profile.ad_bonus_generations || 0;
+      }
+
+      // Calculate limits
       const baseItemLimit = 5;
-      const itemAdBonus = (profile.last_ad_bonus_date === today) ? (profile.ad_bonus_items || 0) : 0;
-      const totalItemsAllowed = baseItemLimit + Math.min(itemAdBonus, 10); // Cap ad bonus at 10
+      const totalItemsAllowed = baseItemLimit + Math.min(adBonusItems, 10);
 
-      // Calculate outfit limits - daily reset
       const baseOutfitLimit = 3;
-      const outfitAdBonus = (profile.last_ad_bonus_date === today) ? (profile.ad_bonus_generations || 0) : 0;
-      const totalOutfitsAllowed = baseOutfitLimit + Math.min(outfitAdBonus, 5); // Cap ad bonus at 5
+      const totalOutfitsAllowed = baseOutfitLimit + Math.min(adBonusGenerations, 5);
 
       setLimits({
         canAddItem: (itemCount || 0) < totalItemsAllowed,
