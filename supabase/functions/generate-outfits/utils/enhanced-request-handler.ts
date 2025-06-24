@@ -1,7 +1,7 @@
 
 import { validateEnvironment } from './config.ts';
 import { processOutfits } from './outfit-processor.ts';
-import { generateEnhancedOutfitPrompt } from './enhanced-prompt-generator.ts';
+import { generateEnhancedPrompt } from './enhanced-prompt-generator.ts';
 
 export const handleEnhancedOutfitGeneration = async (requestData: any, openAIApiKey: string) => {
   console.log('🎯 Starting enhanced outfit generation with sophisticated styling intelligence');
@@ -34,7 +34,7 @@ export const handleEnhancedOutfitGeneration = async (requestData: any, openAIApi
 
   try {
     // Generate enhanced outfit combinations using AI
-    const enhancedPrompt = generateEnhancedOutfitPrompt(
+    const enhancedPrompt = generateEnhancedPrompt(
       wardrobeItems,
       occasion,
       timeOfDay,
