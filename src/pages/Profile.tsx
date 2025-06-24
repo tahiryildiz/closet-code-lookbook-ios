@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { User, LogOut, Settings, Heart, Star, Edit, Crown, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -100,22 +101,24 @@ const Profile = () => {
     navigate('/wardrobe', { state: { showFavorites: true } });
   };
 
-  // Calculate display values for stats
+  // Calculate display values for stats - fix negative values
   const getItemsDisplayText = () => {
     if (limits.isPremium) {
       return 'Sınırsız Ürün';
     }
-    const totalAllowed = limits.remainingItems + itemCount;
-    return `${itemCount}/${totalAllowed}`;
+    const maxItems = 10; // Free tier limit
+    const remaining = Math.max(0, maxItems - itemCount);
+    return `${itemCount}/${maxItems}`;
   };
 
   const getOutfitsDisplayText = () => {
     if (limits.isPremium) {
       return 'Sınırsız Kombin';
     }
-    const totalAllowed = limits.remainingOutfits + (3 - limits.remainingOutfits);
-    const used = totalAllowed - limits.remainingOutfits;
-    return `${used}/${totalAllowed}`;
+    const maxDaily = 3; // Daily limit for free users
+    const remaining = Math.max(0, limits.remainingOutfits);
+    const used = maxDaily - remaining;
+    return `${Math.max(0, used)}/${maxDaily}`;
   };
 
   const getItemsLabelText = () => {

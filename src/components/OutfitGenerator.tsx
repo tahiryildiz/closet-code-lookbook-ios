@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -42,20 +41,75 @@ const OutfitGenerator = () => {
   const [showPaywall, setShowPaywall] = useState(false);
   const [showAdModal, setShowAdModal] = useState(false);
 
-  // Load existing outfits from localStorage on component mount
+  // Load existing outfits from both localStorage and database on component mount
   useEffect(() => {
-    const savedOutfits = localStorage.getItem('generatedOutfits');
-    if (savedOutfits) {
+    const loadOutfits = async () => {
+      if (!user) return;
+
       try {
-        const parsedOutfits = JSON.parse(savedOutfits);
-        setOutfits(parsedOutfits);
+        // First try to load from database (recent outfits)
+        const { data: dbOutfits, error } = await supabase
+          .from('outfits')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(3);
+
+        if (error) {
+          console.error('Error loading outfits from database:', error);
+        }
+
+        if (dbOutfits && dbOutfits.length > 0) {
+          // Convert database outfits to display format
+          const formattedOutfits = dbOutfits.map((outfit, index) => ({
+            id: index + 1,
+            name: outfit.name,
+            items: [], // We'll get this from clothing_item_ids
+            item_ids: outfit.clothing_item_ids || [],
+            confidence: 8,
+            styling_tips: outfit.ai_styling_tips || '',
+            occasion: outfit.occasion,
+            is_saved: outfit.is_saved || false,
+            reference_images: [] // Will be populated with actual item images
+          }));
+
+          // Get actual item names and images for each outfit
+          for (const outfit of formattedOutfits) {
+            if (outfit.item_ids && outfit.item_ids.length > 0) {
+              const { data: items } = await supabase
+                .from('clothing_items')
+                .select('name, image_url')
+                .in('id', outfit.item_ids);
+
+              if (items) {
+                outfit.items = items.map(item => item.name);
+                outfit.reference_images = items.map(item => item.image_url).filter(Boolean);
+              }
+            }
+          }
+
+          setOutfits(formattedOutfits);
+          return;
+        }
+
+        // Fallback to localStorage if no database outfits
+        const savedOutfits = localStorage.getItem('generatedOutfits');
+        if (savedOutfits) {
+          try {
+            const parsedOutfits = JSON.parse(savedOutfits);
+            setOutfits(parsedOutfits);
+          } catch (error) {
+            console.error('Error loading saved outfits:', error);
+            localStorage.removeItem('generatedOutfits');
+          }
+        }
       } catch (error) {
-        console.error('Error loading saved outfits:', error);
-        // Clear corrupted localStorage
-        localStorage.removeItem('generatedOutfits');
+        console.error('Error in loadOutfits:', error);
       }
-    }
-  }, []);
+    };
+
+    loadOutfits();
+  }, [user]);
 
   useEffect(() => {
     const checkItems = async () => {
@@ -82,7 +136,7 @@ const OutfitGenerator = () => {
           user_id: user.id,
           name: outfit.name,
           clothing_item_ids: outfit.item_ids || [],
-          ai_styling_tips: outfit.styling_tips, // Always save complete styling tips
+          ai_styling_tips: outfit.styling_tips,
           occasion: outfit.occasion || occasion,
           time_of_day: timeOfDay,
           weather_type: weather,
@@ -224,26 +278,38 @@ const OutfitGenerator = () => {
         return;
       }
 
-      // Process outfits without truncating styling tips
+      // Process outfits
       const processedOutfits = generatedOutfits.map((outfit: Outfit) => ({
         ...outfit,
-        styling_tips: outfit.styling_tips, // Keep complete styling tips for all users
+        styling_tips: outfit.styling_tips,
         is_saved: false
       }));
 
       setOutfits(processedOutfits);
       
-      // Save to localStorage with error handling for quota exceeded
+      // Save to localStorage with improved error handling
       try {
-        // Create a lightweight version for localStorage (without large base64 images)
         const lightweightOutfits = processedOutfits.map(outfit => ({
           ...outfit,
-          generated_image: outfit.generated_image ? 'stored_separately' : null // Mark that image exists but don't store the full base64
+          generated_image: outfit.generated_image ? 'generated_image_exists' : null
         }));
         localStorage.setItem('generatedOutfits', JSON.stringify(lightweightOutfits));
       } catch (storageError) {
-        console.warn('localStorage quota exceeded, skipping local storage:', storageError);
-        // Continue without localStorage - not critical for functionality
+        console.warn('localStorage quota exceeded, clearing old data and retrying...');
+        // Clear old data and try again
+        localStorage.removeItem('generatedOutfits');
+        try {
+          const minimalOutfits = processedOutfits.map(outfit => ({
+            id: outfit.id,
+            name: outfit.name,
+            items: outfit.items,
+            styling_tips: outfit.styling_tips.substring(0, 200) + '...',
+            reference_images: outfit.reference_images?.slice(0, 2) || []
+          }));
+          localStorage.setItem('generatedOutfits', JSON.stringify(minimalOutfits));
+        } catch (finalError) {
+          console.warn('Unable to save to localStorage, skipping...');
+        }
       }
       
       // Save to database
@@ -322,7 +388,7 @@ const OutfitGenerator = () => {
             {!limits.isPremium && (
               <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 text-center">
                 <p className="text-blue-700 text-sm font-medium">
-                  Kalan kombin hakkı: {limits.remainingOutfits}
+                  Kalan kombin hakkı: {Math.max(0, limits.remainingOutfits)}
                 </p>
               </div>
             )}

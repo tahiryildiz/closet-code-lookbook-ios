@@ -309,7 +309,7 @@ const generateOutfitFlatlayWithActualItems = async (
   }
 
   try {
-    // Find actual wardrobe items with their images
+    // Find actual wardrobe items with their detailed descriptions
     const actualItems = outfit.items.map((itemName: string) => {
       const wardrobeItem = wardrobeItems.find(item => item.name === itemName);
       if (wardrobeItem && wardrobeItem.image_url) {
@@ -317,41 +317,55 @@ const generateOutfitFlatlayWithActualItems = async (
           name: wardrobeItem.name,
           image_url: wardrobeItem.image_url,
           category: wardrobeItem.category,
-          color: wardrobeItem.primary_color || wardrobeItem.color || 'neutral',
+          primary_color: wardrobeItem.primary_color || wardrobeItem.color || 'neutral',
           material: wardrobeItem.material || 'fabric',
-          description: wardrobeItem.prompt_description || `${wardrobeItem.category} in ${wardrobeItem.primary_color || wardrobeItem.color || 'neutral'}`
+          detailed_description: wardrobeItem.prompt_description || wardrobeItem.image_description || `${wardrobeItem.category} in ${wardrobeItem.primary_color || wardrobeItem.color || 'neutral'}`,
+          fit: wardrobeItem.fit,
+          pattern_type: wardrobeItem.pattern_type,
+          style_tags: wardrobeItem.style_tags || []
         };
       }
       return null;
     }).filter(Boolean);
 
     if (actualItems.length === 0) {
-      console.log('❌ [generateOutfitFlatlayWithActualItems] No items with images found');
+      console.log('❌ [generateOutfitFlatlayWithActualItems] No items with valid descriptions found');
       return null;
     }
 
-    console.log(`🎯 [generateOutfitFlatlayWithActualItems] Found ${actualItems.length} items with images`);
+    console.log(`🎯 [generateOutfitFlatlayWithActualItems] Found ${actualItems.length} items with detailed descriptions`);
 
-    // Create detailed description based on actual wardrobe items
-    const itemDescriptions = actualItems.map((item: any, idx: number) => {
-      return `${idx + 1}. ${item.name} - Color: ${item.color}, Material: ${item.material}, Category: ${item.category}`;
+    // Create highly detailed description based on actual wardrobe items with their specific details
+    const detailedItemDescriptions = actualItems.map((item: any, idx: number) => {
+      const colorDesc = item.primary_color ? `${item.primary_color} colored` : '';
+      const materialDesc = item.material ? `made of ${item.material}` : '';
+      const patternDesc = item.pattern_type && item.pattern_type !== 'solid' ? `with ${item.pattern_type} pattern` : '';
+      const fitDesc = item.fit ? `with ${item.fit} fit` : '';
+      
+      return `${idx + 1}. ${item.detailed_description} - ${colorDesc} ${materialDesc} ${patternDesc} ${fitDesc}`.replace(/\s+/g, ' ').trim();
     }).join(', ');
 
-    const prompt = `Create a professional fashion flatlay photograph showing exactly these clothing items arranged on a white background: ${itemDescriptions}. 
+    // Create a comprehensive prompt that describes the exact items from the user's wardrobe
+    const prompt = `Create a professional fashion flatlay photograph showing exactly these specific clothing items from a real wardrobe: ${detailedItemDescriptions}. 
 
 CRITICAL REQUIREMENTS:
-- Use ONLY the exact items listed above, no substitutions
-- Arrange in vertical flatlay composition (portrait orientation)
+- Show ONLY the exact items described above with their specific colors, materials, and details
+- DO NOT add any items not mentioned in the description
+- DO NOT change colors or materials from what's specified
+- Arrange in clean vertical flatlay composition (portrait orientation)
 - Clean white background with soft, even lighting
 - Top-down bird's eye view perspective
 - Items should be arranged as if laid out for wearing
-- Professional fashion photography style with no shadows
+- Professional fashion photography style with minimal shadows
+- Each item should be clearly visible and recognizable
 
-The outfit is for: ${occasion} occasion, ${timeOfDay} time, ${weather} weather
+Context: This outfit is for ${occasion} occasion, ${timeOfDay} time, ${weather} weather
+Style: Clean, minimalist, professional flatlay photography
 Size: 1024x1536 (vertical orientation)
-Style: Clean, minimalist, professional flatlay`;
 
-    console.log(`🤖 [generateOutfitFlatlayWithActualItems] Making OpenAI image generation request...`);
+Focus on accuracy to the actual wardrobe items described.`;
+
+    console.log(`🤖 [generateOutfitFlatlayWithActualItems] Making OpenAI image generation request with detailed item descriptions...`);
 
     const response = await fetch('https://api.openai.com/v1/images/generations', {
       method: 'POST',
@@ -364,7 +378,8 @@ Style: Clean, minimalist, professional flatlay`;
         prompt: prompt,
         n: 1,
         size: '1024x1536',
-        quality: 'high'
+        quality: 'high',
+        response_format: 'b64_json'
       }),
     });
 
@@ -381,7 +396,7 @@ Style: Clean, minimalist, professional flatlay`;
 
     if (data.data && data.data[0] && data.data[0].b64_json) {
       const base64Image = `data:image/png;base64,${data.data[0].b64_json}`;
-      console.log(`🎨 [generateOutfitFlatlayWithActualItems] Successfully generated base64 image`);
+      console.log(`🎨 [generateOutfitFlatlayWithActualItems] Successfully generated base64 image with specific wardrobe items`);
       return base64Image;
     } else {
       console.error('❌ [generateOutfitFlatlayWithActualItems] Invalid OpenAI image response structure:', data);

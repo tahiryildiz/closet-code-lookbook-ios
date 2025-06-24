@@ -4,13 +4,14 @@ import { Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface Outfit {
-  id: number;
+  id: string | number;
   name: string;
-  items: string[];
-  confidence: number;
+  items?: string[];
+  confidence?: number;
   styling_tips: string;
   generated_image?: string;
   reference_images?: string[];
+  clothing_item_ids?: string[];
 }
 
 interface RecentOutfitsCarouselProps {
@@ -25,35 +26,65 @@ const RecentOutfitsCarousel = ({ outfits }: RecentOutfitsCarouselProps) => {
   return (
     <div className="overflow-x-auto scrollbar-hide">
       <div className="flex space-x-4 pb-2" style={{ width: `${outfits.length * 140}px` }}>
-        {outfits.map((outfit) => (
+        {outfits.map((outfit, index) => (
           <div
-            key={outfit.id}
+            key={outfit.id || index}
             className="flex-shrink-0 w-32"
             onClick={() => navigate('/outfits')}
           >
             <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-sm rounded-2xl cursor-pointer hover:shadow-md transition-all duration-200 hover:scale-105">
               <CardContent className="p-3">
                 <div className="aspect-square bg-gray-50 rounded-xl mb-2 overflow-hidden">
-                  {outfit.generated_image ? (
+                  {outfit.generated_image && outfit.generated_image !== 'generated_image_exists' ? (
                     <img
                       src={outfit.generated_image}
                       alt={outfit.name}
                       className="w-full h-full object-cover"
+                      onError={(e) => {
+                        console.error('Failed to load generated image');
+                        e.currentTarget.style.display = 'none';
+                        const parent = e.currentTarget.parentElement;
+                        if (parent) {
+                          parent.innerHTML = `
+                            <div class="w-full h-full bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center">
+                              <svg class="h-8 w-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                              </svg>
+                            </div>
+                          `;
+                        }
+                      }}
                     />
                   ) : outfit.reference_images && outfit.reference_images.length > 0 ? (
                     <img
                       src={outfit.reference_images[0]}
                       alt={outfit.name}
                       className="w-full h-full object-cover"
+                      onError={(e) => {
+                        console.error('Failed to load reference image');
+                        e.currentTarget.style.display = 'none';
+                        const parent = e.currentTarget.parentElement;
+                        if (parent) {
+                          parent.innerHTML = `
+                            <div class="w-full h-full bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center">
+                              <svg class="h-8 w-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                              </svg>
+                            </div>
+                          `;
+                        }
+                      }}
                     />
                   ) : (
-                    <div className="w-full h-full bg-gray-100 flex items-center justify-center">
-                      <Sparkles className="h-8 w-8 text-gray-400" />
+                    <div className="w-full h-full bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center">
+                      <Sparkles className="h-8 w-8 text-blue-500" />
                     </div>
                   )}
                 </div>
                 <p className="font-medium text-sm text-gray-900 truncate">{outfit.name}</p>
-                <p className="text-xs text-gray-500">{outfit.confidence}% uyumlu</p>
+                <p className="text-xs text-gray-500">
+                  {outfit.confidence ? `${outfit.confidence}% uyumlu` : 'Kombin'}
+                </p>
               </CardContent>
             </Card>
           </div>
