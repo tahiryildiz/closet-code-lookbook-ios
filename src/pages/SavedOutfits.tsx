@@ -16,6 +16,8 @@ interface SavedOutfit {
   saved_at: string;
   items?: string[];
   reference_images?: string[];
+  generated_image?: string;
+  image_url?: string;
 }
 
 const SavedOutfits = () => {
