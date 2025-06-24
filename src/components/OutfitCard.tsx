@@ -1,8 +1,7 @@
 
-import { Share, Sparkles, Bookmark } from "lucide-react";
+import { Share, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { useState } from "react";
 
@@ -33,49 +32,11 @@ interface OutfitCardProps {
 const OutfitCard = ({ outfit, onSave }: OutfitCardProps) => {
   const [isSaved, setIsSaved] = useState(outfit.is_saved || false);
   
-  // Enhanced debug logging to track image data reception
-  console.log(`🎯 [DEBUG] OutfitCard - outfit data:`, {
-    name: outfit.name,
-    composition_type: outfit.composition_type,
-    aspect_ratio: outfit.aspect_ratio,
-    has_generated_image: !!outfit.generated_image,
-    generated_image_type: outfit.generated_image ? (
-      outfit.generated_image.startsWith('data:image') ? 'base64_data_url' : 'url'
-    ) : null,
-    generated_image_size: outfit.generated_image ? outfit.generated_image.length : 0,
-    generated_image_preview: outfit.generated_image ? outfit.generated_image.substring(0, 50) + '...' : null,
-    has_reference_images: !!outfit.reference_images,
-    reference_count: outfit.reference_images?.length || 0
-  });
-
-  // Validate base64 data if present
-  if (outfit.generated_image && outfit.generated_image.startsWith('data:image')) {
-    const base64Part = outfit.generated_image.split(',')[1];
-    if (base64Part) {
-      console.log(`📊 [DEBUG] Base64 validation:`, {
-        valid_format: true,
-        base64_length: base64Part.length,
-        estimated_file_size_kb: Math.round(base64Part.length * 0.75 / 1024),
-        base64_start: base64Part.substring(0, 30),
-        base64_end: base64Part.substring(base64Part.length - 30)
-      });
-    } else {
-      console.error(`❌ [DEBUG] Invalid base64 data URL format`);
-    }
-  }
-  
   // Prioritize generated vertical flatlay composition, fallback to reference images
   const hasVerticalFlatlay = outfit.generated_image && 
     (outfit.composition_type === 'professional_flatlay_vertical' || 
      outfit.composition_type === 'professional_flatlay');
   const hasReferenceImages = outfit.reference_images && outfit.reference_images.length > 0;
-  
-  console.log(`🎯 [DEBUG] Display logic:`, {
-    hasVerticalFlatlay,
-    hasReferenceImages,
-    final_composition_type: outfit.composition_type,
-    aspect_ratio: outfit.aspect_ratio
-  });
   
   // Display logic based on available images
   const primaryImage = hasVerticalFlatlay ? outfit.generated_image :
@@ -88,6 +49,7 @@ const OutfitCard = ({ outfit, onSave }: OutfitCardProps) => {
     if (onSave && !isSaved) {
       onSave(outfit.id);
       setIsSaved(true);
+      toast.success("Kombin kaydedildi!");
     }
   };
 
@@ -106,7 +68,7 @@ const OutfitCard = ({ outfit, onSave }: OutfitCardProps) => {
   return (
     <Card className="bg-white border-0 shadow-sm hover:shadow-lg transition-all duration-300 rounded-2xl overflow-hidden">
       <CardContent className="p-0">
-        {/* Outfit Preview - Enhanced for vertical compositions */}
+        {/* Outfit Preview */}
         <div className={`relative overflow-hidden ${
           hasVerticalFlatlay && (outfit.aspect_ratio === '1024x1536' || outfit.aspect_ratio === '1024x1792')
             ? 'aspect-[2/3]' // Vertical aspect ratio for supported dimensions
@@ -145,12 +107,6 @@ const OutfitCard = ({ outfit, onSave }: OutfitCardProps) => {
                   console.error(`Failed to load primary image: ${primaryImage}`);
                   e.currentTarget.src = 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=500&fit=crop';
                 }}
-                onLoad={() => {
-                  console.log(`✅ [DEBUG] Successfully loaded image for ${outfit.name}`);
-                  if (hasVerticalFlatlay) {
-                    console.log(`🎨 [DEBUG] Vertical flatlay composition loaded successfully`);
-                  }
-                }}
               />
             </div>
           )}
@@ -163,11 +119,11 @@ const OutfitCard = ({ outfit, onSave }: OutfitCardProps) => {
               onClick={handleSave}
               disabled={isSaved}
             >
-              <Bookmark 
+              <Heart 
                 className={`h-5 w-5 ${
                   isSaved 
-                    ? 'text-blue-500 fill-blue-500' 
-                    : 'text-gray-600 hover:text-blue-400'
+                    ? 'text-red-500 fill-red-500' 
+                    : 'text-gray-600 hover:text-red-400'
                 }`} 
               />
             </Button>
@@ -180,40 +136,15 @@ const OutfitCard = ({ outfit, onSave }: OutfitCardProps) => {
               <Share className="h-5 w-5 text-gray-600" />
             </Button>
           </div>
-          
-          <div className="absolute top-4 left-4 flex space-x-2">
-            <Badge className="bg-blue-500 text-white rounded-full font-semibold">
-              {outfit.confidence}% uyumlu
-            </Badge>
-            {hasVerticalFlatlay && (
-              <Badge className="bg-green-500 text-white rounded-full font-semibold">
-                {outfit.aspect_ratio === '1024x1536' ? 'AI Vertical Flatlay' : 'AI Flatlay'}
-              </Badge>
-            )}
-            {hasReferenceImages && !hasVerticalFlatlay && (
-              <Badge className="bg-orange-500 text-white rounded-full font-semibold">
-                {outfit.item_count || outfit.reference_images!.length} ürün
-              </Badge>
-            )}
-          </div>
-          
-          {/* Simplified overlay without titles */}
-          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent p-4">
-            {hasVerticalFlatlay && (
-              <p className="text-white/80 text-sm">
-                {outfit.aspect_ratio === '1024x1536' 
-                  ? 'AI-generated vertical flatlay composition' 
-                  : 'AI-generated flatlay composition'}
-              </p>
-            )}
-            {hasReferenceImages && !hasVerticalFlatlay && (
-              <p className="text-white/80 text-sm">Reference images from your wardrobe</p>
-            )}
-          </div>
         </div>
 
         {/* Content */}
         <div className="p-4 space-y-4">
+          {/* Outfit Title */}
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">{outfit.name}</h3>
+          </div>
+
           {/* Items List */}
           <div className="space-y-2">
             <h4 className="text-base font-semibold text-gray-900">Bu kombinasyonda:</h4>
@@ -227,18 +158,20 @@ const OutfitCard = ({ outfit, onSave }: OutfitCardProps) => {
             </div>
           </div>
 
-          {/* Enhanced Styling Tips */}
-          <div className="bg-blue-50 rounded-xl p-4">
-            <div className="flex items-start space-x-3">
-              <div className="bg-blue-100 rounded-full p-2">
-                <Sparkles className="h-4 w-4 text-blue-600" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-semibold text-blue-900 mb-1">Stil İpucu</p>
-                <p className="text-sm text-blue-800 leading-relaxed">{outfit.styling_tips}</p>
+          {/* Styling Tips - Only show if available and not in English */}
+          {outfit.styling_tips && !outfit.styling_tips.toLowerCase().includes('this outfit') && (
+            <div className="bg-blue-50 rounded-xl p-4">
+              <div className="flex items-start space-x-3">
+                <div className="bg-blue-100 rounded-full p-2">
+                  <Heart className="h-4 w-4 text-blue-600" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-blue-900 mb-1">Stil İpucu</p>
+                  <p className="text-sm text-blue-800 leading-relaxed">{outfit.styling_tips}</p>
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
       </CardContent>
     </Card>

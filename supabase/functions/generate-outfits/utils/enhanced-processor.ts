@@ -1,4 +1,3 @@
-
 export const processValidatedOutfits = async (
   outfits: any[],
   wardrobeItems: any[],
@@ -138,12 +137,15 @@ export const processValidatedOutfits = async (
     if (validItems.length >= 2 && validationErrors.length <= 1) {
       console.log(`✅ Outfit ${i + 1} ACCEPTED (${validItems.length} valid items, ${validationErrors.length} invalid)`);
       
-      // Create validated outfit with matched names
+      // Create validated outfit with Turkish styling tips
+      const turkishStylingTip = generateTurkishStylingTip(outfit, occasion, timeOfDay, weather);
+      
       const validatedOutfit = {
         ...outfit,
         items: validItems,
         item_ids: validItemIds,
         confidence: Math.min(outfit.confidence || 8, 9), // Cap confidence for validated outfits
+        styling_tips: turkishStylingTip,
       };
       
       validatedOutfits.push(validatedOutfit);
@@ -206,6 +208,48 @@ export const processValidatedOutfits = async (
   console.log(`🎨 Flatlay generation complete. ${outfitsWithImages.filter(o => o.generated_image).length} outfits have images`);
   
   return outfitsWithImages;
+};
+
+const generateTurkishStylingTip = (outfit: any, occasion: string, timeOfDay: string, weather: string): string => {
+  const occasionMap: { [key: string]: string } = {
+    'casual': 'günlük',
+    'business': 'iş',
+    'formal': 'resmi',
+    'party': 'parti',
+    'sport': 'spor',
+    'evening': 'akşam',
+    'date': 'randevu'
+  };
+
+  const timeMap: { [key: string]: string } = {
+    'morning': 'sabah',
+    'afternoon': 'öğleden sonra',
+    'evening': 'akşam',
+    'night': 'gece'
+  };
+
+  const weatherMap: { [key: string]: string } = {
+    'sunny': 'güneşli',
+    'rainy': 'yağmurlu',
+    'cold': 'soğuk',
+    'warm': 'sıcak',
+    'hot': 'çok sıcak',
+    'mild': 'ılık'
+  };
+
+  const turkishOccasion = occasionMap[occasion.toLowerCase()] || occasion;
+  const turkishTime = timeMap[timeOfDay.toLowerCase()] || timeOfDay;
+  const turkishWeather = weatherMap[weather.toLowerCase()] || weather;
+
+  const tips = [
+    `Bu ${turkishOccasion} kombinasyonu ${turkishTime} vakti için mükemmel. ${outfit.items.length} parçanın uyumu ile şık bir görünüm elde edeceksiniz.`,
+    `${turkishWeather} hava koşulları için ideal olan bu kombin, rahat ve şık bir görünüm sağlar. Renk uyumu dikkat çekici.`,
+    `Bu kombinle kendinizi hem rahat hem de şık hissedeceksiniz. ${turkishOccasion} aktiviteler için harika bir seçim.`,
+    `Klasik ve modern parçaların uyumlu karışımı. ${turkishTime} vakti için mükemmel bir stil yaratıyor.`,
+    `Bu kombin ile hem pratik hem de şık görüneceksiniz. ${turkishWeather} havalar için ideal bir seçim.`
+  ];
+
+  return tips[Math.floor(Math.random() * tips.length)];
 };
 
 const generateOutfitFlatlay = async (
