@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -46,13 +45,14 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
 
   useEffect(() => {
+    // Only show paywall if user has no rights left and is not premium
     if (isOpen && !limits.canAddItem && !limits.isPremium) {
       setShowPaywall(true);
     }
   }, [isOpen, limits.canAddItem, limits.isPremium]);
 
   const handleFileSelect = async (files: File[]) => {
-    // Check limits before proceeding
+    // Check if user has rights to add items
     if (!limits.canAddItem && !limits.isPremium) {
       setShowPaywall(true);
       return;
@@ -60,15 +60,20 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
 
     if (files.length === 0) return;
 
-    // Show ad modal for free users
-    if (!limits.isPremium) {
-      setPendingFiles(files); // Store files to process after ad
-      setShowAdModal(true);
+    // For premium users, process files directly
+    if (limits.isPremium) {
+      await processFiles(files);
       return;
     }
 
-    // Process files directly for premium users
-    await processFiles(files);
+    // For free users who still have rights, process files directly
+    if (limits.canAddItem) {
+      await processFiles(files);
+      return;
+    }
+
+    // This should not happen given the checks above, but as fallback
+    setShowPaywall(true);
   };
 
   const processFiles = async (files: File[]) => {
