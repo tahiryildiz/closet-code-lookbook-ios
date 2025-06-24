@@ -144,6 +144,30 @@ export type Database = {
         }
         Relationships: []
       }
+      fashion_facts: {
+        Row: {
+          category: string | null
+          created_at: string
+          fact: string
+          id: string
+          title: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          fact: string
+          id?: string
+          title: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          fact?: string
+          id?: string
+          title?: string
+        }
+        Relationships: []
+      }
       outfits: {
         Row: {
           ai_styling_tips: string | null

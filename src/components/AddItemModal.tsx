@@ -1,9 +1,12 @@
+
 import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import UploadStep from "./UploadStep";
 import AnalysisStep from "./AnalysisStep";
+import FashionFactCard from "./FashionFactCard";
 import { useSubscription } from "@/hooks/useSubscription";
+import { useImageStorage } from "@/hooks/useImageStorage";
 import PaywallModal from "./PaywallModal";
 import AdModal from "./AdModal";
 import { supabase } from "@/integrations/supabase/client";
@@ -28,6 +31,7 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const { limits, updateUsage, addAdBonus, checkLimits } = useSubscription();
+  const { uploadImage, isUploading } = useImageStorage();
   const [step, setStep] = useState<'upload' | 'analysis'>('upload');
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -91,10 +95,15 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
     setIsAnalyzing(true);
 
     try {
-      // Process first file for now
       const file = files[0];
       
-      // Convert file to base64 data URL
+      // Upload image to Supabase Storage first
+      const uploadedImageUrl = await uploadImage(file);
+      if (!uploadedImageUrl) {
+        throw new Error('Image upload failed');
+      }
+      
+      // Convert file to base64 for AI analysis
       const base64ImageUrl = await convertFileToBase64(file);
       
       // Send the base64 data URL to the edge function
@@ -104,12 +113,9 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
 
       if (error) throw error;
 
-      // Create blob URL for display purposes only
-      const displayImageUrl = URL.createObjectURL(file);
-
       setAnalysisResult({
         ...data,
-        imageUrl: displayImageUrl
+        imageUrl: uploadedImageUrl // Use the permanent storage URL
       });
 
       // Update form data with analysis results
@@ -289,14 +295,23 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
               )}
               
               {step === 'analysis' && (
-                <AnalysisStep 
-                  isAnalyzing={isAnalyzing}
-                  analysisResult={analysisResult}
-                  formData={formData}
-                  onFormDataChange={handleFormDataChange}
-                  onSave={handleSave}
-                  onBack={handleBack}
-                />
+                <div className="space-y-4">
+                  {/* Fashion Fact Card - show during analysis */}
+                  {(isAnalyzing || isUploading) && (
+                    <div className="mb-4">
+                      <FashionFactCard />
+                    </div>
+                  )}
+                  
+                  <AnalysisStep 
+                    isAnalyzing={isAnalyzing || isUploading}
+                    analysisResult={analysisResult}
+                    formData={formData}
+                    onFormDataChange={handleFormDataChange}
+                    onSave={handleSave}
+                    onBack={handleBack}
+                  />
+                </div>
               )}
             </div>
           </CardContent>
