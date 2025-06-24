@@ -76,6 +76,18 @@ const SavedOutfits = () => {
     fetchSavedOutfits();
   }, [user]);
 
+  // Convert SavedOutfit to Outfit format for OutfitGrid
+  const formattedOutfits = savedOutfits.map(outfit => ({
+    id: outfit.id,
+    name: outfit.name,
+    styling_tips: outfit.ai_styling_tips,
+    items: outfit.items,
+    reference_images: outfit.reference_images,
+    clothing_item_ids: outfit.clothing_item_ids,
+    occasion: outfit.occasion,
+    is_saved: true
+  }));
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 pb-20">
@@ -128,7 +140,7 @@ const SavedOutfits = () => {
       </div>
 
       <div className="px-4 py-6">
-        <OutfitGrid outfits={savedOutfits} />
+        <OutfitGrid outfits={formattedOutfits} />
       </div>
     </div>
   );
