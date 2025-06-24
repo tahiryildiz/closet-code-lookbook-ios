@@ -1,40 +1,50 @@
 
-import { validateRequestData } from './validation.ts';
-import { generateEnhancedPrompt } from './enhanced-prompt-generator.ts';
-import { processValidatedOutfits } from './enhanced-processor.ts';
-import { generateAdvancedFallbackOutfits } from './advanced-fallback-generator.ts';
+import { validateEnvironment } from './config.ts';
+import { processOutfits } from './outfit-processor.ts';
+import { generateEnhancedOutfitPrompt } from './enhanced-prompt-generator.ts';
 
-export async function handleEnhancedOutfitGeneration(requestData: any, openAIApiKey: string) {
-  console.log('🎯 Starting enhanced outfit generation with advanced metadata');
+export const handleEnhancedOutfitGeneration = async (requestData: any, openAIApiKey: string) => {
+  console.log('🎯 Starting enhanced outfit generation with sophisticated styling intelligence');
   
-  // Validate request data
-  const validationResult = validateRequestData(requestData);
-  if (!validationResult.isValid) {
-    throw new Error(`Validation failed: ${validationResult.errors.join(', ')}`);
+  const { 
+    wardrobeItems, 
+    occasion, 
+    timeOfDay, 
+    weather, 
+    userGender, 
+    isPremium,
+    userId 
+  } = requestData;
+
+  if (!wardrobeItems || wardrobeItems.length === 0) {
+    throw new Error('No wardrobe items provided');
   }
 
-  const { wardrobeItems, occasion, timeOfDay, weather, userGender, isPremium = false } = requestData;
-  
-  console.log(`📊 Processing ${wardrobeItems.length} wardrobe items with rich metadata`);
-  console.log(`🎨 Available metadata fields: ${Object.keys(wardrobeItems[0] || {}).join(', ')}`);
-  console.log(`👤 User type: ${isPremium ? 'Premium' : 'Free'}`);
+  if (!userId) {
+    throw new Error('User ID is required');
+  }
 
-  // Verify OpenAI API key
-  if (!openAIApiKey) {
-    console.error('❌ OpenAI API key is missing');
-    console.log('🔄 Using advanced fallback due to missing API key');
-    const fallbackOutfits = generateAdvancedFallbackOutfits(wardrobeItems, occasion, timeOfDay, weather, isPremium);
-    return { outfits: fallbackOutfits };
+  // Get Supabase environment variables for storage operations
+  const supabaseUrl = Deno.env.get('SUPABASE_URL');
+  const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+
+  if (!supabaseUrl || !supabaseServiceKey) {
+    throw new Error('Missing Supabase configuration for storage operations');
   }
 
   try {
-    // Generate enhanced prompt with advanced styling rules
-    const prompt = generateEnhancedPrompt(wardrobeItems, occasion, timeOfDay, weather, userGender, isPremium);
+    // Generate enhanced outfit combinations using AI
+    const enhancedPrompt = generateEnhancedOutfitPrompt(
+      wardrobeItems,
+      occasion,
+      timeOfDay,
+      weather,
+      userGender,
+      isPremium
+    );
+
+    console.log('🤖 Making OpenAI API call for outfit generation...');
     
-    console.log('🤖 Making OpenAI API request with enhanced prompt');
-    console.log(`📝 Prompt length: ${prompt.length} characters`);
-    
-    // Make the OpenAI API call directly with detailed logging
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -42,78 +52,87 @@ export async function handleEnhancedOutfitGeneration(requestData: any, openAIApi
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4o',
         messages: [
           {
             role: 'system',
-            content: 'You are a professional fashion stylist with expertise in color theory, pattern mixing, and design coordination. Return only valid JSON.'
+            content: 'You are a professional fashion stylist and outfit coordinator with expertise in color theory, seasonal styling, and occasion-appropriate dressing.'
           },
           {
             role: 'user',
-            content: prompt
+            content: enhancedPrompt
           }
         ],
-        temperature: 0.7,
+        temperature: 0.8,
         max_tokens: 2000,
       }),
     });
 
-    console.log(`📡 OpenAI API response status: ${response.status}`);
-
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(`❌ OpenAI API error (${response.status}): ${errorText}`);
-      throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
+      console.error('OpenAI API error:', errorText);
+      throw new Error(`OpenAI API error: ${response.status}`);
     }
 
-    const data = await response.json();
-    console.log('✅ OpenAI API response received successfully');
-    
-    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-      console.error('❌ Invalid OpenAI response structure:', data);
-      throw new Error('Invalid OpenAI response structure');
+    const completion = await response.json();
+    const content = completion.choices[0]?.message?.content;
+
+    if (!content) {
+      throw new Error('No outfit suggestions received from AI');
     }
-    
-    const generatedOutfits = data.choices[0].message.content;
-    console.log(`📝 Generated content length: ${generatedOutfits.length} characters`);
-    console.log(`📦 Raw AI response preview: ${generatedOutfits.substring(0, 200)}...`);
-    
+
+    console.log('✅ Received outfit suggestions from AI');
+
+    // Parse the AI response
+    let outfits;
     try {
-      const parsedOutfits = JSON.parse(generatedOutfits);
-      console.log(`🎯 Successfully parsed ${parsedOutfits.length} AI-generated outfits`);
-      
-      // Process the outfits with validation and image generation
-      const processedOutfits = await processValidatedOutfits(
-        parsedOutfits,
-        wardrobeItems,
-        occasion,
-        timeOfDay,
-        weather,
-        openAIApiKey
-      );
-      
-      console.log(`✅ Final processed outfits count: ${processedOutfits.length}`);
-      return { outfits: processedOutfits };
-      
+      const jsonMatch = content.match(/\[[\s\S]*\]/);
+      if (jsonMatch) {
+        outfits = JSON.parse(jsonMatch[0]);
+      } else {
+        throw new Error('No valid JSON found in AI response');
+      }
     } catch (parseError) {
-      console.error('❌ JSON parsing failed:', parseError);
-      console.error('🔍 Failed content:', generatedOutfits);
-      console.log('🔄 Using advanced fallback due to JSON parsing failure');
-      const fallbackOutfits = generateAdvancedFallbackOutfits(wardrobeItems, occasion, timeOfDay, weather, isPremium);
-      return { outfits: fallbackOutfits };
+      console.error('Failed to parse AI response:', parseError);
+      throw new Error('Invalid outfit suggestions format');
     }
-    
+
+    if (!Array.isArray(outfits) || outfits.length === 0) {
+      throw new Error('No valid outfits generated');
+    }
+
+    console.log(`🎨 Processing ${outfits.length} outfits with advanced image generation...`);
+
+    // Process outfits with enhanced image generation and storage
+    const processedOutfits = await processOutfits(
+      outfits,
+      wardrobeItems,
+      occasion,
+      timeOfDay,
+      weather,
+      openAIApiKey,
+      userId,
+      supabaseUrl,
+      supabaseServiceKey
+    );
+
+    console.log('✅ Enhanced outfit generation completed successfully');
+
+    return {
+      outfits: processedOutfits,
+      totalGenerated: processedOutfits.length,
+      enhancedFeatures: {
+        advancedColorTheory: true,
+        seasonalStyling: true,
+        patternMixing: true,
+        designCoordination: true,
+        professionalFlatlayImages: true,
+        cloudStorage: true
+      }
+    };
+
   } catch (error) {
     console.error('❌ Error in enhanced outfit generation:', error);
-    console.error('📊 Error details:', {
-      name: error.name,
-      message: error.message,
-      stack: error.stack?.substring(0, 500)
-    });
-    
-    // Fallback to advanced local generation
-    console.log('🔄 Using advanced fallback outfit generation due to error');
-    const fallbackOutfits = generateAdvancedFallbackOutfits(wardrobeItems, occasion, timeOfDay, weather, isPremium);
-    return { outfits: fallbackOutfits };
+    throw error;
   }
-}
+};

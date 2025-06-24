@@ -174,6 +174,7 @@ export type Database = {
           clothing_item_ids: string[] | null
           created_at: string | null
           id: string
+          image_url: string | null
           is_favorite: boolean | null
           is_saved: boolean | null
           last_worn: string | null
@@ -191,6 +192,7 @@ export type Database = {
           clothing_item_ids?: string[] | null
           created_at?: string | null
           id?: string
+          image_url?: string | null
           is_favorite?: boolean | null
           is_saved?: boolean | null
           last_worn?: string | null
@@ -208,6 +210,7 @@ export type Database = {
           clothing_item_ids?: string[] | null
           created_at?: string | null
           id?: string
+          image_url?: string | null
           is_favorite?: boolean | null
           is_saved?: boolean | null
           last_worn?: string | null

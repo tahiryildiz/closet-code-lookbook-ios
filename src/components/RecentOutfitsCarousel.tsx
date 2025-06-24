@@ -35,13 +35,13 @@ const RecentOutfitsCarousel = ({ outfits }: RecentOutfitsCarouselProps) => {
             <Card className="w-full bg-white border border-gray-100 cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-105 rounded-2xl overflow-hidden group">
               <CardContent className="p-0">
                 <div className="aspect-[4/5] bg-gray-50 overflow-hidden relative">
-                  {outfit.generated_image && outfit.generated_image !== 'generated_image_exists' ? (
+                  {outfit.generated_image ? (
                     <img
                       src={outfit.generated_image}
                       alt={outfit.name}
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                       onError={(e) => {
-                        console.error('Failed to load generated image');
+                        console.error('Failed to load flatlay image');
                         e.currentTarget.style.display = 'none';
                         const parent = e.currentTarget.parentElement;
                         if (parent) {

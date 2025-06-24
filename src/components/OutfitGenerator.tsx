@@ -26,6 +26,7 @@ interface Outfit {
   item_count?: number;
   aspect_ratio?: string;
   is_saved?: boolean;
+  image_url?: string; // Store the flatlay image URL
 }
 
 const OutfitGenerator = () => {
@@ -138,6 +139,7 @@ const OutfitGenerator = () => {
           time_of_day: timeOfDay,
           weather_type: weather,
           is_saved: false, // These are generated outfits, not saved ones
+          image_url: outfit.image_url || null, // Store the flatlay image URL
         };
 
         const { data, error } = await supabase
@@ -185,6 +187,7 @@ const OutfitGenerator = () => {
         weather_type: weather,
         is_saved: true,
         saved_at: new Date().toISOString(),
+        image_url: outfit.image_url || null, // Include the flatlay image URL
       };
 
       const { error } = await supabase
@@ -263,7 +266,8 @@ const OutfitGenerator = () => {
           timeOfDay,
           weather,
           userGender: userProfile?.gender,
-          isPremium: limits.isPremium
+          isPremium: limits.isPremium,
+          userId: user.id // Pass userId for image storage
         }
       });
 

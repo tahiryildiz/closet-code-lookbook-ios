@@ -98,7 +98,8 @@ const Index = () => {
                 ...outfit,
                 items: items,
                 reference_images: reference_images,
-                styling_tips: outfit.ai_styling_tips || ''
+                styling_tips: outfit.ai_styling_tips || '',
+                generated_image: outfit.image_url || null // Use stored image URL
               };
             })
           );
@@ -115,7 +116,29 @@ const Index = () => {
           .limit(10);
 
         if (saved) {
-          setSavedOutfits(saved);
+          // Map saved outfits with stored image URLs
+          const mappedSavedOutfits = await Promise.all(
+            saved.map(async (outfit) => {
+              let items: string[] = [];
+              
+              if (outfit.clothing_item_ids && outfit.clothing_item_ids.length > 0) {
+                const { data: itemsData } = await supabase
+                  .from('clothing_items')
+                  .select('name')
+                  .in('id', outfit.clothing_item_ids);
+
+                if (itemsData) {
+                  items = itemsData.map(item => item.name);
+                }
+              }
+
+              return {
+                ...outfit,
+                items: items
+              };
+            })
+          );
+          setSavedOutfits(mappedSavedOutfits);
         }
       } catch (error) {
         console.error('Error fetching dashboard data:', error);

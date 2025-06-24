@@ -57,10 +57,14 @@ const SavedOutfits = () => {
                     ...outfit,
                     items: items.map(item => item.name),
                     reference_images: items.map(item => item.image_url).filter(Boolean),
+                    generated_image: outfit.image_url || null // Use stored flatlay image
                   };
                 }
               }
-              return outfit;
+              return {
+                ...outfit,
+                generated_image: outfit.image_url || null
+              };
             })
           );
 
@@ -85,7 +89,8 @@ const SavedOutfits = () => {
     reference_images: outfit.reference_images,
     clothing_item_ids: outfit.clothing_item_ids,
     occasion: outfit.occasion,
-    is_saved: true
+    is_saved: true,
+    generated_image: outfit.generated_image || outfit.image_url // Support both field names
   }));
 
   if (loading) {
