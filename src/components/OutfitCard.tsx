@@ -1,4 +1,5 @@
-import { Heart, Share, Sparkles } from "lucide-react";
+
+import { Heart, Share, Sparkles, Bookmark } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -19,16 +20,19 @@ interface OutfitCardProps {
     composition_type?: string;
     item_count?: number;
     aspect_ratio?: string;
+    is_saved?: boolean;
     // Legacy support
     images?: string[];
     product_images?: string[];
     complete_outfit_images?: boolean;
     image_count?: number;
   };
+  onSave?: (outfitId: number) => void;
 }
 
-const OutfitCard = ({ outfit }: OutfitCardProps) => {
+const OutfitCard = ({ outfit, onSave }: OutfitCardProps) => {
   const [isFavorite, setIsFavorite] = useState(false);
+  const [isSaved, setIsSaved] = useState(outfit.is_saved || false);
   
   // Enhanced debug logging to track image data reception
   console.log(`🎯 [DEBUG] OutfitCard - outfit data:`, {
@@ -87,6 +91,13 @@ const OutfitCard = ({ outfit }: OutfitCardProps) => {
       toast.success("Kombin favorilere eklendi!");
     } else {
       toast.success("Kombin favorilerden çıkarıldı!");
+    }
+  };
+
+  const handleSave = () => {
+    if (onSave && !isSaved) {
+      onSave(outfit.id);
+      setIsSaved(true);
     }
   };
 
@@ -166,6 +177,21 @@ const OutfitCard = ({ outfit }: OutfitCardProps) => {
                   isFavorite 
                     ? 'text-red-500 fill-red-500' 
                     : 'text-gray-600 hover:text-red-400'
+                }`} 
+              />
+            </Button>
+            <Button 
+              size="sm" 
+              variant="ghost" 
+              className="h-10 w-10 p-0 bg-white/90 hover:bg-white rounded-full shadow-sm"
+              onClick={handleSave}
+              disabled={isSaved}
+            >
+              <Bookmark 
+                className={`h-5 w-5 ${
+                  isSaved 
+                    ? 'text-blue-500 fill-blue-500' 
+                    : 'text-gray-600 hover:text-blue-400'
                 }`} 
               />
             </Button>

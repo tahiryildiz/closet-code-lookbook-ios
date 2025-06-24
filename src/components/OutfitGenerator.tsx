@@ -3,8 +3,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { Sparkles, Wand2, RefreshCw, Briefcase, Utensils, Heart, ShoppingBag, Coffee, Music, Home } from "lucide-react";
+import { Wand2, RefreshCw, Briefcase, Utensils, Heart, ShoppingBag, Coffee, Music, Home } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -27,6 +26,7 @@ interface Outfit {
   composition_type?: string;
   item_count?: number;
   aspect_ratio?: string;
+  is_saved?: boolean;
 }
 
 const OutfitGenerator = () => {
@@ -36,8 +36,6 @@ const OutfitGenerator = () => {
   const [occasion, setOccasion] = useState("casual");
   const [timeOfDay, setTimeOfDay] = useState("day");
   const [weather, setWeather] = useState("mild");
-  const [formality, setFormality] = useState("casual");
-  const [preferences, setPreferences] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [outfits, setOutfits] = useState<Outfit[]>([]);
   const [hasItems, setHasItems] = useState(false);
@@ -100,6 +98,58 @@ const OutfitGenerator = () => {
       console.log('Successfully saved outfits to database');
     } catch (error) {
       console.error('Error in saveOutfitsToDatabase:', error);
+    }
+  };
+
+  const handleSaveOutfit = async (outfitId: number) => {
+    if (!user) {
+      toast({
+        title: "Hata",
+        description: "Lütfen giriş yapın",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      const outfit = outfits.find(o => o.id === outfitId);
+      if (!outfit) return;
+
+      const outfitToSave = {
+        user_id: user.id,
+        name: outfit.name,
+        clothing_item_ids: outfit.item_ids || [],
+        ai_styling_tips: outfit.styling_tips,
+        occasion: outfit.occasion || occasion,
+        time_of_day: timeOfDay,
+        weather_type: weather,
+        is_saved: true,
+        saved_at: new Date().toISOString(),
+      };
+
+      const { error } = await supabase
+        .from('outfits')
+        .insert([outfitToSave]);
+
+      if (error) throw error;
+
+      // Update local state
+      setOutfits(prev => prev.map(o => 
+        o.id === outfitId ? { ...o, is_saved: true } : o
+      ));
+
+      toast({
+        title: "Başarılı!",
+        description: "Kombin kaydedildi!",
+      });
+
+    } catch (error) {
+      console.error('Error saving outfit:', error);
+      toast({
+        title: "Hata",
+        description: "Kombin kaydedilemedi",
+        variant: "destructive"
+      });
     }
   };
 
@@ -177,7 +227,8 @@ const OutfitGenerator = () => {
         ...outfit,
         styling_tips: limits.isPremium 
           ? outfit.styling_tips 
-          : outfit.styling_tips?.substring(0, 100) + "..."
+          : outfit.styling_tips?.substring(0, 100) + "...",
+        is_saved: false
       }));
 
       setOutfits(processedOutfits);
@@ -224,7 +275,7 @@ const OutfitGenerator = () => {
         <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-sm rounded-2xl max-w-md mx-auto mt-20">
           <CardContent className="p-8 text-center">
             <div className="bg-blue-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-              <Sparkles className="h-8 w-8 text-blue-600" />
+              <Wand2 className="h-8 w-8 text-blue-600" />
             </div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">Henüz Kıyafet Yok</h3>
             <p className="text-gray-600 mb-6">
@@ -255,12 +306,6 @@ const OutfitGenerator = () => {
   return (
     <>
       <div className="space-y-6">
-        {/* Header */}
-        <div className="text-center space-y-2">
-          <h2 className="text-2xl font-bold text-gray-900">Kombin Oluştur</h2>
-          <p className="text-gray-600">Mükemmel kombinini oluşturalım</p>
-        </div>
-
         {/* Controls */}
         <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-sm rounded-2xl">
           <CardContent className="p-6 space-y-6">
@@ -296,77 +341,11 @@ const OutfitGenerator = () => {
               </div>
             </div>
 
-            {/* Level of formality */}
-            <div className="space-y-3">
-              <h3 className="text-lg font-semibold text-gray-900">Resmiyet seviyesi</h3>
-              <ToggleGroup 
-                type="single" 
-                value={formality} 
-                onValueChange={(value) => value && setFormality(value)}
-                className="grid grid-cols-3 gap-2"
-              >
-                <ToggleGroupItem 
-                  value="casual" 
-                  className="data-[state=on]:bg-blue-600 data-[state=on]:text-white rounded-xl py-3"
-                >
-                  Günlük
-                </ToggleGroupItem>
-                <ToggleGroupItem 
-                  value="semi-formal" 
-                  className="data-[state=on]:bg-blue-600 data-[state=on]:text-white rounded-xl py-3"
-                >
-                  Yarı Resmi
-                </ToggleGroupItem>
-                <ToggleGroupItem 
-                  value="formal" 
-                  className="data-[state=on]:bg-blue-600 data-[state=on]:text-white rounded-xl py-3"
-                >
-                  Resmi
-                </ToggleGroupItem>
-              </ToggleGroup>
-            </div>
-
-            {/* Preferences */}
-            <div className="space-y-3">
-              <h3 className="text-lg font-semibold text-gray-900">Tercihler</h3>
-              <ToggleGroup 
-                type="multiple" 
-                value={preferences} 
-                onValueChange={setPreferences}
-                className="grid grid-cols-2 gap-2"
-              >
-                <ToggleGroupItem 
-                  value="comfort" 
-                  className="data-[state=on]:bg-blue-600 data-[state=on]:text-white rounded-xl py-3"
-                >
-                  Konfor Öncelikli
-                </ToggleGroupItem>
-                <ToggleGroupItem 
-                  value="trends" 
-                  className="data-[state=on]:bg-blue-600 data-[state=on]:text-white rounded-xl py-3"
-                >
-                  Trendleri Takip Et
-                </ToggleGroupItem>
-                <ToggleGroupItem 
-                  value="minimal" 
-                  className="data-[state=on]:bg-blue-600 data-[state=on]:text-white rounded-xl py-3"
-                >
-                  Minimal Stil
-                </ToggleGroupItem>
-                <ToggleGroupItem 
-                  value="colorful" 
-                  className="data-[state=on]:bg-blue-600 data-[state=on]:text-white rounded-xl py-3"
-                >
-                  Renkli
-                </ToggleGroupItem>
-              </ToggleGroup>
-            </div>
-
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="text-sm font-medium text-gray-700 mb-2 block">Zaman</label>
                 <Select value={timeOfDay} onValueChange={setTimeOfDay}>
-                  <SelectTrigger className="w-full bg-white border-gray-200 rounded-xl">
+                  <SelectTrigger className="w-full bg-white border-2 border-gray-200 rounded-2xl h-12 font-medium">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -381,7 +360,7 @@ const OutfitGenerator = () => {
               <div>
                 <label className="text-sm font-medium text-gray-700 mb-2 block">Hava Durumu</label>
                 <Select value={weather} onValueChange={setWeather}>
-                  <SelectTrigger className="w-full bg-white border-gray-200 rounded-xl">
+                  <SelectTrigger className="w-full bg-white border-2 border-gray-200 rounded-2xl h-12 font-medium">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -425,7 +404,7 @@ const OutfitGenerator = () => {
             <h2 className="text-xl font-semibold text-gray-900 px-2">Önerilen Kombinler</h2>
             <div className="grid gap-6">
               {outfits.map((outfit) => (
-                <OutfitCard key={outfit.id} outfit={outfit} />
+                <OutfitCard key={outfit.id} outfit={outfit} onSave={handleSaveOutfit} />
               ))}
             </div>
           </div>

@@ -151,9 +151,11 @@ export type Database = {
           created_at: string | null
           id: string
           is_favorite: boolean | null
+          is_saved: boolean | null
           last_worn: string | null
           name: string
           occasion: string | null
+          saved_at: string | null
           time_of_day: string | null
           times_worn: number | null
           user_id: string
@@ -166,9 +168,11 @@ export type Database = {
           created_at?: string | null
           id?: string
           is_favorite?: boolean | null
+          is_saved?: boolean | null
           last_worn?: string | null
           name: string
           occasion?: string | null
+          saved_at?: string | null
           time_of_day?: string | null
           times_worn?: number | null
           user_id: string
@@ -181,9 +185,11 @@ export type Database = {
           created_at?: string | null
           id?: string
           is_favorite?: boolean | null
+          is_saved?: boolean | null
           last_worn?: string | null
           name?: string
           occasion?: string | null
+          saved_at?: string | null
           time_of_day?: string | null
           times_worn?: number | null
           user_id?: string
