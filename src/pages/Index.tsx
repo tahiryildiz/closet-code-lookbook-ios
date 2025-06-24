@@ -129,32 +129,32 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
-      {/* Header - Use full width with proper padding */}
-      <div className="px-4 pt-16 pb-6">
+      {/* Header */}
+      <div className="px-4 pt-16 pb-8">
         <div className="ios-fade-in">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2 leading-tight">{greeting()}</h1>
-          <p className="text-gray-600 text-base font-medium">Bugün nasıl bir kombin istiyorsun?</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-3 leading-tight">{greeting()}</h1>
+          <p className="text-gray-600 text-lg font-medium">Bugün nasıl bir kombin istiyorsun?</p>
         </div>
       </div>
 
-      {/* Content - Remove extra spacing, use consistent 16px margins */}
-      <div className="space-y-4">
-        {/* Weather Card - Full width with 16px margins */}
+      {/* Content with better spacing */}
+      <div className="space-y-6">
+        {/* Weather Card */}
         <div className="px-4 ios-fade-in">
           <WeatherCard />
         </div>
 
-        {/* Style Tips Card - Full width with 16px margins */}
+        {/* Style Tips Card */}
         <div className="px-4 ios-fade-in">
           <StyleTipsCard />
         </div>
 
-        {/* Today's Weather Suggestions - Full width cards */}
+        {/* Today's Weather Suggestions */}
         <div className="ios-fade-in">
           <Card className="bg-white border-0 shadow-sm mx-4 rounded-2xl overflow-hidden">
-            <CardHeader className="px-4 pt-4 pb-3">
+            <CardHeader className="px-5 pt-5 pb-4">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-lg font-bold text-gray-900">Bugünkü Hava İçin Öneriler</CardTitle>
+                <CardTitle className="text-xl font-bold text-gray-900">Bugünkü Hava İçin Öneriler</CardTitle>
                 <Button
                   variant="ghost"
                   size="sm"
@@ -166,17 +166,17 @@ const Index = () => {
                 </Button>
               </div>
             </CardHeader>
-            <CardContent className="px-0 pb-4">
+            <CardContent className="px-0 pb-5">
               {recentItems.length > 0 ? (
                 <RecentItemsCarousel items={recentItems.slice(0, 6)} />
               ) : (
-                <div className="text-center py-8 px-4">
-                  <p className="text-gray-500 text-base mb-4">Henüz gardırobunda ürün yok</p>
+                <div className="text-center py-12 px-5">
+                  <p className="text-gray-500 text-lg mb-6">Henüz gardırobunda ürün yok</p>
                   <Button 
                     onClick={() => navigate('/wardrobe')}
-                    className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-xl"
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-3 rounded-xl text-base"
                   >
-                    <Plus className="h-4 w-4 mr-2" />
+                    <Plus className="h-5 w-5 mr-2" />
                     İlk Ürünü Ekle
                   </Button>
                 </div>
@@ -185,13 +185,13 @@ const Index = () => {
           </Card>
         </div>
 
-        {/* Recent Items - Full width cards */}
+        {/* Recent Items */}
         {recentItems.length > 0 && (
           <div className="ios-fade-in">
             <Card className="bg-white border-0 shadow-sm mx-4 rounded-2xl overflow-hidden">
-              <CardHeader className="px-4 pt-4 pb-3">
+              <CardHeader className="px-5 pt-5 pb-4">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg font-bold text-gray-900">Son Eklenen Ürünler</CardTitle>
+                  <CardTitle className="text-xl font-bold text-gray-900">Son Eklenen Ürünler</CardTitle>
                   <Button
                     variant="ghost"
                     size="sm"
@@ -203,20 +203,20 @@ const Index = () => {
                   </Button>
                 </div>
               </CardHeader>
-              <CardContent className="px-0 pb-4">
+              <CardContent className="px-0 pb-5">
                 <RecentItemsCarousel items={recentItems} />
               </CardContent>
             </Card>
           </div>
         )}
 
-        {/* Recent Outfits - Full width cards */}
+        {/* Recent Outfits */}
         {recentOutfits.length > 0 && (
           <div className="ios-fade-in">
             <Card className="bg-white border-0 shadow-sm mx-4 rounded-2xl overflow-hidden">
-              <CardHeader className="px-4 pt-4 pb-3">
+              <CardHeader className="px-5 pt-5 pb-4">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg font-bold text-gray-900">Son Kombinler</CardTitle>
+                  <CardTitle className="text-xl font-bold text-gray-900">Son Kombinler</CardTitle>
                   <Button
                     variant="ghost"
                     size="sm"
@@ -228,20 +228,20 @@ const Index = () => {
                   </Button>
                 </div>
               </CardHeader>
-              <CardContent className="px-0 pb-4">
+              <CardContent className="px-0 pb-5">
                 <RecentOutfitsCarousel outfits={recentOutfits} />
               </CardContent>
             </Card>
           </div>
         )}
 
-        {/* Saved Outfits - Full width cards */}
+        {/* Saved Outfits */}
         {savedOutfits.length > 0 && (
           <div className="ios-fade-in">
             <Card className="bg-white border-0 shadow-sm mx-4 rounded-2xl overflow-hidden">
-              <CardHeader className="px-4 pt-4 pb-3">
+              <CardHeader className="px-5 pt-5 pb-4">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg font-bold text-gray-900">Kaydedilen Kombinler</CardTitle>
+                  <CardTitle className="text-xl font-bold text-gray-900">Kaydedilen Kombinler</CardTitle>
                   <Button
                     variant="ghost"
                     size="sm"
@@ -253,7 +253,7 @@ const Index = () => {
                   </Button>
                 </div>
               </CardHeader>
-              <CardContent className="px-0 pb-4">
+              <CardContent className="px-0 pb-5">
                 <SavedOutfitsCarousel outfits={savedOutfits} />
               </CardContent>
             </Card>
