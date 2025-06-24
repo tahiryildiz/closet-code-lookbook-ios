@@ -207,7 +207,7 @@ const Index = () => {
           </div>}
 
         {/* Recent Outfits */}
-        {recentOutfits.length > 0 && <div>
+        {recentOutfits.length > 0 && <div className="bg-blue-50">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg md:text-xl font-semibold text-gray-900">Son Kombinler</h2>
               <Button variant="ghost" size="sm" onClick={() => navigate('/outfits')} className="text-blue-600 hover:text-blue-700 text-sm font-medium">
