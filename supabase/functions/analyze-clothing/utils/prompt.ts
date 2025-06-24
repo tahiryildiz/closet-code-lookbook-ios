@@ -1,5 +1,7 @@
 
-export function generateClothingAnalysisPrompt(): string {
+export function generateClothingAnalysisPrompt(userGender?: string): string {
+  const genderText = userGender ? `This user is ${userGender === 'male' ? 'Male' : userGender === 'female' ? 'Female' : 'Non-binary'}` : 'Gender preference not specified';
+  
   return `You are an expert fashion analyst with extensive knowledge of clothing, accessories, and footwear. Analyze this image with EXTREME PRECISION and CONSERVATIVE CONFIDENCE.
 
 CRITICAL ANALYSIS PRINCIPLES:
@@ -11,7 +13,7 @@ CRITICAL ANALYSIS PRINCIPLES:
 6. ALWAYS fill ALL relevant fields - this data is used for outfit generation
 
 GENDER FILTER:
-- This user is [Male|Female]. DO NOT suggest items outside the user's gender expression unless absolutely neutral.
+- ${genderText}. DO NOT suggest items outside the user's gender expression unless absolutely neutral.
 - For example, do not label a dress for male users, or a men's blazer for female users, unless the item is clearly unisex.
 - When uncertain about gender appropriateness, err on the side of neutral classification.
 
@@ -144,7 +146,7 @@ FIELD COMPLETION REQUIREMENTS - ALL FIELDS MUST BE FILLED:
 **Contextual Information (REQUIRED):**
 - seasons: Array based on fabric weight and style (["Spring", "Summer"] or ["Fall", "Winter"])
 - occasions: Array of suitable occasions (["Casual", "Business", "Formal", "Athletic"])
-- style_tags: Array of fashion descriptors (["Classic", "Trendy", "Minimalist", "Boho"])
+- style_tags: Array of fashion descriptors (["Classic", "Trendy", "Minimalist", "Boho", "Streetwear", "Formal", "Sporty", "Smart Casual", "Elegant", "Y2K", "Retro", "Vintage", "Modern", "Edgy", "Romantic", "Preppy", "Bohemian", "Grunge", "Chic"])
 - accessories: Array of any visible accessories, empty if none
 
 **Quality Assessment (REQUIRED):**

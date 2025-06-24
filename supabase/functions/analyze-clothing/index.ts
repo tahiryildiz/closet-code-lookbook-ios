@@ -4,6 +4,7 @@ import { corsHeaders, handleCorsPreflightRequest, createResponse } from './utils
 import { callOpenAIVision } from './utils/openai.ts'
 import { callGeminiVision } from './utils/gemini.ts'
 import { parseAndValidateAnalysis } from './utils/validation.ts'
+import { generateClothingAnalysisPrompt } from './utils/prompt.ts'
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -12,6 +13,7 @@ serve(async (req) => {
 
   try {
     let imageUrl: string;
+    let userGender: string | undefined;
 
     // Check content type to determine how to parse the request
     const contentType = req.headers.get('content-type') || '';
@@ -20,6 +22,7 @@ serve(async (req) => {
       // Handle JSON request (with imageUrl)
       const body = await req.json()
       imageUrl = body.imageUrl;
+      userGender = body.userGender;
       
       if (!imageUrl) {
         return createResponse(
@@ -31,6 +34,7 @@ serve(async (req) => {
       // Handle FormData request (with image file)
       const formData = await req.formData()
       const imageFile = formData.get('image') as File
+      userGender = formData.get('userGender') as string
       
       if (!imageFile) {
         return createResponse(
@@ -51,6 +55,10 @@ serve(async (req) => {
     }
 
     console.log('Starting clothing analysis for image')
+    console.log('User gender:', userGender)
+
+    // Generate the prompt with user gender
+    const prompt = generateClothingAnalysisPrompt(userGender);
 
     let analysisResult;
     let usedProvider = 'OpenAI';
@@ -58,7 +66,7 @@ serve(async (req) => {
     // Try OpenAI first
     try {
       console.log('Attempting OpenAI analysis...')
-      const openaiData = await callOpenAIVision(imageUrl)
+      const openaiData = await callOpenAIVision(imageUrl, prompt)
       const content = openaiData.choices[0]?.message?.content
       if (!content) {
         throw new Error('No content received from OpenAI')
@@ -84,7 +92,7 @@ serve(async (req) => {
         
         try {
           console.log('Starting Gemini fallback...')
-          const geminiContent = await callGeminiVision(imageUrl)
+          const geminiContent = await callGeminiVision(imageUrl, prompt)
           console.log('Gemini content received, parsing...')
           analysisResult = parseAndValidateAnalysis(geminiContent)
           usedProvider = 'Gemini';
