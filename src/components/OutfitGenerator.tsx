@@ -41,67 +41,62 @@ const OutfitGenerator = () => {
   const [showPaywall, setShowPaywall] = useState(false);
   const [showAdModal, setShowAdModal] = useState(false);
 
-  // Load existing outfits from both localStorage and database on component mount
+  // Load existing outfits from database only (remove localStorage logic)
   useEffect(() => {
     const loadOutfits = async () => {
       if (!user) return;
 
       try {
-        // First try to load from database (recent outfits)
+        // Load from database (recent outfits that are not saved)
         const { data: dbOutfits, error } = await supabase
           .from('outfits')
           .select('*')
           .eq('user_id', user.id)
+          .eq('is_saved', false) // Only get non-saved outfits for outfit generator
           .order('created_at', { ascending: false })
           .limit(3);
 
         if (error) {
           console.error('Error loading outfits from database:', error);
+          return;
         }
 
         if (dbOutfits && dbOutfits.length > 0) {
           // Convert database outfits to display format
-          const formattedOutfits = dbOutfits.map((outfit, index) => ({
-            id: index + 1,
-            name: outfit.name,
-            items: [], // We'll get this from clothing_item_ids
-            item_ids: outfit.clothing_item_ids || [],
-            confidence: 8,
-            styling_tips: outfit.ai_styling_tips || '',
-            occasion: outfit.occasion,
-            is_saved: outfit.is_saved || false,
-            reference_images: [] // Will be populated with actual item images
-          }));
+          const formattedOutfits = await Promise.all(
+            dbOutfits.map(async (outfit, index) => {
+              // Get actual item names and images for each outfit
+              let items: string[] = [];
+              let reference_images: string[] = [];
+              
+              if (outfit.clothing_item_ids && outfit.clothing_item_ids.length > 0) {
+                const { data: itemsData } = await supabase
+                  .from('clothing_items')
+                  .select('name, image_url')
+                  .in('id', outfit.clothing_item_ids);
 
-          // Get actual item names and images for each outfit
-          for (const outfit of formattedOutfits) {
-            if (outfit.item_ids && outfit.item_ids.length > 0) {
-              const { data: items } = await supabase
-                .from('clothing_items')
-                .select('name, image_url')
-                .in('id', outfit.item_ids);
-
-              if (items) {
-                outfit.items = items.map(item => item.name);
-                outfit.reference_images = items.map(item => item.image_url).filter(Boolean);
+                if (itemsData) {
+                  items = itemsData.map(item => item.name);
+                  reference_images = itemsData.map(item => item.image_url).filter(Boolean);
+                }
               }
-            }
-          }
+
+              return {
+                id: index + 1,
+                name: outfit.name,
+                items: items,
+                item_ids: outfit.clothing_item_ids || [],
+                confidence: 8,
+                styling_tips: outfit.ai_styling_tips || '',
+                occasion: outfit.occasion,
+                is_saved: outfit.is_saved || false,
+                reference_images: reference_images,
+                generated_image: null // Database doesn't store generated images currently
+              };
+            })
+          );
 
           setOutfits(formattedOutfits);
-          return;
-        }
-
-        // Fallback to localStorage if no database outfits
-        const savedOutfits = localStorage.getItem('generatedOutfits');
-        if (savedOutfits) {
-          try {
-            const parsedOutfits = JSON.parse(savedOutfits);
-            setOutfits(parsedOutfits);
-          } catch (error) {
-            console.error('Error loading saved outfits:', error);
-            localStorage.removeItem('generatedOutfits');
-          }
         }
       } catch (error) {
         console.error('Error in loadOutfits:', error);
@@ -127,7 +122,9 @@ const OutfitGenerator = () => {
   }, [user]);
 
   const saveOutfitsToDatabase = async (outfitsData: Outfit[]) => {
-    if (!user) return;
+    if (!user) return [];
+
+    const savedOutfitIds: string[] = [];
 
     try {
       // Save each outfit to the database
@@ -140,14 +137,19 @@ const OutfitGenerator = () => {
           occasion: outfit.occasion || occasion,
           time_of_day: timeOfDay,
           weather_type: weather,
+          is_saved: false, // These are generated outfits, not saved ones
         };
 
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('outfits')
-          .insert([outfitToSave]);
+          .insert([outfitToSave])
+          .select('id')
+          .single();
 
         if (error) {
           console.error('Error saving outfit to database:', error);
+        } else if (data) {
+          savedOutfitIds.push(data.id);
         }
       }
 
@@ -155,6 +157,8 @@ const OutfitGenerator = () => {
     } catch (error) {
       console.error('Error in saveOutfitsToDatabase:', error);
     }
+
+    return savedOutfitIds;
   };
 
   const handleSaveOutfit = async (outfitId: number) => {
@@ -287,32 +291,7 @@ const OutfitGenerator = () => {
 
       setOutfits(processedOutfits);
       
-      // Save to localStorage with improved error handling
-      try {
-        const lightweightOutfits = processedOutfits.map(outfit => ({
-          ...outfit,
-          generated_image: outfit.generated_image ? 'generated_image_exists' : null
-        }));
-        localStorage.setItem('generatedOutfits', JSON.stringify(lightweightOutfits));
-      } catch (storageError) {
-        console.warn('localStorage quota exceeded, clearing old data and retrying...');
-        // Clear old data and try again
-        localStorage.removeItem('generatedOutfits');
-        try {
-          const minimalOutfits = processedOutfits.map(outfit => ({
-            id: outfit.id,
-            name: outfit.name,
-            items: outfit.items,
-            styling_tips: outfit.styling_tips.substring(0, 200) + '...',
-            reference_images: outfit.reference_images?.slice(0, 2) || []
-          }));
-          localStorage.setItem('generatedOutfits', JSON.stringify(minimalOutfits));
-        } catch (finalError) {
-          console.warn('Unable to save to localStorage, skipping...');
-        }
-      }
-      
-      // Save to database
+      // Save to database and get the saved IDs
       await saveOutfitsToDatabase(processedOutfits);
 
       // Update usage for free users

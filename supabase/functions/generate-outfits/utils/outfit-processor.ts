@@ -15,7 +15,7 @@ export const processOutfits = async (outfits: any[], wardrobeItems: any[], occas
     }).filter(Boolean);
     
     // Generate professional flatlay image
-    const generatedImageUrl = await generateOutfitImage(
+    const imageResult = await generateOutfitImage(
       outfit, 
       wardrobeItems, 
       occasion, 
@@ -34,9 +34,13 @@ export const processOutfits = async (outfits: any[], wardrobeItems: any[], occas
       ...outfit,
       items: cleanItems,
       item_ids: itemIds,
-      images: generatedImageUrl ? [generatedImageUrl] : ['https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=500&fit=crop'],
+      images: imageResult?.generated_image ? [imageResult.generated_image] : (imageResult?.reference_images || ['https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=500&fit=crop']),
+      reference_images: imageResult?.reference_images || [],
       occasion: occasion,
-      generated_image: generatedImageUrl
+      generated_image: imageResult?.generated_image || null,
+      composition_type: imageResult?.composition_type || 'reference_fallback',
+      aspect_ratio: imageResult?.aspect_ratio || '4:5',
+      item_count: imageResult?.item_count || itemIds.length
     };
   }));
 };

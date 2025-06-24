@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -67,20 +66,42 @@ const Index = () => {
           setRecentItems(items);
         }
 
-        // Fetch recent outfits
+        // Fetch recent outfits (non-saved ones for recent section)
         const { data: outfits } = await supabase
           .from('outfits')
           .select('*')
           .eq('user_id', user.id)
+          .eq('is_saved', false) // Only non-saved outfits for recent section
           .order('created_at', { ascending: false })
           .limit(10);
 
         if (outfits) {
-          // Map the data to match the Outfit interface
-          const mappedOutfits = outfits.map(outfit => ({
-            ...outfit,
-            styling_tips: outfit.ai_styling_tips || ''
-          }));
+          // Get actual item details for each outfit
+          const mappedOutfits = await Promise.all(
+            outfits.map(async (outfit) => {
+              let items: string[] = [];
+              let reference_images: string[] = [];
+              
+              if (outfit.clothing_item_ids && outfit.clothing_item_ids.length > 0) {
+                const { data: itemsData } = await supabase
+                  .from('clothing_items')
+                  .select('name, image_url')
+                  .in('id', outfit.clothing_item_ids);
+
+                if (itemsData) {
+                  items = itemsData.map(item => item.name);
+                  reference_images = itemsData.map(item => item.image_url).filter(Boolean);
+                }
+              }
+
+              return {
+                ...outfit,
+                items: items,
+                reference_images: reference_images,
+                styling_tips: outfit.ai_styling_tips || ''
+              };
+            })
+          );
           setRecentOutfits(mappedOutfits);
         }
 
