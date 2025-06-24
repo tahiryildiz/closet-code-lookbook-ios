@@ -296,13 +296,6 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
               
               {step === 'analysis' && (
                 <div className="space-y-4">
-                  {/* Fashion Fact Card - show during analysis */}
-                  {(isAnalyzing || isUploading) && (
-                    <div className="mb-4">
-                      <FashionFactCard />
-                    </div>
-                  )}
-                  
                   <AnalysisStep 
                     isAnalyzing={isAnalyzing || isUploading}
                     analysisResult={analysisResult}
@@ -311,6 +304,13 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
                     onSave={handleSave}
                     onBack={handleBack}
                   />
+                  
+                  {/* Fashion Fact Card - show during analysis and after */}
+                  {(isAnalyzing || isUploading || analysisResult) && (
+                    <div className="mt-4">
+                      <FashionFactCard />
+                    </div>
+                  )}
                 </div>
               )}
             </div>
