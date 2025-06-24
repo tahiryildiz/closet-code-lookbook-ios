@@ -34,6 +34,7 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
   const { uploadImage, isUploading } = useImageStorage();
   const [step, setStep] = useState<'upload' | 'analysis'>('upload');
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [currentFileIndex, setCurrentFileIndex] = useState(0);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<any>(null);
   const [formData, setFormData] = useState<FormData>({
@@ -91,11 +92,19 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
 
   const processFiles = async (files: File[]) => {
     setSelectedFiles(files);
+    setCurrentFileIndex(0);
     setStep('analysis');
+    await analyzeCurrentFile(files, 0);
+  };
+
+  const analyzeCurrentFile = async (files: File[], index: number) => {
+    if (index >= files.length) return;
+
     setIsAnalyzing(true);
+    setAnalysisResult(null);
 
     try {
-      const file = files[0];
+      const file = files[index];
       
       // Upload image to Supabase Storage first
       const uploadedImageUrl = await uploadImage(file);
@@ -143,7 +152,17 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
   };
 
   const handleRemoveFile = (index: number) => {
-    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+    const newFiles = selectedFiles.filter((_, i) => i !== index);
+    setSelectedFiles(newFiles);
+    
+    // Adjust current index if needed
+    if (currentFileIndex >= newFiles.length && newFiles.length > 0) {
+      setCurrentFileIndex(newFiles.length - 1);
+      analyzeCurrentFile(newFiles, newFiles.length - 1);
+    } else if (newFiles.length === 0) {
+      setStep('upload');
+      setCurrentFileIndex(0);
+    }
   };
 
   const handleFormDataChange = (data: Partial<FormData>) => {
@@ -201,10 +220,36 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
       
       toast({
         title: "Başarılı!",
-        description: "Ürün gardırobunuza eklendi",
+        description: `Ürün gardırobunuza eklendi (${currentFileIndex + 1}/${selectedFiles.length})`,
       });
 
-      handleClose();
+      // Check if there are more files to process
+      if (currentFileIndex < selectedFiles.length - 1) {
+        // Move to next file
+        const nextIndex = currentFileIndex + 1;
+        setCurrentFileIndex(nextIndex);
+        
+        // Reset form data for next item
+        setFormData({
+          name: '',
+          brand: '',
+          category: '',
+          primaryColor: '',
+          tags: '',
+          notes: ''
+        });
+        
+        // Analyze next file
+        await analyzeCurrentFile(selectedFiles, nextIndex);
+      } else {
+        // All files processed, close modal
+        toast({
+          title: "Tamamlandı!",
+          description: `${selectedFiles.length} ürün başarıyla eklendi`,
+        });
+        handleClose();
+      }
+
     } catch (error) {
       console.error('Save error:', error);
       toast({
@@ -219,11 +264,13 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
     setStep('upload');
     setAnalysisResult(null);
     setIsAnalyzing(false);
+    setCurrentFileIndex(0);
   };
 
   const handleClose = () => {
     setStep('upload');
     setSelectedFiles([]);
+    setCurrentFileIndex(0);
     setAnalysisResult(null);
     setIsAnalyzing(false);
     setPendingFiles([]);
@@ -276,6 +323,12 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
               <h2 className="text-xl font-semibold text-center">
                 {step === 'upload' ? 'Yeni Ürün Ekle' : 'Ürün Analizi'}
               </h2>
+              
+              {step === 'analysis' && selectedFiles.length > 1 && (
+                <div className="text-center mt-2 text-blue-100 text-sm">
+                  {currentFileIndex + 1} / {selectedFiles.length} ürün
+                </div>
+              )}
               
               {!limits.isPremium && (
                 <div className="text-center mt-2 text-blue-100 text-sm">

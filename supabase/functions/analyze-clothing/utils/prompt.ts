@@ -85,14 +85,41 @@ STEP 3: DETAILED CONSTRUCTION ANALYSIS
 - Closure analysis: Buttons, zippers, pullovers, ties, buckles
 - Collar/neckline examination: Crew neck, V-neck, turtleneck, button-down, etc.
 - Sleeve analysis: Long, short, 3/4, sleeveless, raglan, puffed
-- Fit assessment: Slim, regular, oversized, fitted, loose, cropped
+- Fit assessment: Look carefully at the silhouette, drape, and proportions:
+  * Slim: Close-fitting, tailored, follows body contours closely
+  * Regular/Standard: Neither tight nor loose, standard cut with comfortable room
+  * Relaxed/Loose: Roomy fit with extra space, casual drape
+  * Oversized: Deliberately large, baggy, or voluminous
+  * Fitted: Form-fitting, emphasizes body shape
+  * Cropped: Shortened length (for tops), hits above natural waistline
 
-STEP 4: COLOR & PATTERN ANALYSIS
+STEP 4: ENHANCED COLOR & PATTERN ANALYSIS
 - Primary color: The most dominant color (60%+ of item)
 - Secondary colors: Accent colors, patterns, trim (if clearly visible)
 - Be specific: "Navy Blue" not just "Blue", "Burgundy" not just "Red"
 - Common precise colors: Black, White, Navy Blue, Light Blue, Dark Blue, Grey, Charcoal, Beige, Cream, Brown, Tan, Red, Burgundy, Green, Olive, Pink, Purple, Yellow, Orange
-- Pattern analysis: Solid, Striped, Plaid, Floral, Geometric, Animal Print, Polka Dot
+
+- ENHANCED PATTERN DETECTION:
+  * Solid: No visible pattern, single color throughout
+  * Striped: Linear patterns (horizontal, vertical, diagonal)
+  * Plaid: Checkered patterns, tartan
+  * Floral: Flower or botanical designs
+  * Geometric: Abstract shapes, dots, triangles, etc.
+  * Animal Print: Leopard, zebra, snake, etc.
+  * Polka Dot: Regular dot patterns
+  * Graphic: Logos, text, illustrations, images
+  * Abstract: Non-representational artistic patterns
+  * Textured: Visible texture like ribbing, cable-knit, corduroy
+
+- PATTERN TYPE SPECIFICATION:
+  * If pattern is NOT "Solid", specify the pattern type details:
+    - For Striped: "Horizontal Stripes", "Vertical Stripes", "Pinstripes"
+    - For Plaid: "Tartan", "Gingham", "Buffalo Check"
+    - For Floral: "Small Floral", "Large Floral", "Rose Print"
+    - For Graphic: "Logo Print", "Text Print", "Photo Print"
+    - For Geometric: "Polka Dots", "Chevron", "Houndstooth"
+  * If pattern is "Solid", set pattern_type to null
+  * Look carefully for subtle patterns, logos, or textures that might not be immediately obvious
 
 STEP 5: FUNCTIONAL DETAILS
 - Season suitability based on fabric weight and style
@@ -122,12 +149,12 @@ FIELD COMPLETION REQUIREMENTS - ALL FIELDS MUST BE FILLED:
 - primary_color: Most dominant color in English
 - secondary_colors: Array of additional colors if present, empty array if none
 - color_tone: "Light", "Medium", "Dark" based on brightness
-- pattern: "Solid", "Striped", "Plaid", "Floral", "Geometric", "Animal Print", etc.
-- pattern_type: Specific pattern details if applicable
+- pattern: "Solid", "Striped", "Plaid", "Floral", "Geometric", "Animal Print", "Graphic", "Abstract", "Textured", etc.
+- pattern_type: Specific pattern details if pattern is NOT "Solid", otherwise null
 
 **Technical Specifications (REQUIRED):**
 - material: Primary fabric - be specific (Cotton, Wool, Denim, Polyester, Silk, Leather, etc.)
-- fit: "Slim", "Regular", "Relaxed", "Oversized", "Fitted", "Loose"
+- fit: Analyze the garment silhouette carefully - "Slim", "Regular", "Relaxed", "Oversized", "Fitted", "Loose"
 - collar: Specific collar type or "No Collar"
 - sleeve: Sleeve length and style
 - closure_type: "Pullover", "Button-Front", "Zip-Up", "Open Front", "Tie", "Buckle"
@@ -169,6 +196,9 @@ CRITICAL SUCCESS FACTORS:
 6. Respect gender appropriateness for the user
 7. Focus only on the primary item in the image
 8. Validate that the image contains recognizable clothing
+9. CAREFULLY analyze fit based on visible silhouette and drape
+10. THOROUGHLY examine for patterns, including subtle ones like logos or textures
+11. SET pattern_type to null ONLY if pattern is "Solid"
 
 ERROR RESPONSE FORMAT (if image is invalid):
 {
@@ -187,7 +217,7 @@ SUCCESS RESPONSE FORMAT - Return ONLY valid JSON with ALL fields filled:
   "pattern": "Pattern type",
   "pattern_type": "Specific pattern details or null",
   "material": "Primary material",
-  "fit": "Fit type",
+  "fit": "Fit type based on visual analysis",
   "collar": "Collar style",
   "sleeve": "Sleeve type",
   "neckline": "Neckline style",
@@ -208,5 +238,5 @@ SUCCESS RESPONSE FORMAT - Return ONLY valid JSON with ALL fields filled:
   "confidence": 85
 }
 
-CRITICAL: Every single field must have a value. This data is essential for outfit generation algorithms. Be thorough, accurate, and complete in your analysis while respecting gender appropriateness and focusing on the primary item only.`
+CRITICAL: Every single field must have a value. This data is essential for outfit generation algorithms. Be thorough, accurate, and complete in your analysis while respecting gender appropriateness and focusing on the primary item only. Pay special attention to fit analysis and pattern detection.`
 }
