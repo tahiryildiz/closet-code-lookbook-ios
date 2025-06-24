@@ -1,9 +1,7 @@
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Wand2, RefreshCw, Briefcase, Utensils, Heart, ShoppingBag, Coffee, Music, Home } from "lucide-react";
-
 interface OutfitControlsProps {
   occasion: string;
   setOccasion: (value: string) => void;
@@ -16,7 +14,6 @@ interface OutfitControlsProps {
   remainingOutfits: number;
   isPremium: boolean;
 }
-
 const OutfitControls = ({
   occasion,
   setOccasion,
@@ -29,48 +26,54 @@ const OutfitControls = ({
   remainingOutfits,
   isPremium
 }: OutfitControlsProps) => {
-  const occasions = [
-    { id: "work", label: "İş", icon: Briefcase },
-    { id: "dinner", label: "Yemek", icon: Utensils },
-    { id: "date", label: "Randevu", icon: Heart },
-    { id: "shopping", label: "Alışveriş", icon: ShoppingBag },
-    { id: "coffee", label: "Kahve", icon: Coffee },
-    { id: "party", label: "Parti", icon: Music },
-    { id: "casual", label: "Günlük", icon: Home },
-  ];
-
-  return (
-    <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-sm rounded-2xl">
-      <CardContent className="p-4 md:p-6 space-y-4 md:space-y-6">
-        {!isPremium && (
-          <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 text-center">
+  const occasions = [{
+    id: "work",
+    label: "İş",
+    icon: Briefcase
+  }, {
+    id: "dinner",
+    label: "Yemek",
+    icon: Utensils
+  }, {
+    id: "date",
+    label: "Randevu",
+    icon: Heart
+  }, {
+    id: "shopping",
+    label: "Alışveriş",
+    icon: ShoppingBag
+  }, {
+    id: "coffee",
+    label: "Kahve",
+    icon: Coffee
+  }, {
+    id: "party",
+    label: "Parti",
+    icon: Music
+  }, {
+    id: "casual",
+    label: "Günlük",
+    icon: Home
+  }];
+  return <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-sm rounded-2xl">
+      <CardContent className="p-4 md:p-6 space-y-4 md:space-y-6 px-[2px]">
+        {!isPremium && <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 text-center">
             <p className="text-blue-700 text-sm font-medium">
               Kalan kombin hakkı: {Math.max(0, remainingOutfits)}
             </p>
-          </div>
-        )}
+          </div>}
 
         {/* Nerede Giyeceksin? - Responsive grid */}
         <div className="space-y-3">
           <h3 className="text-base md:text-lg font-semibold text-gray-900">Nerede Giyeceksin?</h3>
           <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 md:gap-3">
-            {occasions.map((occ) => {
-              const IconComponent = occ.icon;
-              return (
-                <button
-                  key={occ.id}
-                  onClick={() => setOccasion(occ.id)}
-                  className={`p-3 md:p-4 rounded-2xl border-2 transition-all ${
-                    occasion === occ.id
-                      ? 'border-blue-500 bg-blue-50 text-blue-700'
-                      : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
-                  }`}
-                >
+            {occasions.map(occ => {
+            const IconComponent = occ.icon;
+            return <button key={occ.id} onClick={() => setOccasion(occ.id)} className={`p-3 md:p-4 rounded-2xl border-2 transition-all ${occasion === occ.id ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'}`}>
                   <IconComponent className="h-6 w-6 md:h-8 md:w-8 mx-auto mb-1 md:mb-2" />
                   <span className="text-xs md:text-sm font-medium block">{occ.label}</span>
-                </button>
-              );
-            })}
+                </button>;
+          })}
           </div>
         </div>
 
@@ -109,26 +112,16 @@ const OutfitControls = ({
           </div>
         </div>
 
-        <Button
-          onClick={onGenerate}
-          disabled={loading}
-          className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-3 md:py-4 rounded-xl transition-all duration-200 text-base md:text-lg"
-        >
-          {loading ? (
-            <>
+        <Button onClick={onGenerate} disabled={loading} className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-3 md:py-4 rounded-xl transition-all duration-200 text-base md:text-lg">
+          {loading ? <>
               <RefreshCw className="h-4 md:h-5 w-4 md:w-5 mr-2 animate-spin" />
               Oluşturuluyor...
-            </>
-          ) : (
-            <>
+            </> : <>
               <Wand2 className="h-4 md:h-5 w-4 md:w-5 mr-2" />
               Kombin Oluştur
-            </>
-          )}
+            </>}
         </Button>
       </CardContent>
-    </Card>
-  );
+    </Card>;
 };
-
 export default OutfitControls;
