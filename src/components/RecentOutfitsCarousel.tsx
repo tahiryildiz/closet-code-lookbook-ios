@@ -32,9 +32,9 @@ const RecentOutfitsCarousel = ({ outfits }: RecentOutfitsCarouselProps) => {
             className="flex-shrink-0 w-32"
             onClick={() => navigate('/outfits')}
           >
-            <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-sm rounded-2xl cursor-pointer hover:shadow-md transition-all duration-200 hover:scale-105">
+            <Card className="ios-card shadow-lg border-0 cursor-pointer hover:shadow-xl transition-all duration-300 hover:scale-105 rounded-2xl overflow-hidden">
               <CardContent className="p-3">
-                <div className="aspect-square bg-gray-50 rounded-xl mb-2 overflow-hidden">
+                <div className="aspect-square bg-gray-50 rounded-xl mb-3 overflow-hidden">
                   {outfit.generated_image && outfit.generated_image !== 'generated_image_exists' ? (
                     <img
                       src={outfit.generated_image}
@@ -81,8 +81,8 @@ const RecentOutfitsCarousel = ({ outfits }: RecentOutfitsCarouselProps) => {
                     </div>
                   )}
                 </div>
-                <p className="font-medium text-sm text-gray-900 truncate">{outfit.name}</p>
-                <p className="text-xs text-gray-500">
+                <p className="font-semibold text-sm text-gray-900 truncate">{outfit.name}</p>
+                <p className="text-xs text-gray-500 mt-1">
                   {outfit.confidence ? `${outfit.confidence}% uyumlu` : 'Kombin'}
                 </p>
               </CardContent>

@@ -30,15 +30,15 @@ const SavedOutfitsCarousel = ({ outfits }: SavedOutfitsCarouselProps) => {
             className="flex-shrink-0 w-32"
             onClick={() => navigate('/saved-outfits')}
           >
-            <Card className="bg-white border-gray-200 shadow-sm rounded-xl cursor-pointer hover:shadow-md transition-all duration-200 hover:scale-105">
+            <Card className="ios-card shadow-lg border-0 cursor-pointer hover:shadow-xl transition-all duration-300 hover:scale-105 rounded-2xl overflow-hidden">
               <CardContent className="p-3">
-                <div className="aspect-square bg-gray-50 rounded-xl mb-2 overflow-hidden">
+                <div className="aspect-square bg-gray-50 rounded-xl mb-3 overflow-hidden">
                   <div className="w-full h-full bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center">
                     <Bookmark className="h-8 w-8 text-blue-500" />
                   </div>
                 </div>
                 <p className="font-semibold text-sm text-gray-900 truncate">{outfit.name}</p>
-                <p className="text-xs text-gray-500">{outfit.occasion || 'Kaydedilen'}</p>
+                <p className="text-xs text-gray-500 mt-1">{outfit.occasion || 'Kaydedilen'}</p>
               </CardContent>
             </Card>
           </div>

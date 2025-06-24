@@ -5,7 +5,7 @@ import { Cloud, Sun, CloudRain, Snowflake, Wind } from "lucide-react";
 
 const WeatherCard = () => {
   const [weather, setWeather] = useState({
-    temp: 22,
+    temp: 18,
     condition: "sunny",
     location: "İstanbul"
   });
@@ -14,7 +14,7 @@ const WeatherCard = () => {
   useEffect(() => {
     // Simulate weather data
     const conditions = ["sunny", "cloudy", "rainy", "snowy"];
-    const temps = [18, 22, 25, 28];
+    const temps = [15, 18, 22, 25];
     
     setWeather({
       temp: temps[Math.floor(Math.random() * temps.length)],
@@ -26,15 +26,15 @@ const WeatherCard = () => {
   const getWeatherIcon = (condition: string) => {
     switch (condition) {
       case "sunny":
-        return <Sun className="h-8 w-8 text-yellow-500" />;
+        return <Sun className="h-10 w-10 text-white" />;
       case "cloudy":
-        return <Cloud className="h-8 w-8 text-gray-500" />;
+        return <Cloud className="h-10 w-10 text-white" />;
       case "rainy":
-        return <CloudRain className="h-8 w-8 text-blue-500" />;
+        return <CloudRain className="h-10 w-10 text-white" />;
       case "snowy":
-        return <Snowflake className="h-8 w-8 text-blue-300" />;
+        return <Snowflake className="h-10 w-10 text-white" />;
       default:
-        return <Sun className="h-8 w-8 text-yellow-500" />;
+        return <Sun className="h-10 w-10 text-white" />;
     }
   };
 
@@ -54,19 +54,19 @@ const WeatherCard = () => {
   };
 
   return (
-    <Card className="bg-gradient-to-r from-blue-500 to-purple-600 text-white border-0 shadow-lg rounded-2xl">
-      <CardContent className="p-4">
+    <Card className="bg-gradient-to-r from-blue-500 to-purple-600 text-white border-0 shadow-xl rounded-2xl overflow-hidden">
+      <CardContent className="p-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             {getWeatherIcon(weather.condition)}
             <div>
-              <h3 className="text-2xl font-bold">{weather.temp}°C</h3>
-              <p className="text-white/80 text-sm">{getWeatherText(weather.condition)}</p>
+              <h3 className="text-3xl font-bold">{weather.temp}°C</h3>
+              <p className="text-white/90 text-base">{getWeatherText(weather.condition)}</p>
             </div>
           </div>
           <div className="text-right">
-            <p className="text-white/80 text-sm">{weather.location}</p>
-            <p className="text-white/60 text-xs">Bugün</p>
+            <p className="text-white/90 text-base font-medium">{weather.location}</p>
+            <p className="text-white/70 text-sm">Bugün</p>
           </div>
         </div>
       </CardContent>
