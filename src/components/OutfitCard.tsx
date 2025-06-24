@@ -1,4 +1,5 @@
 
+
 import { Share, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -64,6 +65,48 @@ const OutfitCard = ({ outfit, onSave }: OutfitCardProps) => {
       toast.success("Kombin panoya kopyalandı!");
     }
   };
+
+  // Generate suggestions for additional items based on what's missing
+  const generateAdditionalSuggestions = () => {
+    const categories = outfit.items.map(item => {
+      const lowerItem = item.toLowerCase();
+      if (lowerItem.includes('pantolon') || lowerItem.includes('şort') || lowerItem.includes('etek')) return 'bottom';
+      if (lowerItem.includes('tişört') || lowerItem.includes('gömlek') || lowerItem.includes('kazak') || lowerItem.includes('sweatshirt')) return 'top';
+      if (lowerItem.includes('ayakkabı') || lowerItem.includes('spor') || lowerItem.includes('bot')) return 'shoes';
+      if (lowerItem.includes('ceket') || lowerItem.includes('blazer') || lowerItem.includes('mont')) return 'outerwear';
+      return 'accessory';
+    });
+
+    const suggestions = [];
+    
+    // Suggest shoes if missing
+    if (!categories.includes('shoes')) {
+      suggestions.push('Beyaz düz sneakers', 'Siyah klasik ayakkabı');
+    }
+    
+    // Suggest accessories
+    if (outfit.occasion === 'work' || outfit.occasion === 'dinner') {
+      suggestions.push('Kahverengi saat', 'Siyah kemer');
+    } else {
+      suggestions.push('Günlük saat', 'Rahat kemer');
+    }
+    
+    // Suggest outerwear if missing and weather is cool/cold
+    if (!categories.includes('outerwear')) {
+      suggestions.push('Hafif ceket', 'Denim ceket');
+    }
+    
+    // Suggest bag
+    if (outfit.occasion === 'work') {
+      suggestions.push('Siyah çanta');
+    } else if (outfit.occasion === 'casual' || outfit.occasion === 'shopping') {
+      suggestions.push('Günlük çanta', 'Sırt çantası');
+    }
+
+    return suggestions.slice(0, 3); // Limit to 3 suggestions
+  };
+
+  const additionalSuggestions = generateAdditionalSuggestions();
 
   return (
     <Card className="bg-white border-0 shadow-sm hover:shadow-lg transition-all duration-300 rounded-2xl overflow-hidden">
@@ -158,6 +201,21 @@ const OutfitCard = ({ outfit, onSave }: OutfitCardProps) => {
             </div>
           </div>
 
+          {/* Additional Suggestions */}
+          {additionalSuggestions.length > 0 && (
+            <div className="space-y-2">
+              <h4 className="text-base font-semibold text-gray-900">Bu kombine eklenebilecekler:</h4>
+              <div className="space-y-1">
+                {additionalSuggestions.map((suggestion, index) => (
+                  <div key={index} className="text-sm text-gray-500 flex items-center">
+                    <div className="w-2 h-2 bg-gray-300 rounded-full mr-3"></div>
+                    {suggestion}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Styling Tips - Only show if available and not in English */}
           {outfit.styling_tips && !outfit.styling_tips.toLowerCase().includes('this outfit') && (
             <div className="bg-blue-50 rounded-xl p-4">
@@ -179,3 +237,4 @@ const OutfitCard = ({ outfit, onSave }: OutfitCardProps) => {
 };
 
 export default OutfitCard;
+

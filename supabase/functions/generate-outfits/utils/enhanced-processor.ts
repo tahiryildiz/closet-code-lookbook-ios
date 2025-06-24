@@ -1,4 +1,3 @@
-
 export const processValidatedOutfits = async (
   outfits: any[],
   wardrobeItems: any[],
@@ -378,8 +377,7 @@ Focus on accuracy to the actual wardrobe items described.`;
         prompt: prompt,
         n: 1,
         size: '1024x1536',
-        quality: 'high',
-        response_format: 'b64_json'
+        quality: 'high'
       }),
     });
 
