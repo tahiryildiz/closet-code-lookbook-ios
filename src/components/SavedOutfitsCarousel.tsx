@@ -28,7 +28,7 @@ const SavedOutfitsCarousel = ({ outfits }: SavedOutfitsCarouselProps) => {
           <div
             key={outfit.id}
             className="flex-shrink-0 w-32"
-            onClick={() => navigate('/outfits')}
+            onClick={() => navigate('/saved-outfits')}
           >
             <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-sm rounded-2xl cursor-pointer hover:shadow-md transition-all duration-200 hover:scale-105">
               <CardContent className="p-3">

@@ -133,9 +133,32 @@ export const processValidatedOutfits = async (
 
     console.log(`Validation result for outfit "${outfit.name}": ${validationErrors.length === 0 ? 'VALID' : 'INVALID'}`);
     
-    // Be strict - only accept outfits with ALL valid items
-    if (validItems.length >= 3 && validationErrors.length === 0) {
-      console.log(`✅ Outfit ${i + 1} ACCEPTED (${validItems.length} valid items, ${validationErrors.length} invalid)`);
+    // Check if outfit has both üst (top) and alt (bottom) parts
+    const hasTop = validItems.some(item => {
+      const lowerItem = item.toLowerCase();
+      return lowerItem.includes('tişört') || lowerItem.includes('gömlek') || 
+             lowerItem.includes('kazak') || lowerItem.includes('sweatshirt') ||
+             lowerItem.includes('bluz') || lowerItem.includes('crop') ||
+             lowerItem.includes('tank') || lowerItem.includes('polo');
+    });
+
+    const hasBottom = validItems.some(item => {
+      const lowerItem = item.toLowerCase();
+      return lowerItem.includes('pantolon') || lowerItem.includes('şort') || 
+             lowerItem.includes('etek') || lowerItem.includes('jean') ||
+             lowerItem.includes('eşofman') || lowerItem.includes('pijama');
+    });
+
+    if (!hasTop) {
+      validationErrors.push('INVALID: Outfit missing üst (top) clothing item');
+    }
+    if (!hasBottom) {
+      validationErrors.push('INVALID: Outfit missing alt (bottom) clothing item');
+    }
+
+    // Be strict - only accept outfits with ALL valid items AND both top and bottom
+    if (validItems.length >= 2 && validationErrors.length === 0 && hasTop && hasBottom) {
+      console.log(`✅ Outfit ${i + 1} ACCEPTED (${validItems.length} valid items, has both üst and alt)`);
       
       // Create Turkish outfit name and complete styling tips
       const turkishOutfitName = generateTurkishOutfitName(occasion, i + 1);
@@ -154,6 +177,7 @@ export const processValidatedOutfits = async (
     } else {
       console.log(`❌ Outfit ${i + 1} REJECTED:`);
       console.log(`Valid items (${validItems.length}):`, validItems);
+      console.log(`Has top: ${hasTop}, Has bottom: ${hasBottom}`);
       console.log(`Invalid items (${validationErrors.length}):`, validationErrors);
     }
   }
