@@ -54,19 +54,21 @@ const WeatherCard = () => {
   };
 
   return (
-    <Card className="bg-gradient-to-r from-blue-500 to-purple-600 text-white border-0 shadow-xl rounded-2xl overflow-hidden">
-      <CardContent className="p-6">
+    <Card className="bg-gradient-to-br from-blue-500 via-blue-600 to-purple-600 text-white border-0 shadow-lg rounded-3xl overflow-hidden">
+      <CardContent className="p-8">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            {getWeatherIcon(weather.condition)}
+          <div className="flex items-center space-x-6">
+            <div className="bg-white/20 rounded-2xl p-4 backdrop-blur-sm">
+              {getWeatherIcon(weather.condition)}
+            </div>
             <div>
-              <h3 className="text-3xl font-bold">{weather.temp}°C</h3>
-              <p className="text-white/90 text-base">{getWeatherText(weather.condition)}</p>
+              <h3 className="text-4xl font-bold mb-1">{weather.temp}°C</h3>
+              <p className="text-white/90 text-lg font-medium">{getWeatherText(weather.condition)}</p>
             </div>
           </div>
           <div className="text-right">
-            <p className="text-white/90 text-base font-medium">{weather.location}</p>
-            <p className="text-white/70 text-sm">Bugün</p>
+            <p className="text-white font-semibold text-lg">{weather.location}</p>
+            <p className="text-white/80 text-base">Bugün</p>
           </div>
         </div>
       </CardContent>

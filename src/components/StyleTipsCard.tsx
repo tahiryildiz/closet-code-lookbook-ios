@@ -1,6 +1,6 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Sparkles } from "lucide-react";
+import { Sparkles, Lightbulb } from "lucide-react";
 import { useState, useEffect } from "react";
 
 const StyleTipsCard = () => {
@@ -24,17 +24,31 @@ const StyleTipsCard = () => {
   }, []);
 
   return (
-    <Card className="bg-gradient-to-r from-purple-100 to-pink-100 border-0 shadow-lg rounded-2xl overflow-hidden">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-lg font-semibold text-gray-900 flex items-center">
-          <Sparkles className="h-6 w-6 mr-3 text-purple-600" />
+    <Card className="bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-100 shadow-sm rounded-3xl overflow-hidden">
+      <CardHeader className="px-6 pt-6 pb-4">
+        <CardTitle className="text-xl font-bold text-gray-900 flex items-center">
+          <div className="bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl p-3 mr-4">
+            <Lightbulb className="h-6 w-6 text-white" />
+          </div>
           Günün Stil İpucu
         </CardTitle>
       </CardHeader>
-      <CardContent className="pt-0">
-        <p className="text-base text-gray-700 leading-relaxed">
-          {styleTips[currentTip]}
-        </p>
+      <CardContent className="px-6 pb-6">
+        <div className="bg-white/60 rounded-2xl p-6 backdrop-blur-sm">
+          <p className="text-gray-800 text-lg leading-relaxed font-medium">
+            {styleTips[currentTip]}
+          </p>
+        </div>
+        <div className="flex justify-center mt-4 space-x-2">
+          {styleTips.map((_, index) => (
+            <div
+              key={index}
+              className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                index === currentTip ? 'bg-purple-500' : 'bg-purple-200'
+              }`}
+            />
+          ))}
+        </div>
       </CardContent>
     </Card>
   );
