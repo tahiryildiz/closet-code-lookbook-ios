@@ -1,16 +1,15 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { Wand2, Shirt, Heart } from "lucide-react";
+import { Heart, Shirt, Wand2 } from "lucide-react";
 import RecentOutfitsCarousel from "@/components/RecentOutfitsCarousel";
 import SavedOutfitsCarousel from "@/components/SavedOutfitsCarousel";
 import RecentItemsCarousel from "@/components/RecentItemsCarousel";
-import WeatherRecommendations from "@/components/WeatherRecommendations";
+import WeatherCard from "@/components/WeatherCard";
 import StyleTipsCard from "@/components/StyleTipsCard";
-import FashionFactCard from "@/components/FashionFactCard";
+import WeatherRecommendations from "@/components/WeatherRecommendations";
 
 interface WardrobeItem {
   id: string;
@@ -31,6 +30,7 @@ interface Outfit {
   generated_image?: string;
   reference_images?: string[];
   clothing_item_ids?: string[];
+  image_url?: string;
 }
 
 interface SavedOutfit {
@@ -52,7 +52,6 @@ const Index = () => {
   const [recentOutfits, setRecentOutfits] = useState([]);
   const [savedOutfits, setSavedOutfits] = useState([]);
   const [recentItems, setRecentItems] = useState([]);
-  const [itemCount, setItemCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -70,7 +69,6 @@ const Index = () => {
 
         if (items) {
           setRecentItems(items);
-          setItemCount(items.length);
         }
 
         // Fetch recent outfits (non-saved ones for recent section)
@@ -218,7 +216,7 @@ const Index = () => {
           <div className="text-left">
             <h1 className="text-xl md:text-2xl font-bold text-gray-900">Ana Sayfa</h1>
             <p className="text-gray-500 text-sm md:text-base mt-1">
-              {itemCount > 0 ? `${itemCount} kıyafet` : 'Gardırobunuzu oluşturun'}
+              Hoş Geldiniz
             </p>
           </div>
         </div>
@@ -226,25 +224,8 @@ const Index = () => {
 
       {/* Content */}
       <div className="px-4 md:px-6 py-6 space-y-6">
-        {/* Action Buttons */}
-        <div className="grid grid-cols-2 gap-4">
-          <Button
-            onClick={() => navigate('/outfits')}
-            className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-4 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300"
-          >
-            <Wand2 className="h-5 w-5 mr-2" />
-            Kombin Oluştur
-          </Button>
-          
-          <Button
-            onClick={() => navigate('/wardrobe')}
-            variant="outline"
-            className="border-2 border-gray-200 hover:border-blue-300 hover:bg-blue-50 font-semibold py-4 rounded-2xl transition-all duration-300"
-          >
-            <Shirt className="h-5 w-5 mr-2" />
-            Gardırop
-          </Button>
-        </div>
+        {/* Weather Card */}
+        <WeatherCard />
 
         {/* Weather Recommendations */}
         <WeatherRecommendations />
@@ -306,9 +287,6 @@ const Index = () => {
             <SavedOutfitsCarousel outfits={savedOutfits} />
           </div>
         )}
-
-        {/* Fashion Fact */}
-        <FashionFactCard />
       </div>
     </div>
   );
