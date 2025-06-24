@@ -91,20 +91,20 @@ const SavedOutfits = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 pb-20">
-        <div className="bg-gradient-to-br from-blue-900 to-blue-800 text-white">
-          <div className="px-6 pt-12 pb-8">
+        <div className="bg-white border-b border-gray-200">
+          <div className="px-6 pt-14 pb-6">
             <div className="flex items-center mb-4">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => navigate('/')}
-                className="text-white hover:bg-white/10 mr-3"
+                className="text-blue-500 hover:bg-blue-50 mr-3 -ml-2"
               >
                 <ArrowLeft className="h-5 w-5" />
               </Button>
               <div>
-                <h1 className="text-2xl font-medium">Kaydedilen Kombinler</h1>
-                <p className="text-white/80 text-base mt-1">Favori kombinleriniz</p>
+                <h1 className="text-2xl font-bold text-gray-900">Kaydedilen Kombinler</h1>
+                <p className="text-gray-500 text-base mt-1">Favori kombinleriniz</p>
               </div>
             </div>
           </div>
@@ -118,20 +118,20 @@ const SavedOutfits = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
-      <div className="bg-gradient-to-br from-blue-900 to-blue-800 text-white">
-        <div className="px-6 pt-12 pb-8">
+      <div className="bg-white border-b border-gray-200">
+        <div className="px-6 pt-14 pb-6">
           <div className="flex items-center mb-4">
             <Button
               variant="ghost"
               size="sm"
               onClick={() => navigate('/')}
-              className="text-white hover:bg-white/10 mr-3"
+              className="text-blue-500 hover:bg-blue-50 mr-3 -ml-2"
             >
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div>
-              <h1 className="text-2xl font-medium">Kaydedilen Kombinler</h1>
-              <p className="text-white/80 text-base mt-1">
+              <h1 className="text-2xl font-bold text-gray-900">Kaydedilen Kombinler</h1>
+              <p className="text-gray-500 text-base mt-1">
                 {savedOutfits.length} favori kombin
               </p>
             </div>

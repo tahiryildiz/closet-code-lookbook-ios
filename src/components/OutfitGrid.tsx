@@ -53,7 +53,7 @@ const OutfitGrid = ({ outfits, onSave }: OutfitGridProps) => {
               : 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=500&fit=crop');
 
         return (
-          <Card key={outfit.id || index} className="bg-white border-0 shadow-sm hover:shadow-lg transition-all duration-300 rounded-2xl overflow-hidden">
+          <Card key={outfit.id || index} className="bg-white border-gray-200 shadow-sm hover:shadow-md transition-all duration-300 rounded-xl overflow-hidden">
             <CardContent className="p-0">
               <div className="relative aspect-[4/5] overflow-hidden">
                 {outfit.reference_images && outfit.reference_images.length > 1 ? (
@@ -89,7 +89,7 @@ const OutfitGrid = ({ outfits, onSave }: OutfitGridProps) => {
                   />
                 )}
                 
-                <div className="absolute top-2 right-2 flex space-x-1">
+                <div className="absolute top-3 right-3 flex space-x-2">
                   {onSave && (
                     <Button 
                       size="sm" 
@@ -118,13 +118,13 @@ const OutfitGrid = ({ outfits, onSave }: OutfitGridProps) => {
                 </div>
               </div>
 
-              <div className="p-3">
-                <h3 className="font-semibold text-sm text-gray-900 mb-1 truncate">{outfit.name}</h3>
-                <p className="text-xs text-gray-500 mb-2">
+              <div className="p-4">
+                <h3 className="font-semibold text-base text-gray-900 mb-1 truncate">{outfit.name}</h3>
+                <p className="text-sm text-gray-500 mb-2">
                   {outfit.occasion || 'Kombin'} • {outfit.items?.length || 0} parça
                 </p>
                 {outfit.items && outfit.items.length > 0 && (
-                  <div className="text-xs text-gray-600">
+                  <div className="text-sm text-gray-600">
                     {outfit.items.slice(0, 2).join(', ')}
                     {outfit.items.length > 2 && '...'}
                   </div>

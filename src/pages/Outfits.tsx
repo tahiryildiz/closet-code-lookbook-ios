@@ -6,11 +6,11 @@ const Outfits = () => {
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       {/* Header */}
-      <div className="bg-gradient-to-br from-blue-900 to-blue-800 text-white">
-        <div className="px-6 pt-12 pb-8">
+      <div className="bg-white border-b border-gray-200">
+        <div className="px-6 pt-14 pb-6">
           <div className="text-left">
-            <h1 className="text-2xl font-medium">Kombinler</h1>
-            <p className="text-white/80 text-base mt-1">AI destekli kombin önerileri</p>
+            <h1 className="text-2xl font-bold text-gray-900">Kombinler</h1>
+            <p className="text-gray-500 text-base mt-1">AI destekli kombin önerileri</p>
           </div>
         </div>
       </div>
