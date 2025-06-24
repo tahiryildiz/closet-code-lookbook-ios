@@ -163,7 +163,137 @@ export const processValidatedOutfits = async (
   }
 
   console.log(`✅ ${validatedOutfits.length} outfits validated successfully`);
-  return validatedOutfits;
+  
+  // NOW GENERATE FLATLAY IMAGES FOR VALIDATED OUTFITS
+  console.log('🎨 Starting flatlay image generation for validated outfits...');
+  
+  const outfitsWithImages = await Promise.all(
+    validatedOutfits.map(async (outfit, index) => {
+      console.log(`🖼️ Generating flatlay image for outfit ${index + 1}: "${outfit.name}"`);
+      
+      try {
+        // Generate professional flatlay image using OpenAI
+        const generatedImageUrl = await generateOutfitFlatlay(
+          outfit, 
+          wardrobeItems, 
+          occasion, 
+          timeOfDay, 
+          weather, 
+          openAIApiKey, 
+          index
+        );
+        
+        if (generatedImageUrl) {
+          console.log(`✅ Successfully generated flatlay image for outfit ${index + 1}`);
+          return {
+            ...outfit,
+            generated_image: generatedImageUrl,
+            composition_type: 'professional_flatlay_vertical',
+            aspect_ratio: '1024x1536',
+            reference_images: [], // Clear any reference images since we have AI-generated flatlay
+          };
+        } else {
+          console.log(`⚠️ Failed to generate flatlay image for outfit ${index + 1}, keeping without image`);
+          return outfit;
+        }
+      } catch (error) {
+        console.error(`❌ Error generating flatlay for outfit ${index + 1}:`, error);
+        return outfit;
+      }
+    })
+  );
+  
+  console.log(`🎨 Flatlay generation complete. ${outfitsWithImages.filter(o => o.generated_image).length} outfits have images`);
+  
+  return outfitsWithImages;
+};
+
+const generateOutfitFlatlay = async (
+  outfit: any,
+  wardrobeItems: any[],
+  occasion: string,
+  timeOfDay: string,
+  weather: string,
+  openAIApiKey: string,
+  index: number
+): Promise<string | null> => {
+  console.log(`🎨 [generateOutfitFlatlay] Starting image generation for outfit: ${outfit.name}`);
+  
+  if (!openAIApiKey) {
+    console.error('❌ [generateOutfitFlatlay] No OpenAI API key provided');
+    return null;
+  }
+
+  try {
+    // Create detailed description for each item in the outfit
+    const itemDescriptions = outfit.items.map((itemName: string) => {
+      const wardrobeItem = wardrobeItems.find(item => item.name === itemName);
+      if (wardrobeItem) {
+        const color = wardrobeItem.primary_color || 'neutral';
+        const material = wardrobeItem.material || wardrobeItem.category;
+        const category = wardrobeItem.subcategory || wardrobeItem.category;
+        return `${color} ${material} ${category}`.toLowerCase();
+      }
+      return itemName.toLowerCase();
+    }).join(', ');
+
+    const prompt = `Create a professional fashion flatlay photograph showing: ${itemDescriptions}. 
+
+Style: Clean, minimalist flatlay composition on white background
+Layout: Vertical orientation (portrait) with clothes arranged as if laid out on a bed or flat surface
+Lighting: Soft, even lighting with no harsh shadows
+Perspective: Top-down view (bird's eye perspective)
+Arrangement: Clothes should be arranged in a styling way that shows how they would be worn together
+Background: Pure white or very light neutral background
+Quality: High-resolution, professional fashion photography style
+
+The outfit is for: ${occasion} occasion, ${timeOfDay} time, ${weather} weather
+Make it look like a professional fashion brand flatlay photo.`;
+
+    console.log(`🤖 [generateOutfitFlatlay] Making OpenAI image generation request...`);
+    console.log(`📝 [generateOutfitFlatlay] Prompt: ${prompt.substring(0, 100)}...`);
+
+    const response = await fetch('https://api.openai.com/v1/images/generations', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openAIApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-image-1',
+        prompt: prompt,
+        n: 1,
+        size: '1024x1536', // Vertical aspect ratio for flatlay
+        quality: 'high',
+        output_format: 'png',
+        background: 'opaque'
+      }),
+    });
+
+    console.log(`📡 [generateOutfitFlatlay] OpenAI Image API response status: ${response.status}`);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`❌ [generateOutfitFlatlay] OpenAI Image API error (${response.status}): ${errorText}`);
+      return null;
+    }
+
+    const data = await response.json();
+    console.log(`✅ [generateOutfitFlatlay] OpenAI Image API response received successfully`);
+
+    if (data.data && data.data[0] && data.data[0].b64_json) {
+      const base64Image = `data:image/png;base64,${data.data[0].b64_json}`;
+      console.log(`🎨 [generateOutfitFlatlay] Successfully generated base64 image (${base64Image.length} characters)`);
+      return base64Image;
+    } else {
+      console.error('❌ [generateOutfitFlatlay] Invalid OpenAI image response structure:', data);
+      return null;
+    }
+
+  } catch (error) {
+    console.error(`❌ [generateOutfitFlatlay] Error in image generation:`, error);
+    return null;
+  }
 };
 
 const createWardrobeBasedOutfits = (wardrobeItems: any[], occasion: string, timeOfDay: string, weather: string) => {
