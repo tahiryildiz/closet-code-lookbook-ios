@@ -160,8 +160,8 @@ const Index = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 pb-20">
-        <div className="px-3 pt-16 pb-6">
-          <div className="animate-pulse space-y-6">
+        <div className="px-4 pt-16 pb-6">
+          <div className="animate-pulse space-y-4">
             <div className="h-8 bg-gray-200 rounded-xl w-48"></div>
             <div className="h-20 bg-gray-200 rounded-2xl"></div>
             <div className="h-32 bg-gray-200 rounded-2xl"></div>
@@ -173,32 +173,32 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
-      {/* Header */}
-      <div className="px-3 pt-16 pb-8">
+      {/* Header with responsive padding */}
+      <div className="px-4 pt-16 pb-6">
         <div className="ios-fade-in">
-          <h1 className="text-3xl font-bold text-gray-900 mb-3 leading-tight">{greeting()}</h1>
-          <p className="text-gray-600 text-lg font-medium">Bugün nasıl bir kombin istiyorsun?</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2 leading-tight">{greeting()}</h1>
+          <p className="text-gray-600 text-base md:text-lg font-medium">Bugün nasıl bir kombin istiyorsun?</p>
         </div>
       </div>
 
-      {/* Content with better spacing */}
-      <div className="space-y-5">
+      {/* Content with consistent mobile-first spacing */}
+      <div className="space-y-4">
         {/* Weather Card */}
-        <div className="px-3 ios-fade-in">
+        <div className="px-4 ios-fade-in">
           <WeatherCard />
         </div>
 
         {/* Style Tips Card */}
-        <div className="px-3 ios-fade-in">
+        <div className="px-4 ios-fade-in">
           <StyleTipsCard />
         </div>
 
         {/* Today's Weather Suggestions */}
         <div className="ios-fade-in">
-          <Card className="bg-white border-0 shadow-sm mx-3 rounded-2xl overflow-hidden">
-            <CardHeader className="px-6 pt-6 pb-4">
+          <Card className="bg-white border-0 shadow-sm mx-4 rounded-2xl overflow-hidden">
+            <CardHeader className="px-4 md:px-6 pt-4 md:pt-6 pb-3 md:pb-4">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-xl font-bold text-gray-900">Bugünkü Hava İçin Öneriler</CardTitle>
+                <CardTitle className="text-lg md:text-xl font-bold text-gray-900">Bugünkü Hava İçin Öneriler</CardTitle>
                 <Button
                   variant="ghost"
                   size="sm"
@@ -210,17 +210,17 @@ const Index = () => {
                 </Button>
               </div>
             </CardHeader>
-            <CardContent className="px-0 pb-6">
+            <CardContent className="px-0 pb-4 md:pb-6">
               {recentItems.length > 0 ? (
                 <RecentItemsCarousel items={recentItems.slice(0, 6)} />
               ) : (
-                <div className="text-center py-12 px-6">
-                  <p className="text-gray-500 text-lg mb-6">Henüz gardırobunda ürün yok</p>
+                <div className="text-center py-8 md:py-12 px-4 md:px-6">
+                  <p className="text-gray-500 text-base md:text-lg mb-4 md:mb-6">Henüz gardırobunda ürün yok</p>
                   <Button 
                     onClick={() => navigate('/wardrobe')}
-                    className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-3 rounded-xl text-base"
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 md:px-8 py-2.5 md:py-3 rounded-xl text-sm md:text-base"
                   >
-                    <Plus className="h-5 w-5 mr-2" />
+                    <Plus className="h-4 md:h-5 w-4 md:w-5 mr-2" />
                     İlk Ürünü Ekle
                   </Button>
                 </div>
@@ -232,10 +232,10 @@ const Index = () => {
         {/* Recent Items */}
         {recentItems.length > 0 && (
           <div className="ios-fade-in">
-            <Card className="bg-white border-0 shadow-sm mx-3 rounded-2xl overflow-hidden">
-              <CardHeader className="px-6 pt-6 pb-4">
+            <Card className="bg-white border-0 shadow-sm mx-4 rounded-2xl overflow-hidden">
+              <CardHeader className="px-4 md:px-6 pt-4 md:pt-6 pb-3 md:pb-4">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-xl font-bold text-gray-900">Son Eklenen Ürünler</CardTitle>
+                  <CardTitle className="text-lg md:text-xl font-bold text-gray-900">Son Eklenen Ürünler</CardTitle>
                   <Button
                     variant="ghost"
                     size="sm"
@@ -247,7 +247,7 @@ const Index = () => {
                   </Button>
                 </div>
               </CardHeader>
-              <CardContent className="px-0 pb-6">
+              <CardContent className="px-0 pb-4 md:pb-6">
                 <RecentItemsCarousel items={recentItems} />
               </CardContent>
             </Card>
@@ -257,10 +257,10 @@ const Index = () => {
         {/* Recent Outfits */}
         {recentOutfits.length > 0 && (
           <div className="ios-fade-in">
-            <Card className="bg-white border-0 shadow-sm mx-3 rounded-2xl overflow-hidden">
-              <CardHeader className="px-6 pt-6 pb-4">
+            <Card className="bg-white border-0 shadow-sm mx-4 rounded-2xl overflow-hidden">
+              <CardHeader className="px-4 md:px-6 pt-4 md:pt-6 pb-3 md:pb-4">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-xl font-bold text-gray-900">Son Kombinler</CardTitle>
+                  <CardTitle className="text-lg md:text-xl font-bold text-gray-900">Son Kombinler</CardTitle>
                   <Button
                     variant="ghost"
                     size="sm"
@@ -272,7 +272,7 @@ const Index = () => {
                   </Button>
                 </div>
               </CardHeader>
-              <CardContent className="px-0 pb-6">
+              <CardContent className="px-0 pb-4 md:pb-6">
                 <RecentOutfitsCarousel outfits={recentOutfits} />
               </CardContent>
             </Card>
@@ -282,10 +282,10 @@ const Index = () => {
         {/* Saved Outfits */}
         {savedOutfits.length > 0 && (
           <div className="ios-fade-in">
-            <Card className="bg-white border-0 shadow-sm mx-3 rounded-2xl overflow-hidden">
-              <CardHeader className="px-6 pt-6 pb-4">
+            <Card className="bg-white border-0 shadow-sm mx-4 rounded-2xl overflow-hidden">
+              <CardHeader className="px-4 md:px-6 pt-4 md:pt-6 pb-3 md:pb-4">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-xl font-bold text-gray-900">Kaydedilen Kombinler</CardTitle>
+                  <CardTitle className="text-lg md:text-xl font-bold text-gray-900">Kaydedilen Kombinler</CardTitle>
                   <Button
                     variant="ghost"
                     size="sm"
@@ -297,7 +297,7 @@ const Index = () => {
                   </Button>
                 </div>
               </CardHeader>
-              <CardContent className="px-0 pb-6">
+              <CardContent className="px-0 pb-4 md:pb-6">
                 <SavedOutfitsCarousel outfits={savedOutfits} />
               </CardContent>
             </Card>

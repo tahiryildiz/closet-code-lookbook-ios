@@ -5,7 +5,7 @@ import OutfitGenerator from "@/components/OutfitGenerator";
 const Outfits = () => {
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
-      {/* Header - Full width with proper padding */}
+      {/* Header - Responsive padding */}
       <div className="bg-white border-b border-gray-200">
         <div className="px-4 pt-14 pb-4">
           <div className="text-left">
@@ -15,7 +15,7 @@ const Outfits = () => {
         </div>
       </div>
 
-      {/* Content - Use full width with 16px margins */}
+      {/* Content - Consistent mobile-first spacing */}
       <div className="px-4 py-4">
         <OutfitGenerator />
       </div>

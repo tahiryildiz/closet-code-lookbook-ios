@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -99,7 +98,7 @@ const SavedOutfits = () => {
     return (
       <div className="min-h-screen bg-gray-50 pb-20">
         <div className="bg-white border-b border-gray-200">
-          <div className="px-6 pt-14 pb-6">
+          <div className="px-4 md:px-6 pt-14 pb-4 md:pb-6">
             <div className="flex items-center mb-4">
               <Button
                 variant="ghost"
@@ -110,8 +109,8 @@ const SavedOutfits = () => {
                 <ArrowLeft className="h-5 w-5" />
               </Button>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Kaydedilen Kombinler</h1>
-                <p className="text-gray-500 text-base mt-1">Favori kombinleriniz</p>
+                <h1 className="text-xl md:text-2xl font-bold text-gray-900">Kaydedilen Kombinler</h1>
+                <p className="text-gray-500 text-sm md:text-base mt-1">Favori kombinleriniz</p>
               </div>
             </div>
           </div>
@@ -126,7 +125,7 @@ const SavedOutfits = () => {
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       <div className="bg-white border-b border-gray-200">
-        <div className="px-6 pt-14 pb-6">
+        <div className="px-4 md:px-6 pt-14 pb-4 md:pb-6">
           <div className="flex items-center mb-4">
             <Button
               variant="ghost"
@@ -137,8 +136,8 @@ const SavedOutfits = () => {
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Kaydedilen Kombinler</h1>
-              <p className="text-gray-500 text-base mt-1">
+              <h1 className="text-xl md:text-2xl font-bold text-gray-900">Kaydedilen Kombinler</h1>
+              <p className="text-gray-500 text-sm md:text-base mt-1">
                 {savedOutfits.length} favori kombin
               </p>
             </div>
@@ -146,7 +145,7 @@ const SavedOutfits = () => {
         </div>
       </div>
 
-      <div className="px-4 py-6">
+      <div className="px-4 py-4 md:py-6">
         <OutfitGrid outfits={formattedOutfits} />
       </div>
     </div>
