@@ -66,8 +66,15 @@ export const useSubscription = () => {
       const isToday = profile.last_generation_date === today;
       const dailyGenerations = isToday ? (profile.daily_outfit_generations || 0) : 0;
 
-      const totalItemsAllowed = 5 + (profile.ad_bonus_items || 0);
-      const totalOutfitsAllowed = 3 + (profile.ad_bonus_generations || 0);
+      // Calculate item limits
+      const baseItemLimit = 5;
+      const itemAdBonus = (profile.last_ad_bonus_date === today) ? (profile.ad_bonus_items || 0) : 0;
+      const totalItemsAllowed = baseItemLimit + Math.min(itemAdBonus, 10); // Cap ad bonus at 10
+
+      // Calculate outfit limits - daily reset
+      const baseOutfitLimit = 3;
+      const outfitAdBonus = (profile.last_ad_bonus_date === today) ? (profile.ad_bonus_generations || 0) : 0;
+      const totalOutfitsAllowed = baseOutfitLimit + Math.min(outfitAdBonus, 5); // Cap ad bonus at 5
 
       setLimits({
         canAddItem: (itemCount || 0) < totalItemsAllowed,
@@ -91,11 +98,20 @@ export const useSubscription = () => {
       if (type === 'outfit') {
         const today = new Date().toISOString().split('T')[0];
         
+        // Get current profile to calculate new generation count
+        const { data: profile } = await supabase
+          .from('user_profiles')
+          .select('daily_outfit_generations, last_generation_date')
+          .eq('id', user.id)
+          .single();
+
+        const isToday = profile?.last_generation_date === today;
+        const currentGenerations = isToday ? (profile?.daily_outfit_generations || 0) : 0;
+        
         const { error } = await supabase
           .from('user_profiles')
           .update({
-            daily_outfit_generations: limits.subscriptionType === 'free' ? 
-              (limits.remainingOutfits === 3 ? 1 : (3 - limits.remainingOutfits + 1)) : 0,
+            daily_outfit_generations: currentGenerations + 1,
             last_generation_date: today
           })
           .eq('id', user.id);
@@ -125,16 +141,24 @@ export const useSubscription = () => {
       // Get current profile to calculate new bonus amounts
       const { data: profile } = await supabase
         .from('user_profiles')
-        .select('ad_bonus_items, ad_bonus_generations')
+        .select('ad_bonus_items, ad_bonus_generations, last_ad_bonus_date')
         .eq('id', user.id)
         .single();
 
-      const currentAdBonusItems = profile?.ad_bonus_items || 0;
-      const currentAdBonusGenerations = profile?.ad_bonus_generations || 0;
+      // Reset bonuses if it's a new day
+      const isToday = profile?.last_ad_bonus_date === today;
+      const currentAdBonusItems = isToday ? (profile?.ad_bonus_items || 0) : 0;
+      const currentAdBonusGenerations = isToday ? (profile?.ad_bonus_generations || 0) : 0;
 
       const updateData = type === 'items' 
-        ? { ad_bonus_items: currentAdBonusItems + 3, last_ad_bonus_date: today }
-        : { ad_bonus_generations: currentAdBonusGenerations + 1, last_ad_bonus_date: today };
+        ? { 
+            ad_bonus_items: Math.min(currentAdBonusItems + 3, 10), // Cap at 10
+            last_ad_bonus_date: today 
+          }
+        : { 
+            ad_bonus_generations: Math.min(currentAdBonusGenerations + 1, 5), // Cap at 5
+            last_ad_bonus_date: today 
+          };
 
       const { error } = await supabase
         .from('user_profiles')
