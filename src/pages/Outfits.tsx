@@ -1,10 +1,7 @@
-
 import { useState } from "react";
 import OutfitGenerator from "@/components/OutfitGenerator";
-
 const Outfits = () => {
-  return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+  return <div className="min-h-screen bg-gray-50 pb-20">
       {/* Header - Responsive padding */}
       <div className="bg-white border-b border-gray-200">
         <div className="px-4 pt-14 pb-4">
@@ -16,11 +13,9 @@ const Outfits = () => {
       </div>
 
       {/* Content - Consistent mobile-first spacing */}
-      <div className="px-4 py-4">
+      <div className="py-4 px-0">
         <OutfitGenerator />
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default Outfits;
