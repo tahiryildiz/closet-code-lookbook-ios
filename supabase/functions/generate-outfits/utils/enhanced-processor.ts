@@ -133,13 +133,20 @@ export const processValidatedOutfits = async (
 
     console.log(`Validation result for outfit "${outfit.name}": ${validationErrors.length === 0 ? 'VALID' : 'INVALID'}`);
     
+    // Enhanced validation to prevent conflicting items
+    const hasConflictingTops = checkForConflictingTops(validItems);
+    if (hasConflictingTops) {
+      validationErrors.push('INVALID: Outfit has conflicting top layers (e.g., tişört with kazak)');
+    }
+    
     // Check if outfit has both üst (top) and alt (bottom) parts
     const hasTop = validItems.some(item => {
       const lowerItem = item.toLowerCase();
       return lowerItem.includes('tişört') || lowerItem.includes('gömlek') || 
              lowerItem.includes('kazak') || lowerItem.includes('sweatshirt') ||
              lowerItem.includes('bluz') || lowerItem.includes('crop') ||
-             lowerItem.includes('tank') || lowerItem.includes('polo');
+             lowerItem.includes('tank') || lowerItem.includes('polo') ||
+             lowerItem.includes('blazer') || lowerItem.includes('ceket');
     });
 
     const hasBottom = validItems.some(item => {
@@ -162,7 +169,8 @@ export const processValidatedOutfits = async (
       
       // Create Turkish outfit name and complete styling tips
       const turkishOutfitName = generateTurkishOutfitName(occasion, i + 1);
-      const completeTurkishStylingTip = generateCompleteTurkishStylingTip(outfit, occasion, timeOfDay, weather, validItems.length);
+      const completeTurkishStylingTip = generateCompleteTurkishStylingTip(outfit, occasion, timeOfDay, weather, validItems);
+      const variedAccessories = generateVariedAccessories(wardrobeItems, i);
       
       const validatedOutfit = {
         ...outfit,
@@ -171,6 +179,7 @@ export const processValidatedOutfits = async (
         item_ids: validItemIds,
         confidence: Math.min(outfit.confidence || 8, 9), // Cap confidence for validated outfits
         styling_tips: completeTurkishStylingTip,
+        accessories: variedAccessories,
       };
       
       validatedOutfits.push(validatedOutfit);
@@ -256,6 +265,33 @@ export const processValidatedOutfits = async (
   return outfitsWithImages;
 };
 
+// New function to check for conflicting tops
+const checkForConflictingTops = (items: string[]): boolean => {
+  const lowerItems = items.map(item => item.toLowerCase());
+  
+  // Check for tişört + kazak/sweatshirt combination
+  const hasTshirt = lowerItems.some(item => item.includes('tişört'));
+  const hasKazakOrSweatshirt = lowerItems.some(item => 
+    item.includes('kazak') || item.includes('sweatshirt')
+  );
+  
+  // Check for multiple shirt types
+  const hasShirt = lowerItems.some(item => item.includes('gömlek'));
+  const hasBlouse = lowerItems.some(item => item.includes('bluz'));
+  
+  // If tişört is with kazak/sweatshirt, it's conflicting (tişört won't be visible)
+  if (hasTshirt && hasKazakOrSweatshirt) {
+    return true;
+  }
+  
+  // If multiple shirt types, it's conflicting
+  if ((hasTshirt && hasShirt) || (hasShirt && hasBlouse) || (hasTshirt && hasBlouse)) {
+    return true;
+  }
+  
+  return false;
+};
+
 const generateTurkishOutfitName = (occasion: string, index: number): string => {
   const occasionMap: { [key: string]: string[] } = {
     'work': ['İş Kombinasyonu', 'Ofis Stili', 'Profesyonel Görünüm'],
@@ -271,7 +307,7 @@ const generateTurkishOutfitName = (occasion: string, index: number): string => {
   return names[index % names.length] + ` ${index}`;
 };
 
-const generateCompleteTurkishStylingTip = (outfit: any, occasion: string, timeOfDay: string, weather: string, itemCount: number): string => {
+const generateCompleteTurkishStylingTip = (outfit: any, occasion: string, timeOfDay: string, weather: string, validItems: string[]): string => {
   const occasionMap: { [key: string]: string } = {
     'work': 'iş',
     'business': 'iş',
@@ -305,14 +341,104 @@ const generateCompleteTurkishStylingTip = (outfit: any, occasion: string, timeOf
   const turkishTime = timeMap[timeOfDay.toLowerCase()] || timeOfDay;
   const turkishWeather = weatherMap[weather.toLowerCase()] || weather;
 
+  // Create item-specific styling tips
+  const itemCategories = categorizeItems(validItems);
+  const stylingAdvice = generateItemSpecificStyling(itemCategories, turkishOccasion, turkishTime, turkishWeather);
+
   const completeTips = [
-    `Bu ${turkishOccasion} kombinasyonu ${turkishTime} vakti için mükemmel bir seçim. ${itemCount} parçanın uyumlu karışımı ile hem rahat hem de şık görüneceksiniz. ${turkishWeather} hava koşulları için ideal olan bu kombin, tarzınızı yansıtırken konforunuzdan da ödün vermez.`,
-    `${turkishTime} vakti için hazırlanmış bu ${turkishOccasion} kombininde renk uyumu ve stil dengesine dikkat edilmiştir. ${turkishWeather} havalar göz önünde bulundurularak seçilen ${itemCount} parça, size özgüven veren şık bir görünüm sağlar.`,
-    `Bu ${itemCount} parçalık kombin ${turkishOccasion} aktiviteleriniz için harika bir tercihtir. ${turkishTime} vakti giyilebilecek bu stil, ${turkishWeather} hava şartlarında kendinizi hem rahat hem de şık hissetmenizi sağlayacak. Klasik ve modern detayların uyumlu birleşimi dikkat çekici.`,
-    `${turkishWeather} hava koşulları için özenle seçilmiş bu ${turkishOccasion} kombinasyonu, ${turkishTime} vakti için ideal bir seçimdir. ${itemCount} parçanın uyumu size zarif ve rahat bir görünüm kazandırırken, tarzınızı da ortaya çıkarır.`
+    `Bu ${turkishOccasion} kombinasyonu ${turkishTime} vakti için harika bir seçim. ${stylingAdvice} ${turkishWeather} hava koşulları için ideal olan bu kombin, hem rahatlık hem de şıklık sunar.`,
+    `${turkishTime} vakti için hazırlanmış bu ${turkishOccasion} kombininde ${stylingAdvice} ${turkishWeather} havalar göz önünde bulundurularak seçilen parçalar, size özgüven veren şık bir görünüm sağlar.`,
+    `Bu ${turkishOccasion} aktiviteleriniz için mükemmel tercihtir. ${stylingAdvice} ${turkishTime} vakti giyilebilecek bu stil, ${turkishWeather} hava şartlarında kendinizi hem rahat hem de şık hissetmenizi sağlayacak.`,
+    `${turkishWeather} hava koşulları için özenle seçilmiş bu ${turkishOccasion} kombinasyonu, ${turkishTime} vakti için ideal. ${stylingAdvice} Tarzınızı ortaya çıkaran bu kombinle günün her anında şık görüneceksiniz.`
   ];
 
   return completeTips[Math.floor(Math.random() * completeTips.length)];
+};
+
+const categorizeItems = (items: string[]) => {
+  const categories = {
+    tops: [],
+    bottoms: [],
+    outerwear: [],
+    shoes: []
+  };
+
+  items.forEach(item => {
+    const lowerItem = item.toLowerCase();
+    if (lowerItem.includes('tişört') || lowerItem.includes('gömlek') || lowerItem.includes('bluz')) {
+      categories.tops.push(item);
+    } else if (lowerItem.includes('kazak') || lowerItem.includes('sweatshirt')) {
+      categories.tops.push(item);
+    } else if (lowerItem.includes('ceket') || lowerItem.includes('blazer')) {
+      categories.outerwear.push(item);
+    } else if (lowerItem.includes('pantolon') || lowerItem.includes('şort') || lowerItem.includes('etek')) {
+      categories.bottoms.push(item);
+    } else if (lowerItem.includes('ayakkabı') || lowerItem.includes('spor')) {
+      categories.shoes.push(item);
+    }
+  });
+
+  return categories;
+};
+
+const generateItemSpecificStyling = (categories: any, occasion: string, time: string, weather: string): string => {
+  const tips = [];
+
+  if (categories.outerwear.length > 0) {
+    tips.push(`${categories.outerwear[0]} ile katmanlı bir görünüm elde ediliyor`);
+  }
+
+  if (categories.tops.length > 0) {
+    const topItem = categories.tops[0].toLowerCase();
+    if (topItem.includes('gömlek')) {
+      tips.push('klasik gömlek şıklığı');
+    } else if (topItem.includes('kazak')) {
+      tips.push('rahat kazak konforu');
+    } else if (topItem.includes('tişört')) {
+      tips.push('sade tişört zarafeti');
+    }
+  }
+
+  if (categories.bottoms.length > 0) {
+    const bottomItem = categories.bottoms[0].toLowerCase();
+    if (bottomItem.includes('pantolon')) {
+      tips.push('düz pantolon ile zarif duruş');
+    } else if (bottomItem.includes('şort')) {
+      tips.push('şort ile yaz rahatlığı');
+    }
+  }
+
+  return tips.join(', ');
+};
+
+const generateVariedAccessories = (wardrobeItems: any[], outfitIndex: number): string[] => {
+  const allAccessories = [
+    'Beyaz düz sneakers',
+    'Siyah klasik ayakkabı', 
+    'Kahverengi saat',
+    'Siyah deri çanta',
+    'Beyaz spor çantası',
+    'Gümüş kolye',
+    'Altın küpe',
+    'Siyah kemer',
+    'Kahverengi deri kemer',
+    'Güneş gözlüğü',
+    'Beyaz şapka',
+    'Siyah eşarp',
+    'Jean ceket',
+    'Trench coat'
+  ];
+
+  // Rotate accessories based on outfit index to ensure variety
+  const startIndex = (outfitIndex * 3) % allAccessories.length;
+  const selectedAccessories = [];
+
+  for (let i = 0; i < 3; i++) {
+    const accessoryIndex = (startIndex + i) % allAccessories.length;
+    selectedAccessories.push(allAccessories[accessoryIndex]);
+  }
+
+  return selectedAccessories;
 };
 
 const generateOutfitFlatlayWithActualItems = async (
@@ -448,8 +574,9 @@ const createWardrobeBasedOutfits = (wardrobeItems: any[], occasion: string, time
         occasion, 
         timeOfDay, 
         weather, 
-        selectedItems.length
+        selectedItems.map(item => item.name)
       );
+      const variedAccessories = generateVariedAccessories(wardrobeItems, i);
 
       const outfit = {
         id: i + 1,
@@ -459,6 +586,7 @@ const createWardrobeBasedOutfits = (wardrobeItems: any[], occasion: string, time
         confidence: 7 + Math.floor(Math.random() * 2),
         styling_tips: completeTurkishStylingTip,
         occasion: occasion,
+        accessories: variedAccessories,
         reference_images: selectedItems.map(item => item.image_url).filter(Boolean)
       };
       

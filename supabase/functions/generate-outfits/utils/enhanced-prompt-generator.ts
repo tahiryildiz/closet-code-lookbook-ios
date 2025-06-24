@@ -11,146 +11,117 @@ export function generateEnhancedPrompt(
 ): string {
   const itemDescriptions = createDetailedWardrobeDescription(wardrobeItems);
   
-  const genderContext = userGender ? `Gender preference: ${userGender}` : '';
+  const genderContext = userGender ? `Cinsiyet tercihi: ${userGender}` : '';
   const stylingTipsDetail = isPremium 
-    ? "Provide comprehensive styling advice including advanced color theory (analogous, complementary, triadic schemes), sophisticated pattern mixing rules, design detail coordination, contrast balancing, and micro-aesthetic cohesion with specific fashion principles (250-350 words)."
-    : "Provide focused styling tips on color coordination, fit balance, pattern mixing basics, and occasion appropriateness (100-150 words).";
+    ? "Renk teorisi, desen karışımları, tasarım koordinasyonu ve stil uyumu hakkında detaylı Türkçe stil ipuçları verin (250-350 kelime)."
+    : "Renk koordinasyonu, kalıp dengesi ve durum uygunluğu hakkında odaklanmış Türkçe stil ipuçları verin (100-150 kelime).";
   
   // Weather-specific clothing guidance
   const weatherGuidance = getWeatherSpecificGuidance(weather);
   const occasionGuidance = getOccasionSpecificGuidance(occasion, timeOfDay);
   
-  return `You are an expert fashion stylist with advanced knowledge of color theory, pattern mixing, design coordination, and visual balance. Create 3 sophisticated outfit combinations from this detailed wardrobe:
+  return `Sen bir uzman moda stilisti ve Türk moda danışmanısın. Bu detaylı gardırop öğelerinden 3 sofistike kombin oluştur:
 
 ${itemDescriptions}
 
-Context:
-- Occasion: ${occasion}
-- Time of day: ${timeOfDay}
-- Weather: ${weather}
+Bağlam:
+- Durum: ${occasion}
+- Günün vakti: ${timeOfDay}
+- Hava durumu: ${weather}
 ${genderContext}
 
-CRITICAL WEATHER REQUIREMENTS:
+KRİTİK HAVA DURUMU GEREKSİNİMLERİ:
 ${weatherGuidance}
 
-OCCASION REQUIREMENTS:
+DURUM GEREKSİNİMLERİ:
 ${occasionGuidance}
 
-ADVANCED STYLING RULES:
+GELİŞMİŞ STİL KURALLARI:
 
-1. COLOR THEORY MASTERY:
-   - Apply advanced color harmony: analogous (adjacent hues), complementary (opposite hues), triadic (120° apart), split-complementary
-   - Consider color temperature: avoid mixing warm and cool tones unless creating intentional contrast
-   - Use neutral colors (black, white, gray, navy, beige) as anchors for bold color combinations
-   - Factor in color tone (light, dark, bright, muted, pastel) for sophisticated coordination
+1. RENK TEORİSİ UZMANLİĞI:
+   - İleri renk uyumu uygula: benzer (komşu tonlar), tamamlayıcı (karşıt tonlar), üçlü uyum
+   - Renk sıcaklığını dikkate al: sıcak ve soğuk tonları bilinçli karışım olmadıkça karıştırma
+   - Nötr renkler (siyah, beyaz, gri, lacivert, bej) cesur renk kombinasyonları için çapa olarak kullan
 
-2. PATTERN MIXING EXPERTISE:
-   - Maximum 2 patterns per outfit with strategic scale contrast (fine + large, medium + large)
-   - Mix pattern types thoughtfully: geometric with organic, or same pattern in different scales
-   - Avoid similar complexity patterns competing for attention
-   - Use solid colors to ground patterned pieces and create visual rest
+2. KATMANLI GÖRÜNÜM İLKELERİ:
+   - ASLA aynı anda hem tişört hem de kazak/sweatshirt önerme (tişört görünmez olur)
+   - Bir üst giyim parçası seç: ya tişört, ya gömlek, ya da kazak/sweatshirt
+   - Ceket/blazer gibi dış giyimler diğer üst giyimlerle kombine edilebilir
+   - Katmanların uyumlu olması ve pratik giyilebilir olması gerekli
 
-3. DESIGN DETAIL COORDINATION:
-   - Balance formality levels across pieces (formal vs casual elements should complement, not clash)
-   - Coordinate necklines and collar styles for upper body harmony in layered looks
-   - Limit decorative elements (ruffles, embroidery, beading) to 1-2 pieces maximum
-   - Consider structural elements (pleats, darts, tailoring) for sophisticated silhouettes
+3. TÜRK MODAMIZDAKİ ÖNEMLİ NOKTALAR:
+   - Her kombinin Türkçe ismi olmalı (örn: "Şık İş Kombinasyonu", "Rahat Günlük Stil")
+   - Stil ipuçları tamamen Türkçe olmalı
+   - Türk giyim kültürüne uygun öneriler sun
 
-4. CONTRAST AND BALANCE:
-   - Create light/dark contrast for visual interest (light top + dark bottom or vice versa)
-   - Balance oversized pieces with fitted counterparts for proportional harmony
-   - Mix textures thoughtfully: smooth with textured, matte with shine
-   - Consider garment weights: heavy materials (wool, denim) with lighter ones (silk, cotton)
+4. AKSESSUARİ ÇEŞİTLİLİĞİ:
+   - Her kombin için farklı aksesuar önerileri sun
+   - Standart "beyaz sneakers, siyah ayakkabı, kahverengi saat" tekrarını kaçın
+   - Çeşitli aksesuar seçenekleri: çanta, takı, kemer, şapka, eşarp, vb.
 
-5. SILHOUETTE SOPHISTICATION:
-   - Combine different fits strategically (structured + flowy, oversized + slim-fit)
-   - Create visual interest through proportion play while maintaining balance
-   - Consider body shape and create flattering lines through fit combinations
-
-6. CONSTRUCTION HARMONY:
-   - Match closure types and design details for coherent aesthetic
-   - Consider button counts and hardware consistency
-   - Factor in lining and construction quality for overall sophistication
-
-7. CONTEXTUAL APPROPRIATENESS:
-   - Ensure all pieces align with weather requirements and event formality
-   - Consider lighting conditions and venue appropriateness
-   - Match lifestyle and practical wearability needs
-
-REQUIREMENTS:
-- Each outfit must include 3-5 items that create a visually cohesive and fashion-forward look
-- All items MUST be from the provided wardrobe (use exact item names)
-- Apply advanced color theory principles in combinations
-- Demonstrate sophisticated pattern mixing when applicable
-- Show design detail coordination and contrast balancing
-- STRICTLY follow weather appropriateness guidelines above
+ZORUNLU GEREKLER:
+- Her kombin 3-5 parça içermeli ve moda-ilerisi görünüm oluşturmalı
+- Tüm parçalar verilen gardıroptan olmalı (tam parça isimlerini kullan)
+- KESİNLİKLE hava koşulları rehberini takip et
 - ${stylingTipsDetail}
-- Rate outfit confidence based on color harmony, pattern coordination, design balance, weather appropriateness, and overall sophistication (1-10 scale)
-- Include specific explanations of color theory and pattern mixing choices
+- Renk uyumu, tasarım koordinasyonu ve genel sofistikasyon temelinde güven puanı ver (1-10)
+- Renk teorisi ve tasarım koordinasyonu seçimlerinin özel açıklamalarını dahil et
 
-Return a JSON array with this exact structure:
+Bu yapıyı takip eden JSON dizisi döndür:
 [
   {
     "id": 1,
-    "name": "Descriptive Outfit Name",
-    "items": ["exact item name 1", "exact item name 2", "exact item name 3"],
+    "name": "Türkçe Kombin İsmi",
+    "items": ["tam parça ismi 1", "tam parça ismi 2", "tam parça ismi 3"],
     "item_ids": ["item_id_1", "item_id_2", "item_id_3"],
     "confidence": 9,
-    "styling_tips": "Advanced styling advice with specific color theory, pattern mixing, and design coordination principles...",
-    "color_story": "Detailed analysis of color harmony type (analogous/complementary/etc) and reasoning",
-    "silhouette_notes": "How pieces work together proportionally with contrast and balance details",
-    "pattern_analysis": "Pattern mixing strategy and scale relationships if applicable",
-    "design_coordination": "How design details, formality levels, and construction elements complement each other",
-    "weather_appropriateness": "Explanation of how this outfit suits ${weather} weather conditions",
+    "styling_tips": "Renk teorisi, tasarım koordinasyonu ilkeleriyle detaylı Türkçe stil tavsiyesi...",
+    "color_story": "Renk uyumu türü (benzer/tamamlayıcı/vb) ve nedenlerin detaylı analizi",
+    "silhouette_notes": "Parçaların orantısal uyumu, kontrast ve denge detayları",
+    "design_coordination": "Tasarım detayları, formalite seviyeleri ve yapım unsurları nasıl birbirini tamamlıyor",
+    "weather_appropriateness": "Bu kombinin ${weather} hava koşullarına nasıl uygun olduğunun açıklaması",
+    "accessories": ["aksesuar 1", "aksesuar 2", "aksesuar 3"],
     "occasion": "${occasion}"
   }
 ]
 
-Focus on creating outfits that demonstrate sophisticated fashion knowledge, advanced color theory application, and expert-level styling coordination while being completely appropriate for ${weather} weather. Each combination should represent high-fashion thinking with practical wearability.
+${weather} havası için tamamen uygun, sofistike moda bilgisi gösteren, gelişmiş renk teorisi uygulaması ve uzman seviye stil koordinasyonu ile kombinler oluşturmaya odaklan. Her kombinasyon yüksek moda düşüncesi ile pratik giyilebilirliği temsil etmeli.
 
-Make sure the response is valid JSON only, no additional text.`;
+Sadece geçerli JSON döndür, başka metin yok ve CİDDİ UYARI: ASLA aynı kombinasyonda hem tişört hem de kazak önerme.`;
 }
 
 function getWeatherSpecificGuidance(weather: string): string {
   const weatherMap: { [key: string]: string } = {
     'hot': `
-- ABSOLUTELY NO thick materials like wool, cashmere, or heavy cotton
-- ABSOLUTELY NO sweatshirts, hoodies, heavy sweaters, or thick jackets
-- PRIORITIZE: lightweight cotton, linen, silk, chiffon, and breathable fabrics
-- CHOOSE: tank tops, t-shirts, light blouses, shorts, skirts, sandals
-- AVOID: long sleeves, thick fabrics, closed shoes (unless absolutely necessary)
-- FOCUS on: light colors, loose fits, minimal layers, breathable materials`,
+- KESİNLİKLE KAÇIN: kalın materyaller, kazak, sweatshirt, kalın mont, yün
+- ÖNCELİK VER: hafif pamuklu, keten, ipek, şifon gibi nefes alabilir kumaşlar
+- TERCIH ET: tank top, tişört, hafif bluzlar, şort, hafif etekler, sandalet
+- ODAK: nefes alabilir materyaller, açık renkler, minimum katman`,
     
     'warm': `
-- AVOID heavy materials like thick wool or winter coats
-- PREFER lightweight materials: cotton, light wool, silk blends
-- SUITABLE: light sweaters, cardigans, light jackets, long pants, skirts
-- CONSIDER: light layering options for temperature changes
-- AVOID: heavy boots, thick sweaters, winter coats`,
+- KAÇIN: kalın yün, kış eşyaları
+- UYGUN: hafif pamuk, ipek, hafif hırka, ince ceket
+- İYİ: hafif kazak, uzun pantolon, etekle hafif üst`,
     
     'mild': `
-- BALANCE between light and medium-weight fabrics
-- SUITABLE: cotton, light wool, denim, light jackets
-- GOOD FOR: layering with cardigans, light sweaters, blazers
-- FOOTWEAR: most options work well`,
+- DENGE: hafif ile orta ağırlık kumaşlar iyi çalışır
+- UYGUN: pamuk, hafif yün, denim, blazer, hırka
+- ESNEKLİK: çoğu gardırop parçası uygun`,
     
     'cool': `
-- PREFER warmer materials: wool, cashmere, thicker cotton
-- SUITABLE: sweaters, cardigans, jackets, long pants, boots
-- CONSIDER: light layering for warmth
-- AVOID: very lightweight or sleeveless items without layers`,
+- TERCIH ET: yün, kaşmir, kalın pamuk gibi daha sıcak materyaller
+- UYGUN: kazak, hırka, ceket, bot, uzun pantolon
+- DİKKATE AL: konfor için katmanlaşma`,
     
     'cold': `
-- REQUIRE warm materials: wool, cashmere, thick cotton, fleece
-- NECESSARY: sweaters, coats, jackets, warm boots, long pants
-- FOCUS ON: layering for warmth and wind protection
-- AVOID: lightweight or sleeveless items`,
+- GEREKLİ: yün, kaşmir, polar gibi sıcak materyaller
+- ZORUNLU: kazak, mont, sıcak bot, uzun pantolon
+- ODAK: sıcaklık için çoklu katmanlar`,
     
     'rainy': `
-- CONSIDER water-resistant materials where possible
-- SUITABLE: jackets, closed shoes, longer hemlines
-- AVOID: delicate fabrics that might be damaged by water
-- PREFER: practical footwear and protective layers`
+- DİKKATE AL: mümkünse su geçirmez materyaller
+- TERCIH ET: kapalı ayakkabı, ceket, uzun etekler
+- PRATİK: ıslak koşullarda iyi çalışan parçalar`
   };
 
   return weatherMap[weather.toLowerCase()] || weatherMap['mild'];
@@ -159,34 +130,34 @@ function getWeatherSpecificGuidance(weather: string): string {
 function getOccasionSpecificGuidance(occasion: string, timeOfDay: string): string {
   const occasionMap: { [key: string]: string } = {
     'party': `
-- ELEVATED STYLE: Choose pieces that are more dressy and stylish than everyday wear
-- CONSIDER: statement pieces, interesting textures, bold colors or patterns
-- APPROPRIATE FOR: dancing, socializing, photos
-- BALANCE: style with comfort for extended wear
-- ${timeOfDay === 'night' ? 'EVENING PARTY: Can be more glamorous, darker colors work well' : 'DAY PARTY: Lighter, more casual but still festive'}`,
+- YÜKSEK STİL: günlük giyimden daha şık ve festif parçalar seç
+- DİKKATE AL: ilginç dokular, cesur renkler veya desenler
+- UYGUN: dans etmek, sosyalleşmek, fotoğraf çektirmek için
+- DENGE: stil ile uzun süre giyim konforu
+- ${timeOfDay === 'night' ? 'AKŞAM PARTİSİ: Daha gösterişli olabilir, koyu renkler iyi' : 'GÜNDÜZ PARTİSİ: Daha hafif, yine de festif'}`,
     
     'work': `
-- PROFESSIONAL APPEARANCE: Clean lines, appropriate coverage
-- AVOID: overly casual items like athletic wear or beachwear
-- PREFER: structured pieces, blazers, button-down shirts, dress pants
-- BALANCE: professional with personal style`,
+- PROFESYONEL GÖRÜNÜM: temiz çizgiler, uygun örtünme
+- KAÇIN: çok rahat sporcu giyimi veya plaj kıyafetleri
+- TERCIH ET: yapılandırılmış parçalar, blazer, düğmeli gömlek, pantolon
+- DENGE: profesyonel ile kişisel stil`,
     
     'dinner': `
-- SMART CASUAL TO DRESSY: Depending on venue
-- AVOID: overly casual athletic wear
-- CONSIDER: nice tops, dress pants or skirts, dress shoes
-- ${timeOfDay === 'evening' ? 'DINNER OUT: Can be more elevated and stylish' : 'CASUAL LUNCH: More relaxed but still put-together'}`,
+- AKILLI RAHATİ VEYA ŞIK: mekana bağlı olarak
+- KAÇIN: çok rahat sporcu giyimi
+- DİKKATE AL: güzel üstler, kumaş pantolon veya etekler, şık ayakkabılar
+- ${timeOfDay === 'evening' ? 'AKŞAM YEMEĞİ: Daha yüksek ve şık stil' : 'ÖĞLE YEMEĞİ: Daha rahat ama güzel'}`,
     
     'casual': `
-- COMFORTABLE AND RELAXED: Everyday wear that's still put-together
-- SUITABLE: jeans, t-shirts, casual dresses, sneakers
-- BALANCE: comfort with style`,
+- RAHAT VE GÜNLÜK: her gün giyilebilir, yine de bir arada
+- UYGUN: jeans, tişört, rahat elbiseler, spor ayakkabı
+- DENGE: konfor ile stil`,
     
     'date': `
-- ATTRACTIVE AND CONFIDENT: Choose pieces that make you feel good
-- BALANCE: style with authenticity to your personal taste
-- CONSIDER: the specific date activity and venue
-- ${timeOfDay === 'evening' ? 'EVENING DATE: Can be more romantic and dressy' : 'DAY DATE: More casual but still attractive'}`
+- ÇEKİCİ VE GÜVEN VERİCİ: kendinizi iyi hissettiren parçalar seç
+- DENGE: stil ile kişisel tarzınıza özgünlük
+- DİKKATE AL: belirli randevu aktivitesi ve mekan
+- ${timeOfDay === 'evening' ? 'AKŞAM RANDEVUSU: Daha romantik ve şık olabilir' : 'GÜNDÜZ RANDEVUSU: Daha rahat ama çekici'}`
   };
 
   return occasionMap[occasion.toLowerCase()] || occasionMap['casual'];
