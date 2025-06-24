@@ -43,7 +43,7 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
   });
   const [showPaywall, setShowPaywall] = useState(false);
   const [showAdModal, setShowAdModal] = useState(false);
-  const [pendingFiles, setPendingFiles] = useState<File[]>([]); // Store files waiting for ad completion
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
 
   useEffect(() => {
     if (isOpen && !limits.canAddItem && !limits.isPremium) {

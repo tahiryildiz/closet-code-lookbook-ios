@@ -76,7 +76,7 @@ const UploadStep = ({ onFileSelect, selectedFiles = [], onRemoveFile }: UploadSt
               <Upload className="h-8 w-8 text-blue-600" />
             </div>
             <h3 className="font-semibold text-gray-900 mb-2 text-lg">Görsel Yükle</h3>
-            <p className="text-gray-500">Fotoğraf galerinizden seç (çoklu seçim)</p>
+            <p className="text-gray-500">Tek tek veya toplu şekilde ürün yükleyebilirsiniz</p>
           </CardContent>
         </Card>
       )}
