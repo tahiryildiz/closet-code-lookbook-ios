@@ -51,6 +51,15 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
     }
   }, [isOpen, limits.canAddItem, limits.isPremium]);
 
+  const convertFileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
+
   const handleFileSelect = async (files: File[]) => {
     // Check if user has rights to add items
     if (!limits.canAddItem && !limits.isPremium) {
@@ -85,19 +94,22 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
       // Process first file for now
       const file = files[0];
       
-      // Create a data URL for the image
-      const imageUrl = URL.createObjectURL(file);
+      // Convert file to base64 data URL
+      const base64ImageUrl = await convertFileToBase64(file);
       
-      // Send as JSON with the blob URL
+      // Send the base64 data URL to the edge function
       const { data, error } = await supabase.functions.invoke('analyze-clothing', {
-        body: { imageUrl },
+        body: { imageUrl: base64ImageUrl },
       });
 
       if (error) throw error;
 
+      // Create blob URL for display purposes only
+      const displayImageUrl = URL.createObjectURL(file);
+
       setAnalysisResult({
         ...data,
-        imageUrl: imageUrl
+        imageUrl: displayImageUrl
       });
 
       // Update form data with analysis results
