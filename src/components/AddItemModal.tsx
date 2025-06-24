@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -119,8 +118,8 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
         name: data.name || '',
         brand: data.brand || '',
         category: data.category || '',
-        primaryColor: data.primaryColor || '',
-        tags: data.tags || '',
+        primaryColor: data.primary_color || '',
+        tags: data.style_tags ? data.style_tags.join(', ') : '',
         notes: data.notes || ''
       }));
 
@@ -149,7 +148,7 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
     if (!user || !analysisResult) return;
 
     try {
-      // Map AI analysis fields to database fields correctly
+      // Map AI analysis fields to database fields correctly using exact column names
       const { error } = await supabase
         .from('clothing_items')
         .insert({
@@ -185,7 +184,9 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
           image_url: analysisResult.imageUrl,
           image_description: analysisResult.image_description,
           ai_analysis: analysisResult,
-          confidence: analysisResult.confidence
+          confidence: analysisResult.confidence,
+          context_tags: analysisResult.context_tags || [],
+          prompt_description: analysisResult.prompt_description
         });
 
       if (error) throw error;
