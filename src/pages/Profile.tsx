@@ -100,6 +100,32 @@ const Profile = () => {
     navigate('/wardrobe', { state: { showFavorites: true } });
   };
 
+  // Calculate display values for stats
+  const getItemsDisplayText = () => {
+    if (limits.isPremium) {
+      return 'Sınırsız Ürün';
+    }
+    const totalAllowed = limits.remainingItems + itemCount;
+    return `${itemCount}/${totalAllowed}`;
+  };
+
+  const getOutfitsDisplayText = () => {
+    if (limits.isPremium) {
+      return 'Sınırsız Kombin';
+    }
+    const totalAllowed = limits.remainingOutfits + (3 - limits.remainingOutfits);
+    const used = totalAllowed - limits.remainingOutfits;
+    return `${used}/${totalAllowed}`;
+  };
+
+  const getItemsLabelText = () => {
+    return limits.isPremium ? 'Sınırsız Ürün' : 'Ürün ekleme hakkı';
+  };
+
+  const getOutfitsLabelText = () => {
+    return limits.isPremium ? 'Sınırsız Kombin' : 'Günlük kombin hakkı';
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 pb-20">
       {/* Header */}
@@ -135,18 +161,18 @@ const Profile = () => {
           <Card className="bg-white/90 backdrop-blur-sm border-0 shadow-lg rounded-2xl hover:shadow-xl transition-all duration-300">
             <CardContent className="p-4 text-center">
               <div className="text-2xl font-bold text-blue-600 mb-1">
-                {limits.isPremium ? itemCount : `${itemCount}/${limits.remainingItems + itemCount}`}
+                {getItemsDisplayText()}
               </div>
               <div className="text-sm text-gray-600">
-                {limits.isPremium ? 'Sınırsız Ürün' : 'Ürün Limiti'}
+                {getItemsLabelText()}
               </div>
             </CardContent>
           </Card>
           <Card className="bg-white/90 backdrop-blur-sm border-0 shadow-lg rounded-2xl hover:shadow-xl transition-all duration-300">
             <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-indigo-600 mb-1">{outfitCount}</div>
+              <div className="text-2xl font-bold text-indigo-600 mb-1">{getOutfitsDisplayText()}</div>
               <div className="text-sm text-gray-600">
-                {limits.isPremium ? 'Sınırsız Kombin' : 'Günlük kombin hakkı'}
+                {getOutfitsLabelText()}
               </div>
             </CardContent>
           </Card>
