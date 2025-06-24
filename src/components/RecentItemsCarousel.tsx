@@ -25,11 +25,11 @@ const RecentItemsCarousel = ({ items }: RecentItemsCarouselProps) => {
 
   return (
     <div className="overflow-x-auto scrollbar-hide">
-      <div className="flex gap-4 px-4 pb-2" style={{ width: `${items.length * 200 + 32}px` }}>
+      <div className="flex gap-4 px-3 pb-2" style={{ width: `${items.length * 220 + 24}px` }}>
         {items.map((item) => (
           <div
             key={item.id}
-            className="flex-shrink-0 w-48"
+            className="flex-shrink-0 w-52"
             onClick={() => navigate('/wardrobe')}
           >
             <Card className="w-full bg-white border border-gray-100 cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-105 rounded-2xl overflow-hidden group">
@@ -43,16 +43,16 @@ const RecentItemsCarousel = ({ items }: RecentItemsCarouselProps) => {
                     />
                   ) : (
                     <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-                      <Shirt className="h-16 w-16 text-gray-400" />
+                      <Shirt className="h-20 w-20 text-gray-400" />
                     </div>
                   )}
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
                 </div>
-                <div className="p-4">
-                  <h3 className="font-bold text-gray-900 text-lg mb-2 leading-tight line-clamp-2">{item.name}</h3>
-                  <p className="text-gray-500 text-sm font-medium">{getTurkishLabel(item.category, categoryOptions)}</p>
+                <div className="p-5">
+                  <h3 className="font-bold text-gray-900 text-xl mb-2 leading-tight line-clamp-2">{item.name}</h3>
+                  <p className="text-gray-500 text-base font-medium">{getTurkishLabel(item.category, categoryOptions)}</p>
                   {item.brand && (
-                    <p className="text-gray-400 text-sm mt-1 font-medium truncate">{item.brand}</p>
+                    <p className="text-gray-400 text-sm mt-2 font-medium truncate">{item.brand}</p>
                   )}
                 </div>
               </CardContent>
