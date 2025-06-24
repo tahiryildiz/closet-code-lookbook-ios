@@ -174,7 +174,7 @@ const Index = () => {
   return <div className="min-h-screen bg-gray-50 pb-20">
       {/* Header */}
       <div className="bg-white border-b border-gray-200">
-        <div className="px-4 md:px-6 pt-14 pb-6">
+        <div className="md:px-6 pt-14 pb-6 py-[26px] px-[16px]">
           <div className="text-left">
             <h1 className="text-xl md:text-2xl font-bold text-gray-900">Ana Sayfa</h1>
             <p className="text-gray-500 text-sm md:text-base mt-1">
@@ -198,7 +198,7 @@ const Index = () => {
         {/* Recent Items */}
         {recentItems.length > 0 && <div>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg md:text-xl font-semibold text-gray-900">Son Eklenen Kıyafetler</h2>
+              <h2 className="text-lg md:text-xl font-semibold text-gray-900">Son Eklenenler</h2>
               <Button variant="ghost" size="sm" onClick={() => navigate('/wardrobe')} className="text-blue-600 hover:text-blue-700 text-sm font-medium">
                 Tümünü Gör
               </Button>
