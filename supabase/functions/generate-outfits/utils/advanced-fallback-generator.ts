@@ -32,6 +32,7 @@ export const generateAdvancedFallbackOutfits = (
   for (let i = 0; i < 3 && outfits.length < 3; i++) {
     const outfit = generateSophisticatedOutfit(
       { tops, bottoms, outerwear, shoes, dresses, accessories },
+      wardrobeItems, // Pass wardrobeItems to the outfit generator
       occasion,
       timeOfDay,
       weather,
@@ -49,6 +50,7 @@ export const generateAdvancedFallbackOutfits = (
 
 const generateSophisticatedOutfit = (
   categorizedItems: any,
+  wardrobeItems: any[], // Add wardrobeItems parameter
   occasion: string,
   timeOfDay: string,
   weather: string,
@@ -61,7 +63,7 @@ const generateSophisticatedOutfit = (
   const strategies = [
     () => createColorHarmonyOutfit(dresses, tops, bottoms, outerwear, shoes, accessories, occasion, weather),
     () => createPatternMixingOutfit(tops, bottoms, outerwear, shoes, accessories, occasion, weather),
-    () => createContrastBalancedOutfit(tops, bottoms, outerwear, shoes, accessories, occasion, weather)
+    () => createContrastBalancedOutfit(tops, bottoms, outerwear, shoes, accessories, wardrobeItems, occasion, weather) // Pass wardrobeItems
   ];
 
   const strategy = strategies[index % strategies.length];
@@ -177,7 +179,7 @@ const createPatternMixingOutfit = (tops: any[], bottoms: any[], outerwear: any[]
   return { items };
 };
 
-const createContrastBalancedOutfit = (tops: any[], bottoms: any[], outerwear: any[], shoes: any[], accessories: any[], occasion: string, weather: string) => {
+const createContrastBalancedOutfit = (tops: any[], bottoms: any[], outerwear: any[], shoes: any[], accessories: any[], wardrobeItems: any[], occasion: string, weather: string) => {
   // Create intentional light/dark contrast
   const lightItems = wardrobeItems.filter(item => {
     if (!item.primary_color) return false;
