@@ -19,13 +19,22 @@ export async function handleEnhancedOutfitGeneration(requestData: any, openAIApi
   console.log(`🎨 Available metadata fields: ${Object.keys(wardrobeItems[0] || {}).join(', ')}`);
   console.log(`👤 User type: ${isPremium ? 'Premium' : 'Free'}`);
 
+  // Verify OpenAI API key
+  if (!openAIApiKey) {
+    console.error('❌ OpenAI API key is missing');
+    console.log('🔄 Using advanced fallback due to missing API key');
+    const fallbackOutfits = generateAdvancedFallbackOutfits(wardrobeItems, occasion, timeOfDay, weather, isPremium);
+    return { outfits: fallbackOutfits };
+  }
+
   try {
     // Generate enhanced prompt with advanced styling rules
     const prompt = generateEnhancedPrompt(wardrobeItems, occasion, timeOfDay, weather, userGender, isPremium);
     
-    console.log('🤖 Attempting OpenAI request with enhanced prompt');
+    console.log('🤖 Making OpenAI API request with enhanced prompt');
+    console.log(`📝 Prompt length: ${prompt.length} characters`);
     
-    // Make the OpenAI API call directly
+    // Make the OpenAI API call directly with detailed logging
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -49,43 +58,61 @@ export async function handleEnhancedOutfitGeneration(requestData: any, openAIApi
       }),
     });
 
-    if (response.ok) {
-      console.log('✅ Enhanced OpenAI request successful');
-      const data = await response.json();
-      const generatedOutfits = data.choices[0].message.content;
+    console.log(`📡 OpenAI API response status: ${response.status}`);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`❌ OpenAI API error (${response.status}): ${errorText}`);
+      throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
+    }
+
+    const data = await response.json();
+    console.log('✅ OpenAI API response received successfully');
+    
+    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+      console.error('❌ Invalid OpenAI response structure:', data);
+      throw new Error('Invalid OpenAI response structure');
+    }
+    
+    const generatedOutfits = data.choices[0].message.content;
+    console.log(`📝 Generated content length: ${generatedOutfits.length} characters`);
+    console.log(`📦 Raw AI response preview: ${generatedOutfits.substring(0, 200)}...`);
+    
+    try {
+      const parsedOutfits = JSON.parse(generatedOutfits);
+      console.log(`🎯 Successfully parsed ${parsedOutfits.length} AI-generated outfits`);
       
-      try {
-        const parsedOutfits = JSON.parse(generatedOutfits);
-        
-        // Process the outfits with validation and image generation
-        const processedOutfits = await processValidatedOutfits(
-          parsedOutfits,
-          wardrobeItems,
-          occasion,
-          timeOfDay,
-          weather,
-          openAIApiKey
-        );
-        
-        return { outfits: processedOutfits };
-        
-      } catch (parseError) {
-        console.log('⚠️ JSON parsing failed, using advanced fallback');
-        const fallbackOutfits = generateAdvancedFallbackOutfits(wardrobeItems, occasion, timeOfDay, weather, isPremium);
-        return { outfits: fallbackOutfits };
-      }
+      // Process the outfits with validation and image generation
+      const processedOutfits = await processValidatedOutfits(
+        parsedOutfits,
+        wardrobeItems,
+        occasion,
+        timeOfDay,
+        weather,
+        openAIApiKey
+      );
       
-    } else {
-      console.log('⚠️ OpenAI request failed, using advanced fallback');
+      console.log(`✅ Final processed outfits count: ${processedOutfits.length}`);
+      return { outfits: processedOutfits };
+      
+    } catch (parseError) {
+      console.error('❌ JSON parsing failed:', parseError);
+      console.error('🔍 Failed content:', generatedOutfits);
+      console.log('🔄 Using advanced fallback due to JSON parsing failure');
       const fallbackOutfits = generateAdvancedFallbackOutfits(wardrobeItems, occasion, timeOfDay, weather, isPremium);
       return { outfits: fallbackOutfits };
     }
     
   } catch (error) {
     console.error('❌ Error in enhanced outfit generation:', error);
+    console.error('📊 Error details:', {
+      name: error.name,
+      message: error.message,
+      stack: error.stack?.substring(0, 500)
+    });
     
     // Fallback to advanced local generation
-    console.log('🔄 Using advanced fallback outfit generation');
+    console.log('🔄 Using advanced fallback outfit generation due to error');
     const fallbackOutfits = generateAdvancedFallbackOutfits(wardrobeItems, occasion, timeOfDay, weather, isPremium);
     return { outfits: fallbackOutfits };
   }
