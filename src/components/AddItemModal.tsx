@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -148,17 +149,41 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
     if (!user || !analysisResult) return;
 
     try {
+      // Map AI analysis fields to database fields correctly
       const { error } = await supabase
         .from('clothing_items')
         .insert({
           user_id: user.id,
-          name: formData.name,
-          brand: formData.brand,
-          category: formData.category,
-          primary_color: formData.primaryColor,
-          style_tags: formData.tags ? formData.tags.split(',').map(tag => tag.trim()) : [],
+          name: formData.name || analysisResult.name,
+          brand: formData.brand || analysisResult.brand,
+          category: formData.category || analysisResult.category,
+          subcategory: analysisResult.subcategory,
+          primary_color: formData.primaryColor || analysisResult.primary_color,
+          secondary_colors: analysisResult.secondary_colors || [],
+          color_tone: analysisResult.color_tone,
+          pattern: analysisResult.pattern,
+          pattern_type: analysisResult.pattern_type,
+          material: analysisResult.material,
+          fit: analysisResult.fit,
+          collar: analysisResult.collar,
+          sleeve: analysisResult.sleeve,
+          neckline: analysisResult.neckline,
+          design_details: analysisResult.design_details || [],
+          closure_type: analysisResult.closure_type,
+          waist_style: analysisResult.waist_style,
+          pocket_style: analysisResult.pocket_style,
+          hem_style: analysisResult.hem_style,
+          lapel_style: analysisResult.lapel_style,
+          cuff_style: analysisResult.cuff_style,
+          has_lining: analysisResult.has_lining || false,
+          button_count: analysisResult.button_count,
+          accessories: analysisResult.accessories || [],
+          seasons: analysisResult.seasons || [],
+          occasions: analysisResult.occasions || [],
+          style_tags: formData.tags ? formData.tags.split(',').map(tag => tag.trim()) : (analysisResult.style_tags || []),
           user_notes: formData.notes,
           image_url: analysisResult.imageUrl,
+          image_description: analysisResult.image_description,
           ai_analysis: analysisResult,
           confidence: analysisResult.confidence
         });
