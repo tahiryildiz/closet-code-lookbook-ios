@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -76,7 +75,12 @@ const Index = () => {
           .limit(10);
 
         if (outfits) {
-          setRecentOutfits(outfits);
+          // Map the data to match the Outfit interface
+          const mappedOutfits = outfits.map(outfit => ({
+            ...outfit,
+            styling_tips: outfit.ai_styling_tips || ''
+          }));
+          setRecentOutfits(mappedOutfits);
         }
 
         // Fetch saved outfits
