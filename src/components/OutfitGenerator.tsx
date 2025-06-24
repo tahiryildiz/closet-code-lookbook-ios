@@ -51,6 +51,8 @@ const OutfitGenerator = () => {
         setOutfits(parsedOutfits);
       } catch (error) {
         console.error('Error loading saved outfits:', error);
+        // Clear corrupted localStorage
+        localStorage.removeItem('generatedOutfits');
       }
     }
   }, []);
@@ -80,7 +82,7 @@ const OutfitGenerator = () => {
           user_id: user.id,
           name: outfit.name,
           clothing_item_ids: outfit.item_ids || [],
-          ai_styling_tips: limits.isPremium ? outfit.styling_tips : outfit.styling_tips?.substring(0, 100) + "...",
+          ai_styling_tips: outfit.styling_tips, // Always save complete styling tips
           occasion: outfit.occasion || occasion,
           time_of_day: timeOfDay,
           weather_type: weather,
@@ -222,19 +224,27 @@ const OutfitGenerator = () => {
         return;
       }
 
-      // Process styling tips based on subscription
+      // Process outfits without truncating styling tips
       const processedOutfits = generatedOutfits.map((outfit: Outfit) => ({
         ...outfit,
-        styling_tips: limits.isPremium 
-          ? outfit.styling_tips 
-          : outfit.styling_tips?.substring(0, 100) + "...",
+        styling_tips: outfit.styling_tips, // Keep complete styling tips for all users
         is_saved: false
       }));
 
       setOutfits(processedOutfits);
       
-      // Save to localStorage
-      localStorage.setItem('generatedOutfits', JSON.stringify(processedOutfits));
+      // Save to localStorage with error handling for quota exceeded
+      try {
+        // Create a lightweight version for localStorage (without large base64 images)
+        const lightweightOutfits = processedOutfits.map(outfit => ({
+          ...outfit,
+          generated_image: outfit.generated_image ? 'stored_separately' : null // Mark that image exists but don't store the full base64
+        }));
+        localStorage.setItem('generatedOutfits', JSON.stringify(lightweightOutfits));
+      } catch (storageError) {
+        console.warn('localStorage quota exceeded, skipping local storage:', storageError);
+        // Continue without localStorage - not critical for functionality
+      }
       
       // Save to database
       await saveOutfitsToDatabase(processedOutfits);

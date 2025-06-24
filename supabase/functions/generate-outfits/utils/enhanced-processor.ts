@@ -1,3 +1,4 @@
+
 export const processValidatedOutfits = async (
   outfits: any[],
   wardrobeItems: any[],
@@ -133,19 +134,21 @@ export const processValidatedOutfits = async (
 
     console.log(`Validation result for outfit "${outfit.name}": ${validationErrors.length === 0 ? 'VALID' : 'INVALID'}`);
     
-    // Be more lenient - accept outfits with at least 2 valid items and max 1 invalid
-    if (validItems.length >= 2 && validationErrors.length <= 1) {
+    // Be strict - only accept outfits with ALL valid items
+    if (validItems.length >= 3 && validationErrors.length === 0) {
       console.log(`✅ Outfit ${i + 1} ACCEPTED (${validItems.length} valid items, ${validationErrors.length} invalid)`);
       
-      // Create validated outfit with Turkish styling tips
-      const turkishStylingTip = generateTurkishStylingTip(outfit, occasion, timeOfDay, weather);
+      // Create Turkish outfit name and complete styling tips
+      const turkishOutfitName = generateTurkishOutfitName(occasion, i + 1);
+      const completeTurkishStylingTip = generateCompleteTurkishStylingTip(outfit, occasion, timeOfDay, weather, validItems.length);
       
       const validatedOutfit = {
         ...outfit,
+        name: turkishOutfitName,
         items: validItems,
         item_ids: validItemIds,
         confidence: Math.min(outfit.confidence || 8, 9), // Cap confidence for validated outfits
-        styling_tips: turkishStylingTip,
+        styling_tips: completeTurkishStylingTip,
       };
       
       validatedOutfits.push(validatedOutfit);
@@ -166,7 +169,7 @@ export const processValidatedOutfits = async (
 
   console.log(`✅ ${validatedOutfits.length} outfits validated successfully`);
   
-  // NOW GENERATE FLATLAY IMAGES FOR VALIDATED OUTFITS
+  // NOW GENERATE FLATLAY IMAGES FOR VALIDATED OUTFITS USING ACTUAL WARDROBE IMAGES
   console.log('🎨 Starting flatlay image generation for validated outfits...');
   
   const outfitsWithImages = await Promise.all(
@@ -174,8 +177,8 @@ export const processValidatedOutfits = async (
       console.log(`🖼️ Generating flatlay image for outfit ${index + 1}: "${outfit.name}"`);
       
       try {
-        // Generate professional flatlay image using OpenAI
-        const generatedImageUrl = await generateOutfitFlatlay(
+        // Generate professional flatlay image using actual wardrobe items
+        const generatedImageUrl = await generateOutfitFlatlayWithActualItems(
           outfit, 
           wardrobeItems, 
           occasion, 
@@ -195,12 +198,32 @@ export const processValidatedOutfits = async (
             reference_images: [], // Clear any reference images since we have AI-generated flatlay
           };
         } else {
-          console.log(`⚠️ Failed to generate flatlay image for outfit ${index + 1}, keeping without image`);
-          return outfit;
+          console.log(`⚠️ Failed to generate flatlay image for outfit ${index + 1}, using reference images`);
+          // Get reference images for the matched items
+          const referenceImages = outfit.items.map((itemName: string) => {
+            const wardrobeItem = wardrobeItems.find(item => item.name === itemName);
+            return wardrobeItem?.image_url;
+          }).filter(Boolean);
+          
+          return {
+            ...outfit,
+            reference_images: referenceImages,
+            composition_type: 'reference_images',
+          };
         }
       } catch (error) {
         console.error(`❌ Error generating flatlay for outfit ${index + 1}:`, error);
-        return outfit;
+        // Get reference images for the matched items
+        const referenceImages = outfit.items.map((itemName: string) => {
+          const wardrobeItem = wardrobeItems.find(item => item.name === itemName);
+          return wardrobeItem?.image_url;
+        }).filter(Boolean);
+        
+        return {
+          ...outfit,
+          reference_images: referenceImages,
+          composition_type: 'reference_images',
+        };
       }
     })
   );
@@ -210,19 +233,36 @@ export const processValidatedOutfits = async (
   return outfitsWithImages;
 };
 
-const generateTurkishStylingTip = (outfit: any, occasion: string, timeOfDay: string, weather: string): string => {
+const generateTurkishOutfitName = (occasion: string, index: number): string => {
+  const occasionMap: { [key: string]: string[] } = {
+    'work': ['İş Kombinasyonu', 'Ofis Stili', 'Profesyonel Görünüm'],
+    'dinner': ['Yemek Kombinasyonu', 'Akşam Yemeği Stili', 'Şık Yemek Kıyafeti'],
+    'date': ['Randevu Kombinasyonu', 'Romantik Stil', 'Buluşma Kıyafeti'],
+    'shopping': ['Alışveriş Kombinasyonu', 'Rahat Şık Stil', 'Günlük Gezinti'],
+    'coffee': ['Kahve Kombinasyonu', 'Rahat Buluşma', 'Günlük Şıklık'],
+    'party': ['Parti Kombinasyonu', 'Eğlence Stili', 'Şık Parti Kıyafeti'],
+    'casual': ['Günlük Kombinasyon', 'Rahat Stil', 'Konforlu Şıklık'],
+  };
+
+  const names = occasionMap[occasion.toLowerCase()] || occasionMap['casual'];
+  return names[index % names.length] + ` ${index}`;
+};
+
+const generateCompleteTurkishStylingTip = (outfit: any, occasion: string, timeOfDay: string, weather: string, itemCount: number): string => {
   const occasionMap: { [key: string]: string } = {
-    'casual': 'günlük',
+    'work': 'iş',
     'business': 'iş',
-    'formal': 'resmi',
+    'dinner': 'yemek',
+    'date': 'randevu',
+    'shopping': 'alışveriş',
+    'coffee': 'kahve',
     'party': 'parti',
-    'sport': 'spor',
-    'evening': 'akşam',
-    'date': 'randevu'
+    'casual': 'günlük'
   };
 
   const timeMap: { [key: string]: string } = {
     'morning': 'sabah',
+    'day': 'gündüz',
     'afternoon': 'öğleden sonra',
     'evening': 'akşam',
     'night': 'gece'
@@ -234,25 +274,25 @@ const generateTurkishStylingTip = (outfit: any, occasion: string, timeOfDay: str
     'cold': 'soğuk',
     'warm': 'sıcak',
     'hot': 'çok sıcak',
-    'mild': 'ılık'
+    'mild': 'ılık',
+    'cool': 'serin'
   };
 
   const turkishOccasion = occasionMap[occasion.toLowerCase()] || occasion;
   const turkishTime = timeMap[timeOfDay.toLowerCase()] || timeOfDay;
   const turkishWeather = weatherMap[weather.toLowerCase()] || weather;
 
-  const tips = [
-    `Bu ${turkishOccasion} kombinasyonu ${turkishTime} vakti için mükemmel. ${outfit.items.length} parçanın uyumu ile şık bir görünüm elde edeceksiniz.`,
-    `${turkishWeather} hava koşulları için ideal olan bu kombin, rahat ve şık bir görünüm sağlar. Renk uyumu dikkat çekici.`,
-    `Bu kombinle kendinizi hem rahat hem de şık hissedeceksiniz. ${turkishOccasion} aktiviteler için harika bir seçim.`,
-    `Klasik ve modern parçaların uyumlu karışımı. ${turkishTime} vakti için mükemmel bir stil yaratıyor.`,
-    `Bu kombin ile hem pratik hem de şık görüneceksiniz. ${turkishWeather} havalar için ideal bir seçim.`
+  const completeTips = [
+    `Bu ${turkishOccasion} kombinasyonu ${turkishTime} vakti için mükemmel bir seçim. ${itemCount} parçanın uyumlu karışımı ile hem rahat hem de şık görüneceksiniz. ${turkishWeather} hava koşulları için ideal olan bu kombin, tarzınızı yansıtırken konforunuzdan da ödün vermez.`,
+    `${turkishTime} vakti için hazırlanmış bu ${turkishOccasion} kombininde renk uyumu ve stil dengesine dikkat edilmiştir. ${turkishWeather} havalar göz önünde bulundurularak seçilen ${itemCount} parça, size özgüven veren şık bir görünüm sağlar.`,
+    `Bu ${itemCount} parçalık kombin ${turkishOccasion} aktiviteleriniz için harika bir tercihtir. ${turkishTime} vakti giyilebilecek bu stil, ${turkishWeather} hava şartlarında kendinizi hem rahat hem de şık hissetmenizi sağlayacak. Klasik ve modern detayların uyumlu birleşimi dikkat çekici.`,
+    `${turkishWeather} hava koşulları için özenle seçilmiş bu ${turkishOccasion} kombinasyonu, ${turkishTime} vakti için ideal bir seçimdir. ${itemCount} parçanın uyumu size zarif ve rahat bir görünüm kazandırırken, tarzınızı da ortaya çıkarır.`
   ];
 
-  return tips[Math.floor(Math.random() * tips.length)];
+  return completeTips[Math.floor(Math.random() * completeTips.length)];
 };
 
-const generateOutfitFlatlay = async (
+const generateOutfitFlatlayWithActualItems = async (
   outfit: any,
   wardrobeItems: any[],
   occasion: string,
@@ -261,41 +301,57 @@ const generateOutfitFlatlay = async (
   openAIApiKey: string,
   index: number
 ): Promise<string | null> => {
-  console.log(`🎨 [generateOutfitFlatlay] Starting image generation for outfit: ${outfit.name}`);
+  console.log(`🎨 [generateOutfitFlatlayWithActualItems] Starting image generation for outfit: ${outfit.name}`);
   
   if (!openAIApiKey) {
-    console.error('❌ [generateOutfitFlatlay] No OpenAI API key provided');
+    console.error('❌ [generateOutfitFlatlayWithActualItems] No OpenAI API key provided');
     return null;
   }
 
   try {
-    // Create detailed description for each item in the outfit
-    const itemDescriptions = outfit.items.map((itemName: string) => {
+    // Find actual wardrobe items with their images
+    const actualItems = outfit.items.map((itemName: string) => {
       const wardrobeItem = wardrobeItems.find(item => item.name === itemName);
-      if (wardrobeItem) {
-        const color = wardrobeItem.primary_color || 'neutral';
-        const material = wardrobeItem.material || wardrobeItem.category;
-        const category = wardrobeItem.subcategory || wardrobeItem.category;
-        return `${color} ${material} ${category}`.toLowerCase();
+      if (wardrobeItem && wardrobeItem.image_url) {
+        return {
+          name: wardrobeItem.name,
+          image_url: wardrobeItem.image_url,
+          category: wardrobeItem.category,
+          color: wardrobeItem.primary_color || wardrobeItem.color || 'neutral',
+          material: wardrobeItem.material || 'fabric',
+          description: wardrobeItem.prompt_description || `${wardrobeItem.category} in ${wardrobeItem.primary_color || wardrobeItem.color || 'neutral'}`
+        };
       }
-      return itemName.toLowerCase();
+      return null;
+    }).filter(Boolean);
+
+    if (actualItems.length === 0) {
+      console.log('❌ [generateOutfitFlatlayWithActualItems] No items with images found');
+      return null;
+    }
+
+    console.log(`🎯 [generateOutfitFlatlayWithActualItems] Found ${actualItems.length} items with images`);
+
+    // Create detailed description based on actual wardrobe items
+    const itemDescriptions = actualItems.map((item: any, idx: number) => {
+      return `${idx + 1}. ${item.name} - Color: ${item.color}, Material: ${item.material}, Category: ${item.category}`;
     }).join(', ');
 
-    const prompt = `Create a professional fashion flatlay photograph showing: ${itemDescriptions}. 
+    const prompt = `Create a professional fashion flatlay photograph showing exactly these clothing items arranged on a white background: ${itemDescriptions}. 
 
-Style: Clean, minimalist flatlay composition on white background
-Layout: Vertical orientation (portrait) with clothes arranged as if laid out on a bed or flat surface
-Lighting: Soft, even lighting with no harsh shadows
-Perspective: Top-down view (bird's eye perspective)
-Arrangement: Clothes should be arranged in a styling way that shows how they would be worn together
-Background: Pure white or very light neutral background
-Quality: High-resolution, professional fashion photography style
+CRITICAL REQUIREMENTS:
+- Use ONLY the exact items listed above, no substitutions
+- Arrange in vertical flatlay composition (portrait orientation)
+- Clean white background with soft, even lighting
+- Top-down bird's eye view perspective
+- Items should be arranged as if laid out for wearing
+- Professional fashion photography style with no shadows
 
 The outfit is for: ${occasion} occasion, ${timeOfDay} time, ${weather} weather
-Make it look like a professional fashion brand flatlay photo.`;
+Size: 1024x1536 (vertical orientation)
+Style: Clean, minimalist, professional flatlay`;
 
-    console.log(`🤖 [generateOutfitFlatlay] Making OpenAI image generation request...`);
-    console.log(`📝 [generateOutfitFlatlay] Prompt: ${prompt.substring(0, 100)}...`);
+    console.log(`🤖 [generateOutfitFlatlayWithActualItems] Making OpenAI image generation request...`);
 
     const response = await fetch('https://api.openai.com/v1/images/generations', {
       method: 'POST',
@@ -307,35 +363,33 @@ Make it look like a professional fashion brand flatlay photo.`;
         model: 'gpt-image-1',
         prompt: prompt,
         n: 1,
-        size: '1024x1536', // Vertical aspect ratio for flatlay
-        quality: 'high',
-        output_format: 'png',
-        background: 'opaque'
+        size: '1024x1536',
+        quality: 'high'
       }),
     });
 
-    console.log(`📡 [generateOutfitFlatlay] OpenAI Image API response status: ${response.status}`);
+    console.log(`📡 [generateOutfitFlatlayWithActualItems] OpenAI Image API response status: ${response.status}`);
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(`❌ [generateOutfitFlatlay] OpenAI Image API error (${response.status}): ${errorText}`);
+      console.error(`❌ [generateOutfitFlatlayWithActualItems] OpenAI Image API error (${response.status}): ${errorText}`);
       return null;
     }
 
     const data = await response.json();
-    console.log(`✅ [generateOutfitFlatlay] OpenAI Image API response received successfully`);
+    console.log(`✅ [generateOutfitFlatlayWithActualItems] OpenAI Image API response received successfully`);
 
     if (data.data && data.data[0] && data.data[0].b64_json) {
       const base64Image = `data:image/png;base64,${data.data[0].b64_json}`;
-      console.log(`🎨 [generateOutfitFlatlay] Successfully generated base64 image (${base64Image.length} characters)`);
+      console.log(`🎨 [generateOutfitFlatlayWithActualItems] Successfully generated base64 image`);
       return base64Image;
     } else {
-      console.error('❌ [generateOutfitFlatlay] Invalid OpenAI image response structure:', data);
+      console.error('❌ [generateOutfitFlatlayWithActualItems] Invalid OpenAI image response structure:', data);
       return null;
     }
 
   } catch (error) {
-    console.error(`❌ [generateOutfitFlatlay] Error in image generation:`, error);
+    console.error(`❌ [generateOutfitFlatlayWithActualItems] Error in image generation:`, error);
     return null;
   }
 };
@@ -351,18 +405,24 @@ const createWardrobeBasedOutfits = (wardrobeItems: any[], occasion: string, time
     const selectedItems = wardrobeItems.slice(startIndex, startIndex + itemsPerOutfit);
     
     if (selectedItems.length >= 2) {
+      const turkishOutfitName = generateTurkishOutfitName(occasion, i + 1);
+      const completeTurkishStylingTip = generateCompleteTurkishStylingTip(
+        { items: selectedItems.map(item => item.name) }, 
+        occasion, 
+        timeOfDay, 
+        weather, 
+        selectedItems.length
+      );
+
       const outfit = {
         id: i + 1,
-        name: `${occasion} Kombinasyonu ${i + 1}`,
+        name: turkishOutfitName,
         items: selectedItems.map(item => item.name),
         item_ids: selectedItems.map(item => item.id),
-        confidence: 7 + Math.floor(Math.random() * 2), // 7-8 confidence for fallback
-        styling_tips: `Bu ${occasion} kombinasyonu ${selectedItems.length} parçadan oluşuyor ve ${timeOfDay} vakti için uygundur. ${weather} hava koşulları göz önünde bulundurularak seçilmiştir.`,
+        confidence: 7 + Math.floor(Math.random() * 2),
+        styling_tips: completeTurkishStylingTip,
         occasion: occasion,
-        color_story: 'Wardrobe-based color coordination',
-        silhouette_notes: 'Balanced proportions from your wardrobe',
-        pattern_analysis: 'Coordinated from available pieces',
-        design_coordination: 'Harmonious selection from your items'
+        reference_images: selectedItems.map(item => item.image_url).filter(Boolean)
       };
       
       outfits.push(outfit);
