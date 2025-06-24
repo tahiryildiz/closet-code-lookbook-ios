@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -39,6 +40,10 @@ interface SavedOutfit {
   ai_styling_tips: string;
   occasion?: string;
   saved_at: string;
+  items?: string[];
+  reference_images?: string[];
+  generated_image?: string;
+  image_url?: string;
 }
 
 const Index = () => {
@@ -65,6 +70,7 @@ const Index = () => {
 
         if (items) {
           setRecentItems(items);
+          setItemCount(items.length);
         }
 
         // Fetch recent outfits (non-saved ones for recent section)
@@ -72,12 +78,11 @@ const Index = () => {
           .from('outfits')
           .select('*')
           .eq('user_id', user.id)
-          .eq('is_saved', false) // Only non-saved outfits for recent section
+          .eq('is_saved', false)
           .order('created_at', { ascending: false })
           .limit(10);
 
         if (outfits) {
-          // Get actual item details for each outfit
           const mappedOutfits = await Promise.all(
             outfits.map(async (outfit) => {
               let items: string[] = [];
@@ -100,42 +105,53 @@ const Index = () => {
                 items: items,
                 reference_images: reference_images,
                 styling_tips: outfit.ai_styling_tips || '',
-                generated_image: outfit.image_url || null // Use stored image URL
+                generated_image: outfit.image_url || null
               };
             })
           );
           setRecentOutfits(mappedOutfits);
         }
 
-        // Fetch saved outfits
+        // Fetch saved outfits with proper deduplication
         const { data: saved } = await supabase
           .from('outfits')
           .select('*')
           .eq('user_id', user.id)
           .eq('is_saved', true)
-          .order('saved_at', { ascending: false })
-          .limit(10);
+          .order('saved_at', { ascending: false });
 
-        if (saved) {
-          // Map saved outfits with stored image URLs
+        if (saved && saved.length > 0) {
+          // Remove duplicates based on clothing_item_ids
+          const uniqueOutfits = saved.filter((outfit, index, self) => {
+            const itemIdsString = JSON.stringify(outfit.clothing_item_ids?.sort());
+            return index === self.findIndex(o => 
+              JSON.stringify(o.clothing_item_ids?.sort()) === itemIdsString
+            );
+          });
+
+          // Get actual item names and images for each outfit
           const mappedSavedOutfits = await Promise.all(
-            saved.map(async (outfit) => {
+            uniqueOutfits.slice(0, 10).map(async (outfit) => {
               let items: string[] = [];
+              let reference_images: string[] = [];
               
               if (outfit.clothing_item_ids && outfit.clothing_item_ids.length > 0) {
                 const { data: itemsData } = await supabase
                   .from('clothing_items')
-                  .select('name')
+                  .select('name, image_url')
                   .in('id', outfit.clothing_item_ids);
 
                 if (itemsData) {
                   items = itemsData.map(item => item.name);
+                  reference_images = itemsData.map(item => item.image_url).filter(Boolean);
                 }
               }
 
               return {
                 ...outfit,
-                items: items
+                items: items,
+                reference_images: reference_images,
+                generated_image: outfit.image_url || null
               };
             })
           );
@@ -230,11 +246,29 @@ const Index = () => {
           </Button>
         </div>
 
-        {/* Weather Recommendations - moved above Style Tips */}
+        {/* Weather Recommendations */}
         <WeatherRecommendations />
 
         {/* Style Tips Card */}
         <StyleTipsCard />
+
+        {/* Recent Items */}
+        {recentItems.length > 0 && (
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg md:text-xl font-semibold text-gray-900">Son Eklenen Kıyafetler</h2>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate('/wardrobe')}
+                className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+              >
+                Tümünü Gör
+              </Button>
+            </div>
+            <RecentItemsCarousel items={recentItems} />
+          </div>
+        )}
 
         {/* Recent Outfits */}
         {recentOutfits.length > 0 && (
@@ -258,7 +292,7 @@ const Index = () => {
         {savedOutfits.length > 0 && (
           <div>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg md:text-xl font-semibold text-gray-900">Kaydedilen Kombinler</h2>
+              <h2 className="text-lg md:text-xl font-semibold text-gray-900">Favori Kombinler</h2>
               <Button
                 variant="ghost"
                 size="sm"
@@ -270,24 +304,6 @@ const Index = () => {
               </Button>
             </div>
             <SavedOutfitsCarousel outfits={savedOutfits} />
-          </div>
-        )}
-
-        {/* Recent Items */}
-        {recentItems.length > 0 && (
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg md:text-xl font-semibold text-gray-900">Son Eklenen Kıyafetler</h2>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigate('/wardrobe')}
-                className="text-blue-600 hover:text-blue-700 text-sm font-medium"
-              >
-                Tümünü Gör
-              </Button>
-            </div>
-            <RecentItemsCarousel items={recentItems} />
           </div>
         )}
 

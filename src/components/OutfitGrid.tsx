@@ -73,6 +73,14 @@ const OutfitGrid = ({ outfits, onDelete }: OutfitGridProps) => {
 
         const shouldShowGrid = !hasVerticalFlatlay && hasReferenceImages && outfit.reference_images!.length > 1;
 
+        // Filter out English styling tips
+        const shouldShowStylingTips = outfit.styling_tips && 
+          !outfit.styling_tips.toLowerCase().includes('this outfit') &&
+          !outfit.styling_tips.toLowerCase().includes('for a ') &&
+          !outfit.styling_tips.toLowerCase().includes('pair the ') &&
+          !outfit.styling_tips.toLowerCase().includes('the neutral ') &&
+          !outfit.styling_tips.toLowerCase().includes('with a ');
+
         return (
           <Card key={outfit.id} className="bg-white border-0 shadow-sm hover:shadow-lg transition-all duration-300 rounded-2xl overflow-hidden">
             <CardContent className="p-0">
@@ -154,7 +162,7 @@ const OutfitGrid = ({ outfits, onDelete }: OutfitGridProps) => {
                   </div>
                 )}
 
-                {outfit.styling_tips && !outfit.styling_tips.toLowerCase().includes('this outfit') && (
+                {shouldShowStylingTips && (
                   <div className="bg-blue-50 rounded-xl p-4">
                     <div className="flex items-start space-x-3">
                       <div className="bg-blue-100 rounded-full p-2">
