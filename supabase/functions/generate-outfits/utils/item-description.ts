@@ -1,5 +1,5 @@
 
-export const createDetailedItemDescription = (item: any) => {
+export const createItemDescription = (item: any) => {
   const parts = [];
   
   // Add color and tone information
@@ -32,7 +32,7 @@ export const createDetailedItemDescription = (item: any) => {
 
 export const createWardrobeDescription = (wardrobeItems: any[]) => {
   return wardrobeItems.map((item: any) => {
-    const description = createDetailedItemDescription(item);
+    const description = createItemDescription(item);
     const brand = item.brand && item.brand !== 'Unknown' ? `, ${item.brand}` : '';
     return `${description} (${item.category}${brand})`;
   }).join(', ');
