@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,7 +15,6 @@ interface WardrobeItem {
   brand?: string;
   image_url: string;
   material?: string;
-  sub_category?: string;
 }
 
 interface WeatherData {
@@ -54,10 +52,10 @@ const WeatherRecommendations = () => {
       if (!user || !currentWeather) return;
 
       try {
-        // Get all clothing items first
+        // Get all clothing items (removed sub_category to fix the build error)
         const { data: items } = await supabase
           .from('clothing_items')
-          .select('id, name, category, primary_color, brand, image_url, material, sub_category')
+          .select('id, name, category, primary_color, brand, image_url, material')
           .eq('user_id', user.id);
 
         if (items && items.length > 0) {
@@ -84,7 +82,7 @@ const WeatherRecommendations = () => {
     return items.filter(item => {
       // Temperature-based filtering
       if (temp >= 25) {
-        // Hot weather - avoid heavy items
+        // Hot weather - prioritize light clothing
         const hotWeatherCategories = ['tshirt', 'tank_top', 'shorts', 'skirt', 'dress', 'sandals', 'light_shirt'];
         const avoidCategories = ['sweater', 'hoodie', 'jacket', 'coat', 'boots', 'long_sleeve'];
         
@@ -107,7 +105,7 @@ const WeatherRecommendations = () => {
         ];
         if (mildWeatherCategories.includes(item.category)) return true;
       } else if (temp < 15) {
-        // Cold weather - prefer warm items
+        // Cold weather - prioritize warm clothing
         const coldWeatherCategories = [
           'sweater', 'hoodie', 'jacket', 'coat', 'pants', 'jeans', 
           'boots', 'long_sleeve', 'cardigan'
@@ -125,13 +123,22 @@ const WeatherRecommendations = () => {
       }
 
       // Condition-based filtering
-      if (condition === 'rainy') {
-        // Prefer closed shoes and jackets
+      if (condition === 'rainy' || condition === 'stormy') {
+        // Prefer waterproof items and closed shoes
         const rainyCategories = ['jacket', 'boots', 'pants', 'jeans'];
         const avoidCategories = ['sandals', 'shorts'];
         
         if (avoidCategories.includes(item.category)) return false;
         if (rainyCategories.includes(item.category)) return true;
+      }
+
+      if (condition === 'snowy') {
+        // Prioritize warm, insulated items
+        const snowyCategories = ['coat', 'boots', 'sweater', 'pants', 'jeans'];
+        const avoidCategories = ['shorts', 'sandals', 'tank_top'];
+        
+        if (avoidCategories.includes(item.category)) return false;
+        if (snowyCategories.includes(item.category)) return true;
       }
 
       // Default: include item if no specific rules exclude it
@@ -148,6 +155,22 @@ const WeatherRecommendations = () => {
     return "soğuk";
   };
 
+  const getConditionAdvice = () => {
+    if (!currentWeather) return "";
+    
+    switch (currentWeather.condition) {
+      case 'rainy':
+      case 'stormy':
+        return " ve yağmurlu";
+      case 'snowy':
+        return " ve karlı";
+      case 'foggy':
+        return " ve sisli";
+      default:
+        return "";
+    }
+  };
+
   // Don't render if loading or no user
   if (loading || !user) return null;
   
@@ -158,7 +181,7 @@ const WeatherRecommendations = () => {
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg md:text-xl font-semibold text-gray-900 flex items-center">
             <Thermometer className="h-5 w-5 mr-2 text-orange-600" />
-            {currentWeather ? `${getWeatherDescription()} hava için öneriler` : 'Bugünkü Hava İçin Öneriler'}
+            {currentWeather ? `${getWeatherDescription()}${getConditionAdvice()} hava için öneriler` : 'Bugünkü Hava İçin Öneriler'}
           </h2>
           <Button
             variant="ghost"
@@ -173,7 +196,7 @@ const WeatherRecommendations = () => {
           <Shirt className="h-12 w-12 text-gray-300 mx-auto mb-3" />
           <p className="text-gray-500 text-sm">
             {currentWeather 
-              ? `${currentWeather.temp}°C ${getWeatherDescription()} hava için uygun kıyafet bulunamadı` 
+              ? `${currentWeather.temp}°C ${getWeatherDescription()}${getConditionAdvice()} hava için uygun kıyafet bulunamadı` 
               : 'Hava durumu önerileri için gardırobunuza kıyafet ekleyin'
             }
           </p>
@@ -187,7 +210,7 @@ const WeatherRecommendations = () => {
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg md:text-xl font-semibold text-gray-900 flex items-center">
           <Thermometer className="h-5 w-5 mr-2 text-orange-600" />
-          {currentWeather ? `${currentWeather.temp}°C ${getWeatherDescription()} hava için öneriler` : 'Bugünkü Hava İçin Öneriler'}
+          {currentWeather ? `${currentWeather.temp}°C ${getWeatherDescription()}${getConditionAdvice()} hava için öneriler` : 'Bugünkü Hava İçin Öneriler'}
         </h2>
         <Button
           variant="ghost"

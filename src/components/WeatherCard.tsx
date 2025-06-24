@@ -27,7 +27,7 @@ const WeatherCard = () => {
         // Get user's location
         const position = await getCurrentLocation();
         
-        // Fetch weather data from OpenWeatherMap API
+        // Fetch weather data from Open-Meteo API
         const weatherData = await fetchCurrentWeather(position.latitude, position.longitude);
         setWeather(weatherData);
       } catch (err) {
@@ -67,26 +67,41 @@ const WeatherCard = () => {
   };
 
   const fetchCurrentWeather = async (lat: number, lon: number): Promise<WeatherData> => {
-    // Using OpenWeatherMap free API - you'll need to set up the API key
-    const API_KEY = 'your-openweather-api-key'; // This should be moved to environment variables
-    const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric&lang=tr`;
-
     try {
-      const response = await fetch(url);
+      // Using Open-Meteo free API
+      const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&timezone=auto`;
+      const geocodeUrl = `https://geocoding-api.open-meteo.com/v1/reverse?latitude=${lat}&longitude=${lon}&count=1`;
+
+      const [weatherResponse, geocodeResponse] = await Promise.all([
+        fetch(weatherUrl),
+        fetch(geocodeUrl)
+      ]);
       
-      if (!response.ok) {
+      if (!weatherResponse.ok) {
         throw new Error('Weather API failed');
       }
 
-      const data = await response.json();
+      const weatherData = await weatherResponse.json();
+      let locationName = 'Bilinmeyen Konum';
+      
+      if (geocodeResponse.ok) {
+        const geocodeData = await geocodeResponse.json();
+        if (geocodeData.results && geocodeData.results.length > 0) {
+          const location = geocodeData.results[0];
+          locationName = location.name || location.admin1 || location.country || 'Bilinmeyen Konum';
+        }
+      }
+      
+      const current = weatherData.current;
+      const condition = mapWeatherCode(current.weather_code);
       
       return {
-        temp: Math.round(data.main.temp),
-        condition: mapWeatherCondition(data.weather[0].main, data.weather[0].id),
-        location: data.name || 'Bilinmeyen Konum',
-        humidity: data.main.humidity,
-        windSpeed: data.wind?.speed,
-        description: data.weather[0].description
+        temp: Math.round(current.temperature_2m),
+        condition: condition,
+        location: locationName,
+        humidity: current.relative_humidity_2m,
+        windSpeed: current.wind_speed_10m,
+        description: getWeatherDescription(condition)
       };
     } catch (error) {
       console.error('Weather fetch error:', error);
@@ -100,25 +115,26 @@ const WeatherCard = () => {
     }
   };
 
-  const mapWeatherCondition = (main: string, id: number): string => {
-    // Map OpenWeatherMap conditions to our internal conditions
-    switch (main.toLowerCase()) {
-      case 'clear':
-        return 'sunny';
-      case 'clouds':
-        return 'cloudy';
-      case 'rain':
-      case 'drizzle':
-        return 'rainy';
-      case 'snow':
-        return 'snowy';
-      case 'thunderstorm':
-        return 'stormy';
-      case 'mist':
-      case 'fog':
-        return 'foggy';
-      default:
-        return 'sunny';
+  const mapWeatherCode = (code: number): string => {
+    // Map Open-Meteo weather codes to our internal conditions
+    if (code === 0) return 'sunny'; // Clear sky
+    if (code >= 1 && code <= 3) return 'cloudy'; // Partly cloudy to overcast
+    if (code >= 45 && code <= 48) return 'foggy'; // Fog
+    if (code >= 51 && code <= 67) return 'rainy'; // Drizzle and rain
+    if (code >= 71 && code <= 77) return 'snowy'; // Snow
+    if (code >= 80 && code <= 99) return 'stormy'; // Rain showers and thunderstorms
+    return 'sunny'; // Default
+  };
+
+  const getWeatherDescription = (condition: string): string => {
+    switch (condition) {
+      case "sunny": return "Güneşli";
+      case "cloudy": return "Bulutlu";
+      case "rainy": return "Yağmurlu";
+      case "snowy": return "Karlı";
+      case "stormy": return "Fırtınalı";
+      case "foggy": return "Sisli";
+      default: return "Güneşli";
     }
   };
 
@@ -142,22 +158,7 @@ const WeatherCard = () => {
   };
 
   const getWeatherText = (condition: string) => {
-    switch (condition) {
-      case "sunny":
-        return "Güneşli";
-      case "cloudy":
-        return "Bulutlu";
-      case "rainy":
-        return "Yağmurlu";
-      case "snowy":
-        return "Karlı";
-      case "stormy":
-        return "Fırtınalı";
-      case "foggy":
-        return "Sisli";
-      default:
-        return "Güneşli";
-    }
+    return getWeatherDescription(condition);
   };
 
   // Export weather data for other components to use
