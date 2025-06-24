@@ -14,6 +14,9 @@ serve(async (req) => {
     const { openAIApiKey } = validateEnvironment();
     const requestData = await req.json();
     
+    console.log('🎯 Starting advanced outfit generation with sophisticated styling intelligence');
+    console.log('📊 Advanced features: color theory, pattern mixing, design coordination, contrast balancing');
+    
     const result = await handleEnhancedOutfitGeneration(requestData, openAIApiKey);
     
     return createResponse(result);

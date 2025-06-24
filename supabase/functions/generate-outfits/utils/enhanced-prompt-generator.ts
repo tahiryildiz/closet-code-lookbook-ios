@@ -13,10 +13,10 @@ export function generateEnhancedPrompt(
   
   const genderContext = userGender ? `Gender preference: ${userGender}` : '';
   const stylingTipsDetail = isPremium 
-    ? "Provide comprehensive styling advice including color theory, silhouette balance, texture mixing, layering techniques, and seasonal appropriateness with specific fashion principles (200-300 words)."
-    : "Provide focused styling tips on color coordination, fit balance, and occasion appropriateness (80-120 words).";
+    ? "Provide comprehensive styling advice including advanced color theory (analogous, complementary, triadic schemes), sophisticated pattern mixing rules, design detail coordination, contrast balancing, and micro-aesthetic cohesion with specific fashion principles (250-350 words)."
+    : "Provide focused styling tips on color coordination, fit balance, pattern mixing basics, and occasion appropriateness (100-150 words).";
   
-  return `You are an expert fashion stylist with deep knowledge of color theory, silhouette balance, and style coherence. Create 3 sophisticated outfit combinations from this detailed wardrobe:
+  return `You are an expert fashion stylist with advanced knowledge of color theory, pattern mixing, design coordination, and visual balance. Create 3 sophisticated outfit combinations from this detailed wardrobe:
 
 ${itemDescriptions}
 
@@ -27,30 +27,55 @@ Context:
 ${genderContext}
 
 ADVANCED STYLING RULES:
-1. COLOR HARMONY: Ensure color palettes are cohesive (complementary, analogous, or monochromatic schemes). Avoid mixing warm and cool tones unless intentionally creating contrast.
 
-2. SILHOUETTE BALANCE: Combine different fits strategically (oversized + fitted, structured + flowy). Create visual interest through proportion play.
+1. COLOR THEORY MASTERY:
+   - Apply advanced color harmony: analogous (adjacent hues), complementary (opposite hues), triadic (120° apart), split-complementary
+   - Consider color temperature: avoid mixing warm and cool tones unless creating intentional contrast
+   - Use neutral colors (black, white, gray, navy, beige) as anchors for bold color combinations
+   - Factor in color tone (light, dark, bright, muted, pastel) for sophisticated coordination
 
-3. TEXTURE & MATERIAL COORDINATION: Mix textures thoughtfully - avoid clashing materials (satin with denim) unless creating intentional contrast. Consider fabric weight and formality levels.
+2. PATTERN MIXING EXPERTISE:
+   - Maximum 2 patterns per outfit with strategic scale contrast (fine + large, medium + large)
+   - Mix pattern types thoughtfully: geometric with organic, or same pattern in different scales
+   - Avoid similar complexity patterns competing for attention
+   - Use solid colors to ground patterned pieces and create visual rest
 
-4. PATTERN MIXING RULES: 
-   - Maximum 2 patterns per outfit
-   - Mix different scales (large + small patterns)
-   - Keep one pattern dominant, others as accents
-   - Use solid colors to ground patterned pieces
+3. DESIGN DETAIL COORDINATION:
+   - Balance formality levels across pieces (formal vs casual elements should complement, not clash)
+   - Coordinate necklines and collar styles for upper body harmony in layered looks
+   - Limit decorative elements (ruffles, embroidery, beading) to 1-2 pieces maximum
+   - Consider structural elements (pleats, darts, tailoring) for sophisticated silhouettes
 
-5. DESIGN DETAIL BALANCE: Balance ornate pieces (ruffles, embellishments) with simpler counterparts. Avoid overwhelming detail competition.
+4. CONTRAST AND BALANCE:
+   - Create light/dark contrast for visual interest (light top + dark bottom or vice versa)
+   - Balance oversized pieces with fitted counterparts for proportional harmony
+   - Mix textures thoughtfully: smooth with textured, matte with shine
+   - Consider garment weights: heavy materials (wool, denim) with lighter ones (silk, cotton)
 
-6. CONSTRUCTION HARMONY: Consider necklines, collar styles, and sleeve types for upper body cohesion. Match formality levels across pieces.
+5. SILHOUETTE SOPHISTICATION:
+   - Combine different fits strategically (structured + flowy, oversized + slim-fit)
+   - Create visual interest through proportion play while maintaining balance
+   - Consider body shape and create flattering lines through fit combinations
 
-7. SEASONAL & OCCASION APPROPRIATENESS: Ensure all pieces align with weather requirements and event formality.
+6. CONSTRUCTION HARMONY:
+   - Match closure types and design details for coherent aesthetic
+   - Consider button counts and hardware consistency
+   - Factor in lining and construction quality for overall sophistication
+
+7. CONTEXTUAL APPROPRIATENESS:
+   - Ensure all pieces align with weather requirements and event formality
+   - Consider lighting conditions and venue appropriateness
+   - Match lifestyle and practical wearability needs
 
 REQUIREMENTS:
-- Each outfit must include 3-5 items that create a cohesive look
+- Each outfit must include 3-5 items that create a visually cohesive and fashion-forward look
 - All items MUST be from the provided wardrobe (use exact item names)
+- Apply advanced color theory principles in combinations
+- Demonstrate sophisticated pattern mixing when applicable
+- Show design detail coordination and contrast balancing
 - ${stylingTipsDetail}
-- Rate outfit confidence based on style coherence, color harmony, and appropriateness (1-10 scale)
-- Consider the wearer's lifestyle and the practical wearability
+- Rate outfit confidence based on color harmony, pattern coordination, design balance, and overall sophistication (1-10 scale)
+- Include specific explanations of color theory and pattern mixing choices
 
 Return a JSON array with this exact structure:
 [
@@ -60,14 +85,16 @@ Return a JSON array with this exact structure:
     "items": ["exact item name 1", "exact item name 2", "exact item name 3"],
     "item_ids": ["item_id_1", "item_id_2", "item_id_3"],
     "confidence": 9,
-    "styling_tips": "Detailed styling advice with specific fashion principles...",
-    "color_story": "Brief description of the color palette and harmony",
-    "silhouette_notes": "How the pieces work together proportionally",
+    "styling_tips": "Advanced styling advice with specific color theory, pattern mixing, and design coordination principles...",
+    "color_story": "Detailed analysis of color harmony type (analogous/complementary/etc) and reasoning",
+    "silhouette_notes": "How pieces work together proportionally with contrast and balance details",
+    "pattern_analysis": "Pattern mixing strategy and scale relationships if applicable",
+    "design_coordination": "How design details, formality levels, and construction elements complement each other",
     "occasion": "${occasion}"
   }
 ]
 
-Focus on creating outfits that demonstrate sophisticated fashion knowledge and practical wearability. Each combination should tell a coherent style story.
+Focus on creating outfits that demonstrate sophisticated fashion knowledge, advanced color theory application, and expert-level styling coordination. Each combination should represent high-fashion thinking with practical wearability.
 
 Make sure the response is valid JSON only, no additional text.`;
 }
