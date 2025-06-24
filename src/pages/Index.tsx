@@ -9,6 +9,9 @@ import { supabase } from "@/integrations/supabase/client";
 import RecentItemsCarousel from "@/components/RecentItemsCarousel";
 import RecentOutfitsCarousel from "@/components/RecentOutfitsCarousel";
 import SavedOutfitsCarousel from "@/components/SavedOutfitsCarousel";
+import WeatherCard from "@/components/WeatherCard";
+import WeatherRecommendations from "@/components/WeatherRecommendations";
+import StyleTipsCard from "@/components/StyleTipsCard";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -121,6 +124,15 @@ const Index = () => {
 
       {/* Content */}
       <div className="px-4 py-6 space-y-6">
+        {/* Weather Card */}
+        <WeatherCard />
+
+        {/* Weather-based Recommendations */}
+        <WeatherRecommendations />
+
+        {/* Style Tips */}
+        <StyleTipsCard />
+
         {/* Quick Actions */}
         <div className="grid grid-cols-2 gap-4">
           <Card className="bg-white/90 backdrop-blur-sm border-0 shadow-lg rounded-2xl hover:shadow-xl transition-all duration-300 cursor-pointer" onClick={() => navigate('/wardrobe')}>
@@ -165,6 +177,31 @@ const Index = () => {
             </CardContent>
           </Card>
         </div>
+
+        {/* Recent Items */}
+        {recentItems.length > 0 && (
+          <Card className="bg-white/90 backdrop-blur-sm border-0 shadow-lg rounded-2xl">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base font-semibold text-gray-900 flex items-center">
+                  <Plus className="h-5 w-5 mr-2 text-green-600" />
+                  Son Eklenen Ürünler
+                </CardTitle>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => navigate('/wardrobe')}
+                  className="text-green-600 hover:text-green-700 text-sm font-medium"
+                >
+                  Hepsini Gör
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <RecentItemsCarousel items={recentItems} />
+            </CardContent>
+          </Card>
+        )}
 
         {/* Saved Outfits Section */}
         {savedOutfits.length > 0 && (
@@ -212,31 +249,6 @@ const Index = () => {
             </CardHeader>
             <CardContent className="pt-0">
               <RecentOutfitsCarousel outfits={recentOutfits} />
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Recent Items */}
-        {recentItems.length > 0 && (
-          <Card className="bg-white/90 backdrop-blur-sm border-0 shadow-lg rounded-2xl">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-base font-semibold text-gray-900 flex items-center">
-                  <Plus className="h-5 w-5 mr-2 text-green-600" />
-                  Son Eklenen Ürünler
-                </CardTitle>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => navigate('/wardrobe')}
-                  className="text-green-600 hover:text-green-700 text-sm font-medium"
-                >
-                  Hepsini Gör
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <RecentItemsCarousel items={recentItems} />
             </CardContent>
           </Card>
         )}
