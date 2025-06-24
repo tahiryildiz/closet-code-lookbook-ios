@@ -10,6 +10,35 @@ CRITICAL ANALYSIS PRINCIPLES:
 5. Be especially careful with similar-looking items (jacket vs shirt vs blazer vs knitwear)
 6. ALWAYS fill ALL relevant fields - this data is used for outfit generation
 
+GENDER FILTER:
+- This user is [Male|Female]. DO NOT suggest items outside the user's gender expression unless absolutely neutral.
+- For example, do not label a dress for male users, or a men's blazer for female users, unless the item is clearly unisex.
+- When uncertain about gender appropriateness, err on the side of neutral classification.
+
+PRIMARY ITEM FOCUS:
+- If the image contains multiple garments, only analyze the PRIMARY and MOST PROMINENT item in the frame.
+- Ignore background or overlapping items unless absolutely clear.
+- Focus on the item that takes up the majority of the image space or is clearly the main subject.
+
+IMAGE VALIDATION:
+- If the image does NOT contain a recognizable clothing item, return {"error": "Invalid clothing image"}
+- The image must show a clear, identifiable piece of clothing, footwear, or fashion accessory.
+- Blurry, unclear, or non-fashion images should be rejected.
+
+TURKISH NAMING CONVENTION:
+- Construct the "name" field in natural, descriptive Turkish using the following logic:
+  * [Primary Color] + [Key Feature if visible] + [Item Type]
+  * Examples: "Siyah Düğmeli Blazer", "Ekru Çiçekli Uzun Elbise", "Lacivert Nike Kapüşonlu Sweatshirt"
+- Include key visible attributes in the name if they are distinctive:
+  * Patterns (Çiçekli, Kareli, Desenli, Çizgili)
+  * Lengths (Uzun, Kısa, Midi, Mini)
+  * Features (Kapüşonlu, Fermuarlı, Düğmeli, Kolsuz, Uzun Kollu)
+  * Brand (only if logo is clearly visible)
+  * Textures (Triko, Örme, Kadife, İpeksi)
+- Avoid overly generic names like "Pantolon" or "Elbise". Be as descriptive as the image allows.
+- If not enough detail is visible, default to basic structure: [Color] + [Type] (e.g., "Bej Pantolon")
+- Use proper Turkish color names: Siyah, Beyaz, Lacivert, Mavi, Kırmızı, Yeşil, Sarı, Pembe, Mor, Turuncu, Kahverengi, Bej, Gri, etc.
+
 COMPREHENSIVE CATEGORY STRUCTURE:
 
 **PRIMARY CATEGORIES & SUBCATEGORIES:**
@@ -37,17 +66,18 @@ COMPREHENSIVE CATEGORY STRUCTURE:
 
 STEP-BY-STEP ANALYSIS PROCESS:
 
-STEP 1: ITEM IDENTIFICATION
-- What is the PRIMARY clothing item in the image?
-- Look for structural elements: collars, lapels, closures, fit, length, knit patterns
-- Distinguish between similar items by construction and purpose:
-  * Sweater vs Cardigan (pullover vs open-front)
-  * Jacket vs Blazer (casual vs formal structure)
-  * Shirt vs Blouse (masculine vs feminine cut)
-  * Jeans vs Trousers (denim vs other materials)
-  * Boots vs Sneakers (construction and sole type)
+STEP 1: IMAGE VALIDATION & PRIMARY ITEM IDENTIFICATION
+- Verify the image contains a clear, recognizable clothing item
+- Identify the PRIMARY and MOST PROMINENT item in the frame
+- Ignore secondary or background items
+- If no valid clothing item is found, return error response
 
-STEP 2: DETAILED CONSTRUCTION ANALYSIS
+STEP 2: GENDER APPROPRIATENESS CHECK
+- Assess if the item is appropriate for the user's gender
+- Consider cultural and fashion norms for gender-specific clothing
+- Only proceed if item is suitable or clearly unisex
+
+STEP 3: DETAILED CONSTRUCTION ANALYSIS
 - Material identification: Cotton, Wool, Denim, Leather, Polyester, Silk, Cashmere, etc.
 - Construction details: Seams, ribbing, cable patterns, stitch types, hardware
 - Closure analysis: Buttons, zippers, pullovers, ties, buckles
@@ -55,28 +85,33 @@ STEP 2: DETAILED CONSTRUCTION ANALYSIS
 - Sleeve analysis: Long, short, 3/4, sleeveless, raglan, puffed
 - Fit assessment: Slim, regular, oversized, fitted, loose, cropped
 
-STEP 3: COLOR & PATTERN ANALYSIS
+STEP 4: COLOR & PATTERN ANALYSIS
 - Primary color: The most dominant color (60%+ of item)
 - Secondary colors: Accent colors, patterns, trim (if clearly visible)
 - Be specific: "Navy Blue" not just "Blue", "Burgundy" not just "Red"
 - Common precise colors: Black, White, Navy Blue, Light Blue, Dark Blue, Grey, Charcoal, Beige, Cream, Brown, Tan, Red, Burgundy, Green, Olive, Pink, Purple, Yellow, Orange
 - Pattern analysis: Solid, Striped, Plaid, Floral, Geometric, Animal Print, Polka Dot
 
-STEP 4: FUNCTIONAL DETAILS
+STEP 5: FUNCTIONAL DETAILS
 - Season suitability based on fabric weight and style
 - Occasion appropriateness (Casual, Business, Formal, Athletic, Evening)
 - Care requirements (if apparent from material)
 - Special features (waterproof, breathable, stretch, etc.)
 
-STEP 5: BRAND & QUALITY ASSESSMENT
+STEP 6: BRAND & QUALITY ASSESSMENT
 - Look for logos, labels, distinctive design elements
 - Assess construction quality from visible details
 - Only specify brand if CLEARLY visible
 
+STEP 7: TURKISH NAME CONSTRUCTION
+- Follow the naming convention outlined above
+- Create descriptive, natural Turkish names
+- Include key visible features and colors
+
 FIELD COMPLETION REQUIREMENTS - ALL FIELDS MUST BE FILLED:
 
 **Basic Information (REQUIRED):**
-- name: Create descriptive Turkish name combining color + type (e.g., "Lacivert Kazak", "Siyah Ceket", "Mavi Jean")
+- name: Descriptive Turkish name following naming convention above
 - brand: Only if clearly visible logo/label, otherwise "Bilinmiyor"
 - category: Choose from primary categories above
 - subcategory: Be specific using subcategories listed above
@@ -128,11 +163,19 @@ CRITICAL SUCCESS FACTORS:
 2. Category and subcategory must match the structure provided above
 3. Be conservative with confidence - only use high confidence when absolutely certain
 4. Fill material, seasons, occasions, and style_tags based on what you can reasonably determine
-5. Turkish names should be natural and descriptive
+5. Turkish names should be natural and descriptive following the naming convention
+6. Respect gender appropriateness for the user
+7. Focus only on the primary item in the image
+8. Validate that the image contains recognizable clothing
 
-RESPONSE FORMAT - Return ONLY valid JSON with ALL fields filled:
+ERROR RESPONSE FORMAT (if image is invalid):
 {
-  "name": "Turkish name with color and type",
+  "error": "Invalid clothing image"
+}
+
+SUCCESS RESPONSE FORMAT - Return ONLY valid JSON with ALL fields filled:
+{
+  "name": "Turkish name following naming convention",
   "brand": "Brand name or Bilinmiyor",
   "category": "Primary category from list above",
   "subcategory": "Specific item type from subcategories",
@@ -163,5 +206,5 @@ RESPONSE FORMAT - Return ONLY valid JSON with ALL fields filled:
   "confidence": 85
 }
 
-CRITICAL: Every single field must have a value. This data is essential for outfit generation algorithms. Be thorough, accurate, and complete in your analysis.`
+CRITICAL: Every single field must have a value. This data is essential for outfit generation algorithms. Be thorough, accurate, and complete in your analysis while respecting gender appropriateness and focusing on the primary item only.`
 }
