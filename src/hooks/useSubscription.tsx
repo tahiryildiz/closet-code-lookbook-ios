@@ -3,17 +3,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-
-type SubscriptionType = 'free' | 'monthly' | 'yearly';
-
-interface SubscriptionLimits {
-  canAddItem: boolean;
-  canGenerateOutfit: boolean;
-  remainingItems: number;
-  remainingOutfits: number;
-  subscriptionType: SubscriptionType;
-  isPremium: boolean;
-}
+import { calculateSubscriptionLimits, SubscriptionLimits } from "@/utils/subscriptionLimits";
 
 export const useSubscription = () => {
   const { user } = useAuth();
@@ -41,80 +31,8 @@ export const useSubscription = () => {
 
       if (!profile) return;
 
-      const subscriptionType = (profile.subscription_type as SubscriptionType) || 'free';
-      const isPremium = subscriptionType === 'monthly' || subscriptionType === 'yearly';
-
-      if (isPremium) {
-        setLimits({
-          canAddItem: true,
-          canGenerateOutfit: true,
-          remainingItems: -1, // unlimited
-          remainingOutfits: -1, // unlimited
-          subscriptionType,
-          isPremium: true
-        });
-        return;
-      }
-
-      // For free users, check current usage
-      const { count: itemCount } = await supabase
-        .from('clothing_items')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id);
-
-      const today = new Date().toISOString().split('T')[0];
-      
-      // Reset daily counters if it's a new day
-      let dailyGenerations = 0;
-      let adBonusItems = 0;
-      let adBonusGenerations = 0;
-      
-      if (profile.last_generation_date !== today) {
-        // Reset daily outfit generations for new day
-        await supabase
-          .from('user_profiles')
-          .update({
-            daily_outfit_generations: 0,
-            last_generation_date: today
-          })
-          .eq('id', user.id);
-        dailyGenerations = 0;
-      } else {
-        dailyGenerations = profile.daily_outfit_generations || 0;
-      }
-
-      if (profile.last_ad_bonus_date !== today) {
-        // Reset ad bonuses for new day
-        await supabase
-          .from('user_profiles')
-          .update({
-            ad_bonus_items: 0,
-            ad_bonus_generations: 0,
-            last_ad_bonus_date: today
-          })
-          .eq('id', user.id);
-        adBonusItems = 0;
-        adBonusGenerations = 0;
-      } else {
-        adBonusItems = profile.ad_bonus_items || 0;
-        adBonusGenerations = profile.ad_bonus_generations || 0;
-      }
-
-      // Calculate limits
-      const baseItemLimit = 5;
-      const totalItemsAllowed = baseItemLimit + Math.min(adBonusItems, 10);
-
-      const baseOutfitLimit = 3;
-      const totalOutfitsAllowed = baseOutfitLimit + Math.min(adBonusGenerations, 5);
-
-      setLimits({
-        canAddItem: (itemCount || 0) < totalItemsAllowed,
-        canGenerateOutfit: dailyGenerations < totalOutfitsAllowed,
-        remainingItems: Math.max(0, totalItemsAllowed - (itemCount || 0)),
-        remainingOutfits: Math.max(0, totalOutfitsAllowed - dailyGenerations),
-        subscriptionType: 'free',
-        isPremium: false
-      });
+      const calculatedLimits = await calculateSubscriptionLimits(user.id, profile);
+      setLimits(calculatedLimits);
     } catch (error) {
       console.error('Error checking subscription limits:', error);
     } finally {
