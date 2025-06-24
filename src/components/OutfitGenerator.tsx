@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -92,7 +93,10 @@ const OutfitGenerator = () => {
                 occasion: outfit.occasion,
                 is_saved: outfit.is_saved || false,
                 reference_images: reference_images,
-                generated_image: null // Database doesn't store generated images currently
+                // Use the stored flatlay image URL if available, otherwise fall back to generated_image
+                generated_image: outfit.image_url || null,
+                image_url: outfit.image_url || null,
+                composition_type: outfit.image_url ? 'professional_flatlay_vertical' : 'reference_fallback'
               };
             })
           );
@@ -286,11 +290,14 @@ const OutfitGenerator = () => {
         return;
       }
 
-      // Process outfits
-      const processedOutfits = generatedOutfits.map((outfit: Outfit) => ({
+      // Process outfits and ensure proper image handling
+      const processedOutfits = generatedOutfits.map((outfit: any) => ({
         ...outfit,
         styling_tips: outfit.styling_tips,
-        is_saved: false
+        is_saved: false,
+        // Prioritize the uploaded flatlay image over generated base64
+        generated_image: outfit.image_url || outfit.generated_image,
+        image_url: outfit.image_url
       }));
 
       setOutfits(processedOutfits);
