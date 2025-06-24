@@ -133,51 +133,6 @@ const Index = () => {
         {/* Style Tips */}
         <StyleTipsCard />
 
-        {/* Quick Actions */}
-        <div className="grid grid-cols-2 gap-4">
-          <Card className="bg-white/90 backdrop-blur-sm border-0 shadow-lg rounded-2xl hover:shadow-xl transition-all duration-300 cursor-pointer" onClick={() => navigate('/wardrobe')}>
-            <CardContent className="p-4 text-center">
-              <div className="bg-blue-100 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-3">
-                <Plus className="h-6 w-6 text-blue-600" />
-              </div>
-              <h3 className="font-semibold text-gray-900 text-sm">Kıyafet Ekle</h3>
-              <p className="text-xs text-gray-600 mt-1">Gardırobuna yeni ürün ekle</p>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-white/90 backdrop-blur-sm border-0 shadow-lg rounded-2xl hover:shadow-xl transition-all duration-300 cursor-pointer" onClick={() => navigate('/outfits')}>
-            <CardContent className="p-4 text-center">
-              <div className="bg-purple-100 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-3">
-                <TrendingUp className="h-6 w-6 text-purple-600" />
-              </div>
-              <h3 className="font-semibold text-gray-900 text-sm">Kombin Oluştur</h3>
-              <p className="text-xs text-gray-600 mt-1">AI ile kombin önerisi al</p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Stats */}
-        <div className="grid grid-cols-3 gap-3">
-          <Card className="bg-white/90 backdrop-blur-sm border-0 shadow-lg rounded-2xl">
-            <CardContent className="p-3 text-center">
-              <div className="text-lg font-bold text-blue-600">{stats.totalItems}</div>
-              <div className="text-xs text-gray-600">Toplam Ürün</div>
-            </CardContent>
-          </Card>
-          <Card className="bg-white/90 backdrop-blur-sm border-0 shadow-lg rounded-2xl">
-            <CardContent className="p-3 text-center">
-              <div className="text-lg font-bold text-indigo-600">{stats.totalOutfits}</div>
-              <div className="text-xs text-gray-600">Kombin</div>
-            </CardContent>
-          </Card>
-          <Card className="bg-white/90 backdrop-blur-sm border-0 shadow-lg rounded-2xl">
-            <CardContent className="p-3 text-center">
-              <div className="text-lg font-bold text-red-600">{stats.favoriteItems}</div>
-              <div className="text-xs text-gray-600">Favori</div>
-            </CardContent>
-          </Card>
-        </div>
-
         {/* Recent Items */}
         {recentItems.length > 0 && (
           <Card className="bg-white/90 backdrop-blur-sm border-0 shadow-lg rounded-2xl">
@@ -252,6 +207,51 @@ const Index = () => {
             </CardContent>
           </Card>
         )}
+
+        {/* Quick Actions */}
+        <div className="grid grid-cols-2 gap-4">
+          <Card className="bg-white/90 backdrop-blur-sm border-0 shadow-lg rounded-2xl hover:shadow-xl transition-all duration-300 cursor-pointer" onClick={() => navigate('/wardrobe')}>
+            <CardContent className="p-4 text-center">
+              <div className="bg-blue-100 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-3">
+                <Plus className="h-6 w-6 text-blue-600" />
+              </div>
+              <h3 className="font-semibold text-gray-900 text-sm">Kıyafet Ekle</h3>
+              <p className="text-xs text-gray-600 mt-1">Gardırobuna yeni ürün ekle</p>
+            </CardContent>
+          </Card>
+          
+          <Card className="bg-white/90 backdrop-blur-sm border-0 shadow-lg rounded-2xl hover:shadow-xl transition-all duration-300 cursor-pointer" onClick={() => navigate('/outfits')}>
+            <CardContent className="p-4 text-center">
+              <div className="bg-purple-100 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-3">
+                <TrendingUp className="h-6 w-6 text-purple-600" />
+              </div>
+              <h3 className="font-semibold text-gray-900 text-sm">Kombin Oluştur</h3>
+              <p className="text-xs text-gray-600 mt-1">AI ile kombin önerisi al</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-3 gap-3">
+          <Card className="bg-white/90 backdrop-blur-sm border-0 shadow-lg rounded-2xl">
+            <CardContent className="p-3 text-center">
+              <div className="text-lg font-bold text-blue-600">{stats.totalItems}</div>
+              <div className="text-xs text-gray-600">Toplam Ürün</div>
+            </CardContent>
+          </Card>
+          <Card className="bg-white/90 backdrop-blur-sm border-0 shadow-lg rounded-2xl">
+            <CardContent className="p-3 text-center">
+              <div className="text-lg font-bold text-indigo-600">{stats.totalOutfits}</div>
+              <div className="text-xs text-gray-600">Kombin</div>
+            </CardContent>
+          </Card>
+          <Card className="bg-white/90 backdrop-blur-sm border-0 shadow-lg rounded-2xl">
+            <CardContent className="p-3 text-center">
+              <div className="text-lg font-bold text-red-600">{stats.favoriteItems}</div>
+              <div className="text-xs text-gray-600">Favori</div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );

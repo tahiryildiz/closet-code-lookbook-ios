@@ -28,15 +28,25 @@ const WeatherRecommendations = () => {
       if (!user) return;
 
       try {
-        // Get weather-appropriate items (mock logic for now)
+        // Get all clothing items first, then filter for weather-appropriate ones
         const { data: items } = await supabase
           .from('clothing_items')
           .select('id, name, category, primary_color, brand, image_url')
           .eq('user_id', user.id)
-          .in('category', ['tshirt', 'shirt', 'pants', 'jacket']) // Weather-appropriate categories
-          .limit(4);
+          .limit(8); // Get more items to filter from
 
-        setRecommendedItems(items || []);
+        if (items && items.length > 0) {
+          // Filter for weather-appropriate categories or just take first 4 if not enough
+          const weatherAppropriate = items.filter(item => 
+            ['tshirt', 'shirt', 'pants', 'jacket', 'dress', 'skirt', 'shorts', 'sweater'].includes(item.category)
+          );
+          
+          const selectedItems = weatherAppropriate.length >= 4 
+            ? weatherAppropriate.slice(0, 4)
+            : items.slice(0, 4);
+            
+          setRecommendedItems(selectedItems);
+        }
       } catch (error) {
         console.error('Error fetching recommended items:', error);
       } finally {
@@ -47,7 +57,38 @@ const WeatherRecommendations = () => {
     fetchRecommendedItems();
   }, [user]);
 
-  if (loading || recommendedItems.length === 0) return null;
+  // Don't render if loading or no user
+  if (loading || !user) return null;
+  
+  // Show the card even if no items, with a message to add items
+  if (recommendedItems.length === 0) {
+    return (
+      <Card className="bg-white/90 backdrop-blur-sm border-0 shadow-lg rounded-2xl">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base font-semibold text-gray-900 flex items-center">
+              <Thermometer className="h-5 w-5 mr-2 text-orange-600" />
+              Bugünkü Hava İçin Öneriler
+            </CardTitle>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate('/wardrobe')}
+              className="text-orange-600 hover:text-orange-700 text-sm font-medium"
+            >
+              Kıyafet Ekle
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent className="pt-0">
+          <div className="text-center py-8">
+            <Shirt className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+            <p className="text-gray-500 text-sm">Hava durumu önerileri için gardırobunuza kıyafet ekleyin</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="bg-white/90 backdrop-blur-sm border-0 shadow-lg rounded-2xl">
