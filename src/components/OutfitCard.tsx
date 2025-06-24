@@ -1,10 +1,9 @@
-
-
 import { Share, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface OutfitCardProps {
   outfit: {
@@ -21,7 +20,6 @@ interface OutfitCardProps {
     item_count?: number;
     aspect_ratio?: string;
     is_saved?: boolean;
-    // Legacy support
     images?: string[];
     product_images?: string[];
     complete_outfit_images?: boolean;
@@ -32,7 +30,41 @@ interface OutfitCardProps {
 
 const OutfitCard = ({ outfit, onSave }: OutfitCardProps) => {
   const [isSaved, setIsSaved] = useState(outfit.is_saved || false);
+  const [itemsWithBrands, setItemsWithBrands] = useState<string[]>([]);
   
+  // Fetch brand information for items
+  useEffect(() => {
+    const fetchItemBrands = async () => {
+      if (outfit.item_ids && outfit.item_ids.length > 0) {
+        try {
+          const { data: items } = await supabase
+            .from('clothing_items')
+            .select('name, brand')
+            .in('id', outfit.item_ids);
+
+          if (items) {
+            const itemsWithBrandInfo = items.map(item => {
+              if (item.brand && item.brand.trim()) {
+                return `${item.brand} ${item.name.toLowerCase()}`;
+              }
+              return item.name;
+            });
+            setItemsWithBrands(itemsWithBrandInfo);
+          } else {
+            setItemsWithBrands(outfit.items);
+          }
+        } catch (error) {
+          console.error('Error fetching item brands:', error);
+          setItemsWithBrands(outfit.items);
+        }
+      } else {
+        setItemsWithBrands(outfit.items);
+      }
+    };
+
+    fetchItemBrands();
+  }, [outfit.item_ids, outfit.items]);
+
   // Prioritize generated vertical flatlay composition, fallback to reference images
   const hasVerticalFlatlay = outfit.generated_image && 
     (outfit.composition_type === 'professional_flatlay_vertical' || 
@@ -58,17 +90,17 @@ const OutfitCard = ({ outfit, onSave }: OutfitCardProps) => {
     if (navigator.share) {
       navigator.share({
         title: outfit.name,
-        text: `${outfit.name} - ${outfit.items.join(', ')}`,
+        text: `${outfit.name} - ${itemsWithBrands.join(', ')}`,
       }).catch(console.error);
     } else {
-      navigator.clipboard.writeText(`${outfit.name} - ${outfit.items.join(', ')}`);
+      navigator.clipboard.writeText(`${outfit.name} - ${itemsWithBrands.join(', ')}`);
       toast.success("Kombin panoya kopyalandı!");
     }
   };
 
   // Generate suggestions for additional items based on what's missing
   const generateAdditionalSuggestions = () => {
-    const categories = outfit.items.map(item => {
+    const categories = itemsWithBrands.map(item => {
       const lowerItem = item.toLowerCase();
       if (lowerItem.includes('pantolon') || lowerItem.includes('şort') || lowerItem.includes('etek')) return 'bottom';
       if (lowerItem.includes('tişört') || lowerItem.includes('gömlek') || lowerItem.includes('kazak') || lowerItem.includes('sweatshirt')) return 'top';
@@ -129,7 +161,7 @@ const OutfitCard = ({ outfit, onSave }: OutfitCardProps) => {
                 >
                   <img
                     src={imageUrl}
-                    alt={`${outfit.items[index] || 'Outfit item'}`}
+                    alt={`${itemsWithBrands[index] || 'Outfit item'}`}
                     className="w-full h-full object-cover"
                     onError={(e) => {
                       console.error(`Failed to load reference image: ${imageUrl}`);
@@ -188,11 +220,11 @@ const OutfitCard = ({ outfit, onSave }: OutfitCardProps) => {
             <h3 className="text-lg font-semibold text-gray-900 mb-2">{outfit.name}</h3>
           </div>
 
-          {/* Items List */}
+          {/* Items List with Brand Information */}
           <div className="space-y-2">
             <h4 className="text-base font-semibold text-gray-900">Bu kombinasyonda:</h4>
             <div className="space-y-1">
-              {outfit.items.map((item, index) => (
+              {itemsWithBrands.map((item, index) => (
                 <div key={index} className="text-sm text-gray-600 flex items-center">
                   <div className="w-2 h-2 bg-blue-400 rounded-full mr-3"></div>
                   {item}
@@ -237,4 +269,3 @@ const OutfitCard = ({ outfit, onSave }: OutfitCardProps) => {
 };
 
 export default OutfitCard;
-

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -30,7 +31,7 @@ const SavedOutfits = () => {
       if (!user) return;
 
       try {
-        // Fetch saved outfits
+        // Fetch saved outfits with deduplication
         const { data: outfits, error } = await supabase
           .from('outfits')
           .select('*')
@@ -44,9 +45,17 @@ const SavedOutfits = () => {
         }
 
         if (outfits && outfits.length > 0) {
+          // Remove duplicates based on clothing_item_ids
+          const uniqueOutfits = outfits.filter((outfit, index, self) => {
+            const itemIdsString = JSON.stringify(outfit.clothing_item_ids?.sort());
+            return index === self.findIndex(o => 
+              JSON.stringify(o.clothing_item_ids?.sort()) === itemIdsString
+            );
+          });
+
           // Get actual item names and images for each outfit
           const outfitsWithItems = await Promise.all(
-            outfits.map(async (outfit) => {
+            uniqueOutfits.map(async (outfit) => {
               if (outfit.clothing_item_ids && outfit.clothing_item_ids.length > 0) {
                 const { data: items } = await supabase
                   .from('clothing_items')
@@ -58,7 +67,7 @@ const SavedOutfits = () => {
                     ...outfit,
                     items: items.map(item => item.name),
                     reference_images: items.map(item => item.image_url).filter(Boolean),
-                    generated_image: outfit.image_url || null // Use stored flatlay image
+                    generated_image: outfit.image_url || null
                   };
                 }
               }
@@ -81,6 +90,23 @@ const SavedOutfits = () => {
     fetchSavedOutfits();
   }, [user]);
 
+  const handleDeleteOutfit = async (outfitId: string) => {
+    try {
+      const { error } = await supabase
+        .from('outfits')
+        .delete()
+        .eq('id', outfitId)
+        .eq('user_id', user?.id);
+
+      if (error) throw error;
+
+      // Remove from local state
+      setSavedOutfits(prev => prev.filter(outfit => outfit.id !== outfitId));
+    } catch (error) {
+      console.error('Error deleting outfit:', error);
+    }
+  };
+
   // Convert SavedOutfit to Outfit format for OutfitGrid
   const formattedOutfits = savedOutfits.map(outfit => ({
     id: outfit.id,
@@ -91,7 +117,7 @@ const SavedOutfits = () => {
     clothing_item_ids: outfit.clothing_item_ids,
     occasion: outfit.occasion,
     is_saved: true,
-    generated_image: outfit.generated_image || outfit.image_url // Support both field names
+    generated_image: outfit.generated_image || outfit.image_url
   }));
 
   if (loading) {
@@ -146,7 +172,7 @@ const SavedOutfits = () => {
       </div>
 
       <div className="px-4 py-4 md:py-6">
-        <OutfitGrid outfits={formattedOutfits} />
+        <OutfitGrid outfits={formattedOutfits} onDelete={handleDeleteOutfit} />
       </div>
     </div>
   );

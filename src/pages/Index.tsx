@@ -1,15 +1,15 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import RecentItemsCarousel from "@/components/RecentItemsCarousel";
+import { Wand2, Shirt, Heart } from "lucide-react";
 import RecentOutfitsCarousel from "@/components/RecentOutfitsCarousel";
 import SavedOutfitsCarousel from "@/components/SavedOutfitsCarousel";
-import WeatherCard from "@/components/WeatherCard";
+import RecentItemsCarousel from "@/components/RecentItemsCarousel";
+import WeatherRecommendations from "@/components/WeatherRecommendations";
 import StyleTipsCard from "@/components/StyleTipsCard";
+import FashionFactCard from "@/components/FashionFactCard";
 
 interface WardrobeItem {
   id: string;
@@ -44,9 +44,10 @@ interface SavedOutfit {
 const Index = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [recentItems, setRecentItems] = useState<WardrobeItem[]>([]);
-  const [recentOutfits, setRecentOutfits] = useState<Outfit[]>([]);
-  const [savedOutfits, setSavedOutfits] = useState<SavedOutfit[]>([]);
+  const [recentOutfits, setRecentOutfits] = useState([]);
+  const [savedOutfits, setSavedOutfits] = useState([]);
+  const [recentItems, setRecentItems] = useState([]);
+  const [itemCount, setItemCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -157,6 +158,28 @@ const Index = () => {
     return "İyi akşamlar! 👋";
   };
 
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+        <div className="text-center max-w-md mx-auto">
+          <div className="bg-white rounded-3xl p-8 shadow-xl">
+            <div className="bg-blue-100 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-6">
+              <Shirt className="h-10 w-10 text-blue-600" />
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">Hoş Geldiniz!</h1>
+            <p className="text-gray-600 mb-8">AI destekli gardrop asistanınız ile tanışın</p>
+            <Button 
+              onClick={() => navigate('/auth')}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-semibold"
+            >
+              Başlayın
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 pb-20">
@@ -173,136 +196,103 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
-      {/* Header with responsive padding */}
-      <div className="px-4 pt-16 pb-6">
-        <div className="ios-fade-in">
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2 leading-tight">{greeting()}</h1>
-          <p className="text-gray-600 text-base md:text-lg font-medium">Bugün nasıl bir kombin istiyorsun?</p>
+      {/* Header */}
+      <div className="bg-white border-b border-gray-200">
+        <div className="px-4 md:px-6 pt-14 pb-6">
+          <div className="text-left">
+            <h1 className="text-xl md:text-2xl font-bold text-gray-900">Ana Sayfa</h1>
+            <p className="text-gray-500 text-sm md:text-base mt-1">
+              {itemCount > 0 ? `${itemCount} kıyafet` : 'Gardırobunuzu oluşturun'}
+            </p>
+          </div>
         </div>
       </div>
 
-      {/* Content with consistent mobile-first spacing */}
-      <div className="space-y-4">
-        {/* Weather Card */}
-        <div className="px-4 ios-fade-in">
-          <WeatherCard />
+      {/* Content */}
+      <div className="px-4 md:px-6 py-6 space-y-6">
+        {/* Action Buttons */}
+        <div className="grid grid-cols-2 gap-4">
+          <Button
+            onClick={() => navigate('/outfits')}
+            className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-4 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300"
+          >
+            <Wand2 className="h-5 w-5 mr-2" />
+            Kombin Oluştur
+          </Button>
+          
+          <Button
+            onClick={() => navigate('/wardrobe')}
+            variant="outline"
+            className="border-2 border-gray-200 hover:border-blue-300 hover:bg-blue-50 font-semibold py-4 rounded-2xl transition-all duration-300"
+          >
+            <Shirt className="h-5 w-5 mr-2" />
+            Gardırop
+          </Button>
         </div>
+
+        {/* Weather Recommendations - moved above Style Tips */}
+        <WeatherRecommendations />
 
         {/* Style Tips Card */}
-        <div className="px-4 ios-fade-in">
-          <StyleTipsCard />
-        </div>
-
-        {/* Today's Weather Suggestions */}
-        <div className="ios-fade-in">
-          <Card className="bg-white border-0 shadow-sm mx-4 rounded-2xl overflow-hidden">
-            <CardHeader className="px-4 md:px-6 pt-4 md:pt-6 pb-3 md:pb-4">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-lg md:text-xl font-bold text-gray-900">Bugünkü Hava İçin Öneriler</CardTitle>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => navigate('/outfits')}
-                  className="text-blue-600 hover:bg-blue-50 font-semibold -mr-2 text-sm"
-                >
-                  Tümünü Gör
-                  <ArrowRight className="h-4 w-4 ml-1" />
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent className="px-0 pb-4 md:pb-6">
-              {recentItems.length > 0 ? (
-                <RecentItemsCarousel items={recentItems.slice(0, 6)} />
-              ) : (
-                <div className="text-center py-8 md:py-12 px-4 md:px-6">
-                  <p className="text-gray-500 text-base md:text-lg mb-4 md:mb-6">Henüz gardırobunda ürün yok</p>
-                  <Button 
-                    onClick={() => navigate('/wardrobe')}
-                    className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 md:px-8 py-2.5 md:py-3 rounded-xl text-sm md:text-base"
-                  >
-                    <Plus className="h-4 md:h-5 w-4 md:w-5 mr-2" />
-                    İlk Ürünü Ekle
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Recent Items */}
-        {recentItems.length > 0 && (
-          <div className="ios-fade-in">
-            <Card className="bg-white border-0 shadow-sm mx-4 rounded-2xl overflow-hidden">
-              <CardHeader className="px-4 md:px-6 pt-4 md:pt-6 pb-3 md:pb-4">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg md:text-xl font-bold text-gray-900">Son Eklenen Ürünler</CardTitle>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => navigate('/wardrobe')}
-                    className="text-blue-600 hover:bg-blue-50 font-semibold -mr-2 text-sm"
-                  >
-                    Hepsini Gör
-                    <ArrowRight className="h-4 w-4 ml-1" />
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="px-0 pb-4 md:pb-6">
-                <RecentItemsCarousel items={recentItems} />
-              </CardContent>
-            </Card>
-          </div>
-        )}
+        <StyleTipsCard />
 
         {/* Recent Outfits */}
         {recentOutfits.length > 0 && (
-          <div className="ios-fade-in">
-            <Card className="bg-white border-0 shadow-sm mx-4 rounded-2xl overflow-hidden">
-              <CardHeader className="px-4 md:px-6 pt-4 md:pt-6 pb-3 md:pb-4">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg md:text-xl font-bold text-gray-900">Son Kombinler</CardTitle>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => navigate('/outfits')}
-                    className="text-blue-600 hover:bg-blue-50 font-semibold -mr-2 text-sm"
-                  >
-                    Hepsini Gör
-                    <ArrowRight className="h-4 w-4 ml-1" />
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="px-0 pb-4 md:pb-6">
-                <RecentOutfitsCarousel outfits={recentOutfits} />
-              </CardContent>
-            </Card>
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg md:text-xl font-semibold text-gray-900">Son Kombinler</h2>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate('/outfits')}
+                className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+              >
+                Tümünü Gör
+              </Button>
+            </div>
+            <RecentOutfitsCarousel outfits={recentOutfits} />
           </div>
         )}
 
         {/* Saved Outfits */}
         {savedOutfits.length > 0 && (
-          <div className="ios-fade-in">
-            <Card className="bg-white border-0 shadow-sm mx-4 rounded-2xl overflow-hidden">
-              <CardHeader className="px-4 md:px-6 pt-4 md:pt-6 pb-3 md:pb-4">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg md:text-xl font-bold text-gray-900">Kaydedilen Kombinler</CardTitle>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => navigate('/saved-outfits')}
-                    className="text-blue-600 hover:bg-blue-50 font-semibold -mr-2 text-sm"
-                  >
-                    Hepsini Gör
-                    <ArrowRight className="h-4 w-4 ml-1" />
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="px-0 pb-4 md:pb-6">
-                <SavedOutfitsCarousel outfits={savedOutfits} />
-              </CardContent>
-            </Card>
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg md:text-xl font-semibold text-gray-900">Kaydedilen Kombinler</h2>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate('/saved-outfits')}
+                className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+              >
+                <Heart className="h-4 w-4 mr-1" />
+                Favoriler
+              </Button>
+            </div>
+            <SavedOutfitsCarousel outfits={savedOutfits} />
           </div>
         )}
+
+        {/* Recent Items */}
+        {recentItems.length > 0 && (
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg md:text-xl font-semibold text-gray-900">Son Eklenen Kıyafetler</h2>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate('/wardrobe')}
+                className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+              >
+                Tümünü Gör
+              </Button>
+            </div>
+            <RecentItemsCarousel items={recentItems} />
+          </div>
+        )}
+
+        {/* Fashion Fact */}
+        <FashionFactCard />
       </div>
     </div>
   );

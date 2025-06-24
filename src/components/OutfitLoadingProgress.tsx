@@ -1,42 +1,8 @@
 
 import { useState, useEffect } from "react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Sparkles, Clock, Lightbulb } from "lucide-react";
-
-const fashionTips = [
-  {
-    icon: Sparkles,
-    text: "Renkleri karıştırırken, aynı ton ailesinden seçim yapmak her zaman güvenli bir seçimdir."
-  },
-  {
-    icon: Lightbulb,
-    text: "Vücut tipinize uygun kesimler seçerek hem rahat hem şık görünebilirsiniz."
-  },
-  {
-    icon: Sparkles,
-    text: "Temel parçalar (basic items) gardırobunuzun %70'ini oluşturmalı, trend parçalar %30'unu."
-  },
-  {
-    icon: Clock,
-    text: "Sabah acelesi yaşamamak için bir gece önceden kombin hazırlamak akıllıca."
-  },
-  {
-    icon: Lightbulb,
-    text: "Aksesuarlar en sade kombinleri bile özel kılabilir. Küçük dokunuşlar büyük fark yaratır."
-  },
-  {
-    icon: Sparkles,
-    text: "Monokrom kombinler (tek renk) hem şık hem de kolay bir seçimdir."
-  },
-  {
-    icon: Clock,
-    text: "İyi kalite temel parçalar uzun vadede daha ekonomik bir yatırımdır."
-  },
-  {
-    icon: Lightbulb,
-    text: "Katmanlama (layering) tekniği ile mevsim geçişlerinde rahat kombin yapabilirsiniz."
-  }
-];
+import { Sparkles } from "lucide-react";
 
 interface OutfitLoadingProgressProps {
   isVisible: boolean;
@@ -44,109 +10,78 @@ interface OutfitLoadingProgressProps {
 
 const OutfitLoadingProgress = ({ isVisible }: OutfitLoadingProgressProps) => {
   const [progress, setProgress] = useState(0);
-  const [currentTipIndex, setCurrentTipIndex] = useState(0);
-  const [elapsedTime, setElapsedTime] = useState(0);
+  const [currentStep, setCurrentStep] = useState(0);
+
+  const steps = [
+    "Gardırobunuz analiz ediliyor...",
+    "Renk uyumları hesaplanıyor...",
+    "Stil tercihleri belirleniyor...",
+    "Kombinler oluşturuluyor...",
+    "Son rötuşlar yapılıyor..."
+  ];
 
   useEffect(() => {
     if (!isVisible) {
       setProgress(0);
-      setCurrentTipIndex(0);
-      setElapsedTime(0);
+      setCurrentStep(0);
       return;
     }
 
-    // Progress tracking (40 seconds total)
-    const progressInterval = setInterval(() => {
+    const interval = setInterval(() => {
       setProgress(prev => {
-        if (prev >= 100) return 100;
-        return prev + (100 / 40); // Increment every second for 40 seconds
+        const newProgress = prev + 2;
+        
+        // Update step based on progress
+        const stepIndex = Math.floor((newProgress / 100) * steps.length);
+        setCurrentStep(Math.min(stepIndex, steps.length - 1));
+        
+        return Math.min(newProgress, 95); // Don't complete until actual completion
       });
-    }, 1000);
+    }, 2400); // 120 seconds / 50 steps = 2.4 seconds per step
 
-    // Tip rotation (every 7 seconds)
-    const tipInterval = setInterval(() => {
-      setCurrentTipIndex(prev => (prev + 1) % fashionTips.length);
-    }, 7000);
-
-    // Elapsed time tracking
-    const timeInterval = setInterval(() => {
-      setElapsedTime(prev => prev + 1);
-    }, 1000);
-
-    return () => {
-      clearInterval(progressInterval);
-      clearInterval(tipInterval);
-      clearInterval(timeInterval);
-    };
+    return () => clearInterval(interval);
   }, [isVisible]);
 
   if (!isVisible) return null;
 
-  const currentTip = fashionTips[currentTipIndex];
-  const IconComponent = currentTip.icon;
-  const estimatedTime = 40;
-  const remainingTime = Math.max(0, estimatedTime - elapsedTime);
-
   return (
-    <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100">
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="text-center">
-          <div className="flex items-center justify-center space-x-2 mb-2">
-            <div className="animate-spin">
-              <Sparkles className="h-6 w-6 text-blue-500" />
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <Card className="w-full max-w-md bg-white rounded-3xl shadow-2xl">
+        <CardContent className="p-8">
+          <div className="text-center space-y-6">
+            {/* Loading Animation */}
+            <div className="relative">
+              <div className="bg-gradient-to-br from-blue-100 to-purple-100 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4">
+                <Sparkles className="h-10 w-10 text-blue-600 animate-pulse" />
+              </div>
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full w-20 h-20 mx-auto opacity-20 animate-ping"></div>
             </div>
-            <h3 className="text-lg font-semibold text-gray-900">
-              AI Kombinlerinizi Oluşturuyor
-            </h3>
-          </div>
-          <p className="text-sm text-gray-600">
-            Tahmini bekleme süresi: ~{estimatedTime} saniye
-          </p>
-        </div>
 
-        {/* Progress Bar */}
-        <div className="space-y-2">
-          <div className="flex justify-between items-center">
-            <span className="text-sm font-medium text-gray-700">İlerleme</span>
-            <span className="text-sm text-gray-500">
-              {elapsedTime}s / {estimatedTime}s ({remainingTime}s kaldı)
-            </span>
-          </div>
-          <Progress 
-            value={progress} 
-            className="h-3 bg-gray-200"
-          />
-          <div className="text-center">
-            <span className="text-sm font-semibold text-blue-600">
-              %{Math.round(progress)}
-            </span>
-          </div>
-        </div>
-
-        {/* Fashion Tip */}
-        <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
-          <div className="flex items-start space-x-3">
-            <div className="bg-blue-100 rounded-full p-2 flex-shrink-0">
-              <IconComponent className="h-5 w-5 text-blue-600" />
-            </div>
-            <div className="flex-1">
-              <h4 className="text-sm font-semibold text-gray-900 mb-1">
-                Stil İpucu #{currentTipIndex + 1}
-              </h4>
-              <p className="text-sm text-gray-700 leading-relaxed">
-                {currentTip.text}
+            {/* Title */}
+            <div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">
+                AI Kombinler Hazırlanıyor
+              </h3>
+              <p className="text-gray-600 text-sm">
+                Tahmini bekleme süresi: 120 saniye
               </p>
             </div>
-          </div>
-        </div>
 
-        {/* Status */}
-        <div className="flex items-center justify-center space-x-2 text-sm text-gray-500">
-          <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-          <span>Gardırobunuz analiz ediliyor ve mükemmel kombinler hazırlanıyor...</span>
-        </div>
-      </div>
+            {/* Progress Bar */}
+            <div className="space-y-3">
+              <Progress value={progress} className="h-2" />
+              <p className="text-sm text-gray-600 font-medium">
+                {steps[currentStep]}
+              </p>
+            </div>
+
+            {/* Progress Percentage */}
+            <div className="text-sm text-gray-500">
+              %{Math.round(progress)} tamamlandı
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
