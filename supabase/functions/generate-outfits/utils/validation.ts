@@ -6,6 +6,37 @@ export interface ValidationResult {
   invalidItems: string[];
 }
 
+export const validateRequestData = (requestData: any): { isValid: boolean; errors: string[] } => {
+  const errors: string[] = [];
+  
+  if (!requestData) {
+    errors.push('Request data is required');
+    return { isValid: false, errors };
+  }
+  
+  if (!requestData.wardrobeItems || !Array.isArray(requestData.wardrobeItems)) {
+    errors.push('Wardrobe items are required and must be an array');
+  }
+  
+  if (requestData.wardrobeItems && requestData.wardrobeItems.length === 0) {
+    errors.push('At least one wardrobe item is required');
+  }
+  
+  if (!requestData.occasion) {
+    errors.push('Occasion is required');
+  }
+  
+  if (!requestData.timeOfDay) {
+    errors.push('Time of day is required');
+  }
+  
+  if (!requestData.weather) {
+    errors.push('Weather is required');
+  }
+  
+  return { isValid: errors.length === 0, errors };
+};
+
 export const validateOutfitAgainstWardrobe = (outfit: any, wardrobeItems: any[]): ValidationResult => {
   // Create exact name mapping from wardrobe
   const exactWardrobeNames = wardrobeItems.map(item => {
