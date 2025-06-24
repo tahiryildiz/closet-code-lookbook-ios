@@ -2,15 +2,63 @@
 export const generateOutfitImage = async (outfit: any, wardrobeItems: any[], occasion: string, timeOfDay: string, weather: string, openAIApiKey: string, index: number) => {
   console.log(`🖼️  [DEBUG] Starting image generation for outfit ${index + 1}`);
   console.log(`🖼️  [DEBUG] Outfit items:`, outfit.items);
+  console.log(`🖼️  [DEBUG] Available wardrobe items:`, wardrobeItems.map(item => item.name));
   console.log(`🖼️  [DEBUG] OpenAI API Key present:`, !!openAIApiKey);
   
-  // Find actual wardrobe items that match the outfit items
+  // Enhanced item matching with better Turkish text matching
   const matchedItems = outfit.items.map((itemName: string) => {
-    const cleanedItemName = itemName.trim();
-    const wardrobeItem = wardrobeItems.find((item: any) => {
-      const wardrobeName = (item.name || item.subcategory || '').trim();
-      return wardrobeName === cleanedItemName;
+    const cleanedItemName = itemName.trim().toLowerCase();
+    console.log(`🔍 [DEBUG] Looking for match for: "${itemName}"`);
+    
+    // Try multiple matching strategies
+    let wardrobeItem = null;
+    
+    // Strategy 1: Exact name match (case insensitive)
+    wardrobeItem = wardrobeItems.find((item: any) => {
+      return item.name && item.name.toLowerCase() === cleanedItemName;
     });
+    
+    if (wardrobeItem) {
+      console.log(`✅ [DEBUG] Exact match found: "${wardrobeItem.name}"`);
+    } else {
+      // Strategy 2: Partial name match
+      wardrobeItem = wardrobeItems.find((item: any) => {
+        const wardrobeName = (item.name || '').toLowerCase();
+        return wardrobeName.includes(cleanedItemName) || cleanedItemName.includes(wardrobeName);
+      });
+      
+      if (wardrobeItem) {
+        console.log(`✅ [DEBUG] Partial match found: "${wardrobeItem.name}" for "${itemName}"`);
+      } else {
+        // Strategy 3: Category + color matching
+        const colorKeywords = ['beyaz', 'siyah', 'mavi', 'yeşil', 'kırmızı', 'sarı', 'mor', 'turuncu', 'pembe', 'gri', 'kahverengi', 'lacivert', 'bej', 'haki'];
+        const categoryKeywords = ['tişört', 'gömlek', 'pantolon', 'etek', 'kazak', 'sweatshirt', 'ayakkabı', 'blazer', 'ceket', 'şort', 'elbise'];
+        
+        const itemColors = colorKeywords.filter(color => cleanedItemName.includes(color));
+        const itemCategories = categoryKeywords.filter(cat => cleanedItemName.includes(cat));
+        
+        if (itemColors.length > 0 || itemCategories.length > 0) {
+          wardrobeItem = wardrobeItems.find((item: any) => {
+            const wardrobeName = (item.name || '').toLowerCase();
+            const wardromeCategory = (item.category || '').toLowerCase();
+            const wardrobeColor = (item.primary_color || item.color || '').toLowerCase();
+            
+            const colorMatch = itemColors.some(color => 
+              wardrobeName.includes(color) || wardrobeColor.includes(color)
+            );
+            const categoryMatch = itemCategories.some(cat => 
+              wardrobeName.includes(cat) || wardromeCategory.includes(cat)
+            );
+            
+            return colorMatch || categoryMatch;
+          });
+          
+          if (wardrobeItem) {
+            console.log(`✅ [DEBUG] Category/color match found: "${wardrobeItem.name}" for "${itemName}"`);
+          }
+        }
+      }
+    }
     
     if (wardrobeItem && wardrobeItem.image_url) {
       console.log(`✅ [DEBUG] Found reference image for "${itemName}": ${wardrobeItem.image_url}`);
@@ -32,6 +80,7 @@ export const generateOutfitImage = async (outfit: any, wardrobeItems: any[], occ
 
   if (matchedItems.length === 0) {
     console.log('❌ [DEBUG] No reference images found for outfit items');
+    console.log('📋 [DEBUG] Available wardrobe items:', wardrobeItems.map(item => ({ name: item.name, hasImage: !!item.image_url })));
     return {
       generated_image: null,
       reference_images: [],
@@ -45,14 +94,14 @@ export const generateOutfitImage = async (outfit: any, wardrobeItems: any[], occ
 
   // Categorize items for proper flatlay arrangement
   const categorizedItems = {
-    tops: matchedItems.filter(item => ['Tops', 'shirts', 'sweaters', 'jackets'].some(cat => 
-      item.category?.toLowerCase().includes(cat.toLowerCase()))),
-    bottoms: matchedItems.filter(item => ['Bottoms', 'pants', 'jeans', 'trousers', 'shorts'].some(cat => 
-      item.category?.toLowerCase().includes(cat.toLowerCase()))),
-    shoes: matchedItems.filter(item => ['shoes', 'footwear', 'sneakers', 'boots'].some(cat => 
-      item.category?.toLowerCase().includes(cat.toLowerCase()))),
-    accessories: matchedItems.filter(item => ['accessories', 'bags', 'belts', 'hats'].some(cat => 
-      item.category?.toLowerCase().includes(cat.toLowerCase())))
+    tops: matchedItems.filter(item => ['Tops', 'shirts', 'sweaters', 'jackets', 'tişört', 'gömlek', 'kazak', 'sweatshirt', 'blazer', 'ceket'].some(cat => 
+      (item.category || '').toLowerCase().includes(cat.toLowerCase()))),
+    bottoms: matchedItems.filter(item => ['Bottoms', 'pants', 'jeans', 'trousers', 'shorts', 'pantolon', 'şort', 'etek'].some(cat => 
+      (item.category || '').toLowerCase().includes(cat.toLowerCase()))),
+    shoes: matchedItems.filter(item => ['shoes', 'footwear', 'sneakers', 'boots', 'ayakkabı'].some(cat => 
+      (item.category || '').toLowerCase().includes(cat.toLowerCase()))),
+    accessories: matchedItems.filter(item => ['accessories', 'bags', 'belts', 'hats', 'aksesuar', 'çanta', 'kemer', 'şapka'].some(cat => 
+      (item.category || '').toLowerCase().includes(cat.toLowerCase())))
   };
 
   console.log(`📋 [DEBUG] Categorized items:`, {
@@ -145,9 +194,8 @@ OUTPUT REQUIREMENT: Single unified professional layered flatlay photograph in ve
         model: 'gpt-image-1',
         prompt: flatlayPrompt,
         n: 1,
-        size: '1024x1536', // Supported vertical canvas
+        size: '1024x1536',
         quality: 'high'
-        // Note: gpt-image-1 doesn't support response_format parameter - always returns base64
       }),
     });
 
@@ -178,13 +226,12 @@ OUTPUT REQUIREMENT: Single unified professional layered flatlay photograph in ve
     // Extract and properly format the base64 image data
     const generatedImageData = imageData.data[0];
     let generatedImageUrl = null;
-    let base64Data = null; // Initialize base64Data variable
+    let base64Data = null;
     
     if (generatedImageData && generatedImageData.b64_json) {
-      base64Data = generatedImageData.b64_json; // Assign to the declared variable
+      base64Data = generatedImageData.b64_json;
       generatedImageUrl = `data:image/png;base64,${base64Data}`;
       
-      // Enhanced logging for debugging
       console.log(`✅ [DEBUG] Successfully converted base64 image`);
       console.log(`📊 [DEBUG] Base64 data stats:`, {
         size: base64Data.length,
@@ -194,7 +241,6 @@ OUTPUT REQUIREMENT: Single unified professional layered flatlay photograph in ve
       });
       console.log(`🔗 [DEBUG] Data URL preview: ${generatedImageUrl.substring(0, 100)}...`);
       
-      // Verify data URL format
       if (!generatedImageUrl.startsWith('data:image/png;base64,')) {
         console.error(`❌ [DEBUG] Invalid data URL format`);
         return {
@@ -220,7 +266,6 @@ OUTPUT REQUIREMENT: Single unified professional layered flatlay photograph in ve
     }
 
     console.log(`✅ [DEBUG] Successfully generated vertical layered flatlay composition for outfit ${index + 1}`);
-    console.log(`🎯 [DEBUG] Final composition type: professional_flatlay_vertical_layered`);
 
     return {
       generated_image: generatedImageUrl,
@@ -231,7 +276,7 @@ OUTPUT REQUIREMENT: Single unified professional layered flatlay photograph in ve
       aspect_ratio: '1024x1536',
       debug_reason: 'success',
       debug_info: {
-        base64_size: base64Data?.length || 0, // Use optional chaining to prevent errors
+        base64_size: base64Data?.length || 0,
         exact_items_used: matchedItems.length,
         vertical_canvas: true,
         layered_composition: true
@@ -245,7 +290,6 @@ OUTPUT REQUIREMENT: Single unified professional layered flatlay photograph in ve
       name: error.name
     });
     
-    // Fallback: return reference images for manual composition
     return {
       generated_image: null,
       reference_images: matchedItems.map(item => item.image_url),
