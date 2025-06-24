@@ -146,7 +146,7 @@ const Profile = () => {
             <CardContent className="p-4 text-center">
               <div className="text-2xl font-bold text-indigo-600 mb-1">{outfitCount}</div>
               <div className="text-sm text-gray-600">
-                {limits.isPremium ? 'Sınırsız Kombin' : `Günlük: ${3 - limits.remainingOutfits}/3`}
+                {limits.isPremium ? 'Sınırsız Kombin' : 'Günlük kombin hakkı'}
               </div>
             </CardContent>
           </Card>
