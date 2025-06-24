@@ -24,15 +24,15 @@ const RecentItemsCarousel = ({ items }: RecentItemsCarouselProps) => {
   if (!items || items.length === 0) return null;
 
   return (
-    <div className="overflow-x-auto scrollbar-hide -mx-6">
-      <div className="flex space-x-4 px-6 pb-2" style={{ width: `${items.length * 280 + 48}px` }}>
+    <div className="overflow-x-auto scrollbar-hide">
+      <div className="flex space-x-3 px-4 pb-2" style={{ width: `${items.length * 160 + 48}px` }}>
         {items.map((item) => (
           <div
             key={item.id}
-            className="flex-shrink-0 w-64"
+            className="flex-shrink-0 w-36"
             onClick={() => navigate('/wardrobe')}
           >
-            <Card className="bg-white border border-gray-100 cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-105 rounded-3xl overflow-hidden group">
+            <Card className="bg-white border border-gray-100 cursor-pointer hover:shadow-md transition-all duration-300 hover:scale-105 rounded-xl overflow-hidden group">
               <CardContent className="p-0">
                 <div className="aspect-[4/5] bg-gray-50 overflow-hidden relative">
                   {item.image_url ? (
@@ -43,16 +43,16 @@ const RecentItemsCarousel = ({ items }: RecentItemsCarouselProps) => {
                     />
                   ) : (
                     <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-                      <Shirt className="h-16 w-16 text-gray-400" />
+                      <Shirt className="h-12 w-12 text-gray-400" />
                     </div>
                   )}
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
                 </div>
-                <div className="p-6">
-                  <h3 className="font-bold text-gray-900 text-lg mb-2 leading-tight">{item.name}</h3>
-                  <p className="text-gray-500 text-base font-medium">{getTurkishLabel(item.category, categoryOptions)}</p>
+                <div className="p-3">
+                  <h3 className="font-semibold text-gray-900 text-sm mb-1 leading-tight line-clamp-2">{item.name}</h3>
+                  <p className="text-gray-500 text-xs font-medium">{getTurkishLabel(item.category, categoryOptions)}</p>
                   {item.brand && (
-                    <p className="text-gray-400 text-sm mt-2 font-medium">{item.brand}</p>
+                    <p className="text-gray-400 text-xs mt-1 font-medium truncate">{item.brand}</p>
                   )}
                 </div>
               </CardContent>
