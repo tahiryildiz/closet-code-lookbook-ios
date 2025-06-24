@@ -11,16 +11,46 @@ serve(async (req) => {
   }
 
   try {
-    const { imageUrl } = await req.json()
+    let imageUrl: string;
 
-    if (!imageUrl) {
+    // Check content type to determine how to parse the request
+    const contentType = req.headers.get('content-type') || '';
+    
+    if (contentType.includes('application/json')) {
+      // Handle JSON request (with imageUrl)
+      const body = await req.json()
+      imageUrl = body.imageUrl;
+      
+      if (!imageUrl) {
+        return createResponse(
+          { error: 'Image URL is required' },
+          400
+        )
+      }
+    } else if (contentType.includes('multipart/form-data')) {
+      // Handle FormData request (with image file)
+      const formData = await req.formData()
+      const imageFile = formData.get('image') as File
+      
+      if (!imageFile) {
+        return createResponse(
+          { error: 'Image file is required' },
+          400
+        )
+      }
+
+      // Convert file to base64 data URL for processing
+      const arrayBuffer = await imageFile.arrayBuffer()
+      const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)))
+      imageUrl = `data:${imageFile.type};base64,${base64}`
+    } else {
       return createResponse(
-        { error: 'Image URL is required' },
+        { error: 'Invalid content type. Expected JSON or FormData' },
         400
       )
     }
 
-    console.log('Starting clothing analysis for:', imageUrl)
+    console.log('Starting clothing analysis for image')
 
     let analysisResult;
     let usedProvider = 'OpenAI';

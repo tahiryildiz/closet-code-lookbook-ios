@@ -84,18 +84,20 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
     try {
       // Process first file for now
       const file = files[0];
-      const formData = new FormData();
-      formData.append('image', file);
-
+      
+      // Create a data URL for the image
+      const imageUrl = URL.createObjectURL(file);
+      
+      // Send as JSON with the blob URL
       const { data, error } = await supabase.functions.invoke('analyze-clothing', {
-        body: formData,
+        body: { imageUrl },
       });
 
       if (error) throw error;
 
       setAnalysisResult({
         ...data,
-        imageUrl: URL.createObjectURL(file)
+        imageUrl: imageUrl
       });
 
       // Update form data with analysis results
