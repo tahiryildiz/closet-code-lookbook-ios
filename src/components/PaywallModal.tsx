@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { X, Crown, Check, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -37,6 +36,17 @@ const PaywallModal = ({ isOpen, onClose, onWatchAd, reason = 'upgrade' }: Paywal
         return "Daha fazla kombin oluşturmak için Premium'a geçin veya reklam izleyerek bonus hak kazanın.";
       default:
         return "Sınırsız özelliklerle gardırobunuzun tam potansiyelini keşfedin.";
+    }
+  };
+
+  const getAdButtonText = () => {
+    switch (reason) {
+      case 'items':
+        return "Reklam izleyerek 3 ürün ekleme hakkı kazan";
+      case 'outfits':
+        return "Reklam izleyerek 1 kombin oluşturma hakkı kazan";
+      default:
+        return "Reklam İzleyerek Devam Et";
     }
   };
 
@@ -195,7 +205,7 @@ const PaywallModal = ({ isOpen, onClose, onWatchAd, reason = 'upgrade' }: Paywal
                   onClick={onWatchAd}
                   className="w-full py-3 rounded-2xl font-semibold border-gray-300 hover:bg-gray-50"
                 >
-                  Reklam İzleyerek Devam Et
+                  {getAdButtonText()}
                 </Button>
               )}
             </div>

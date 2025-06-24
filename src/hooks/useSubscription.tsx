@@ -121,9 +121,20 @@ export const useSubscription = () => {
 
     try {
       const today = new Date().toISOString().split('T')[0];
+      
+      // Get current profile to calculate new bonus amounts
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('ad_bonus_items, ad_bonus_generations')
+        .eq('id', user.id)
+        .single();
+
+      const currentAdBonusItems = profile?.ad_bonus_items || 0;
+      const currentAdBonusGenerations = profile?.ad_bonus_generations || 0;
+
       const updateData = type === 'items' 
-        ? { ad_bonus_items: (limits.remainingItems + 3), last_ad_bonus_date: today }
-        : { ad_bonus_generations: (limits.remainingOutfits + 1), last_ad_bonus_date: today };
+        ? { ad_bonus_items: currentAdBonusItems + 3, last_ad_bonus_date: today }
+        : { ad_bonus_generations: currentAdBonusGenerations + 1, last_ad_bonus_date: today };
 
       const { error } = await supabase
         .from('user_profiles')
@@ -132,6 +143,7 @@ export const useSubscription = () => {
 
       if (error) throw error;
 
+      // Refresh limits after adding bonus
       await checkLimits();
       
       toast({

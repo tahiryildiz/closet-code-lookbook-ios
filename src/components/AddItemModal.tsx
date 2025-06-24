@@ -28,7 +28,7 @@ interface FormData {
 const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const { limits, updateUsage, addAdBonus } = useSubscription();
+  const { limits, updateUsage, addAdBonus, checkLimits } = useSubscription();
   const [step, setStep] = useState<'upload' | 'analysis'>('upload');
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -43,6 +43,7 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
   });
   const [showPaywall, setShowPaywall] = useState(false);
   const [showAdModal, setShowAdModal] = useState(false);
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]); // Store files waiting for ad completion
 
   useEffect(() => {
     if (isOpen && !limits.canAddItem && !limits.isPremium) {
@@ -61,7 +62,7 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
 
     // Show ad modal for free users
     if (!limits.isPremium) {
-      setSelectedFiles(files);
+      setPendingFiles(files); // Store files to process after ad
       setShowAdModal(true);
       return;
     }
@@ -174,6 +175,7 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
     setSelectedFiles([]);
     setAnalysisResult(null);
     setIsAnalyzing(false);
+    setPendingFiles([]);
     setFormData({
       name: '',
       brand: '',
@@ -190,8 +192,13 @@ const AddItemModal = ({ isOpen, onClose }: AddItemModalProps) => {
   const handleAdComplete = async () => {
     await addAdBonus('items');
     setShowAdModal(false);
-    // Process files after ad
-    await processFiles(selectedFiles);
+    // Refresh limits to get updated counts
+    await checkLimits();
+    // Process the pending files after ad completion
+    if (pendingFiles.length > 0) {
+      await processFiles(pendingFiles);
+      setPendingFiles([]);
+    }
   };
 
   const handleWatchAd = () => {
