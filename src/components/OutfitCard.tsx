@@ -1,5 +1,5 @@
 
-import { Heart, Share, Sparkles, Bookmark } from "lucide-react";
+import { Share, Sparkles, Bookmark } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -31,7 +31,6 @@ interface OutfitCardProps {
 }
 
 const OutfitCard = ({ outfit, onSave }: OutfitCardProps) => {
-  const [isFavorite, setIsFavorite] = useState(false);
   const [isSaved, setIsSaved] = useState(outfit.is_saved || false);
   
   // Enhanced debug logging to track image data reception
@@ -84,15 +83,6 @@ const OutfitCard = ({ outfit, onSave }: OutfitCardProps) => {
      'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=500&fit=crop');
 
   const shouldShowGrid = !hasVerticalFlatlay && hasReferenceImages && outfit.reference_images!.length > 1;
-
-  const handleFavorite = () => {
-    setIsFavorite(!isFavorite);
-    if (!isFavorite) {
-      toast.success("Kombin favorilere eklendi!");
-    } else {
-      toast.success("Kombin favorilerden çıkarıldı!");
-    }
-  };
 
   const handleSave = () => {
     if (onSave && !isSaved) {
@@ -166,20 +156,6 @@ const OutfitCard = ({ outfit, onSave }: OutfitCardProps) => {
           )}
           
           <div className="absolute top-4 right-4 flex space-x-2">
-            <Button 
-              size="sm" 
-              variant="ghost" 
-              className="h-10 w-10 p-0 bg-white/90 hover:bg-white rounded-full shadow-sm"
-              onClick={handleFavorite}
-            >
-              <Heart 
-                className={`h-5 w-5 transition-colors ${
-                  isFavorite 
-                    ? 'text-red-500 fill-red-500' 
-                    : 'text-gray-600 hover:text-red-400'
-                }`} 
-              />
-            </Button>
             <Button 
               size="sm" 
               variant="ghost" 

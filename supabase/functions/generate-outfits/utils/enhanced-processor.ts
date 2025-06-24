@@ -1,185 +1,166 @@
 
-import { validateOutfitAgainstWardrobe, detectDuplicateOutfits } from './validation.ts';
-import { generateOutfitImage } from './image-generator.ts';
-
 export const processValidatedOutfits = async (
-  outfits: any[], 
-  wardrobeItems: any[], 
-  occasion: string, 
-  timeOfDay: string, 
-  weather: string, 
-  openAIApiKey: string
-) => {
-  console.log('🔍 Starting strict outfit validation and flatlay generation process...');
-  console.log('Input outfits:', outfits.map(o => ({ name: o.name, items: o.items })));
-  
-  // Step 1: STRICT validation - reject ANY outfit with non-wardrobe items
-  const validatedOutfits = [];
-  
-  for (let i = 0; i < outfits.length; i++) {
-    const outfit = outfits[i];
-    console.log(`\n🔍 Validating outfit ${i + 1}: "${outfit.name}"`);
-    console.log('Items:', outfit.items);
-    
-    const validation = validateOutfitAgainstWardrobe(outfit, wardrobeItems);
-    
-    if (validation.isValid) {
-      console.log(`✅ Outfit ${i + 1} APPROVED`);
-      validatedOutfits.push(outfit);
-    } else {
-      console.log(`❌ Outfit ${i + 1} REJECTED:`);
-      validation.errors.forEach(error => console.log(`   - ${error}`));
-    }
-  }
-  
-  if (validatedOutfits.length === 0) {
-    console.log('❌ ALL AI OUTFITS REJECTED - Contains hallucinated items');
-    throw new Error('All AI outfits contain items not in wardrobe');
-  }
-  
-  console.log(`✅ ${validatedOutfits.length} outfits passed strict validation`);
-  
-  // Step 2: Remove duplicates
-  const duplicateIndices = detectDuplicateOutfits(validatedOutfits);
-  const uniqueOutfits = validatedOutfits.filter((_, index) => !duplicateIndices.includes(index));
-  
-  console.log(`📝 Removed ${duplicateIndices.length} duplicate outfits`);
-  console.log(`📝 Processing ${uniqueOutfits.length} unique, validated outfits`);
-  
-  // Step 3: Process final outfits with flatlay generation and enhanced styling tips
-  const processedOutfits = await Promise.all(
-    uniqueOutfits.slice(0, 3).map(async (outfit: any, index: number) => {
-      console.log(`\n🎨 Processing final outfit ${index + 1}:`, outfit.items);
-      
-      // Find exact wardrobe matches for each item
-      const exactMatches = outfit.items.map((itemName: string) => {
-        const match = wardrobeItems.find((item: any) => {
-          const wardrobeName = (item.name || item.subcategory || '').trim();
-          return wardrobeName === itemName.trim();
-        });
-        return match;
-      }).filter(Boolean);
-      
-      if (exactMatches.length !== outfit.items.length) {
-        console.log(`⚠️  Warning: Could not find exact matches for all items in outfit ${index + 1}`);
-        return null;
-      }
-      
-      const itemIds = exactMatches.map(item => item.id);
-      const exactItemNames = exactMatches.map(item => item.name || item.subcategory);
-      
-      console.log(`✅ Exact matches found:`, exactItemNames);
-      
-      // Generate flatlay composition using reference images
-      const flatlayData = await generateOutfitImage(
-        { ...outfit, items: exactItemNames }, 
-        wardrobeItems, 
-        occasion, 
-        timeOfDay, 
-        weather, 
-        openAIApiKey, 
-        index
-      );
-      
-      console.log(`🖼️  Flatlay generation result: ${flatlayData.composition_type}`);
-      
-      // Generate enhanced styling tips with accessory suggestions
-      const enhancedStylingTips = await generateEnhancedStylingTips(
-        outfit.styling_tips,
-        exactMatches,
-        occasion,
-        timeOfDay,
-        weather,
-        openAIApiKey
-      );
-      
-      return {
-        ...outfit,
-        items: exactItemNames,
-        item_ids: itemIds,
-        generated_image: flatlayData.generated_image,
-        reference_images: flatlayData.reference_images,
-        item_details: flatlayData.item_details,
-        occasion: occasion,
-        validated: true,
-        validation_passed: true,
-        uses_reference_images: true,
-        composition_type: flatlayData.composition_type,
-        item_count: flatlayData.item_count,
-        aspect_ratio: flatlayData.aspect_ratio,
-        styling_tips: enhancedStylingTips,
-        // Legacy compatibility
-        images: flatlayData.generated_image ? [flatlayData.generated_image] : flatlayData.reference_images,
-        primary_image: flatlayData.generated_image,
-        product_images: flatlayData.reference_images
-      };
-    })
-  );
-  
-  const finalOutfits = processedOutfits.filter(Boolean);
-  
-  console.log(`🎉 Successfully processed ${finalOutfits.length} validated outfits with vertical flatlay compositions`);
-  finalOutfits.forEach((outfit, index) => {
-    console.log(`   Outfit ${index + 1}: ${outfit.composition_type} - ${outfit.item_count} items - ${outfit.aspect_ratio || 'default ratio'}`);
-  });
-  
-  return finalOutfits;
-};
-
-// Enhanced styling tips generator with accessory suggestions
-const generateEnhancedStylingTips = async (
-  originalTips: string,
-  outfitItems: any[],
+  outfits: any[],
+  wardrobeItems: any[],
   occasion: string,
   timeOfDay: string,
   weather: string,
   openAIApiKey: string
-): Promise<string> => {
-  try {
-    const itemDescriptions = outfitItems.map(item => 
-      `${item.name} (${item.category}, ${item.primary_color || item.color})`
-    ).join(', ');
+) => {
+  console.log('🔍 Starting strict outfit validation and flatlay generation process...');
+  
+  // Log input outfits for debugging
+  console.log('Input outfits:', outfits.map(outfit => ({
+    name: outfit.name,
+    items: outfit.items
+  })));
 
-    const enhancementPrompt = `Enhance this outfit styling tip with 1-2 specific accessory suggestions:
+  // Create a more flexible item name lookup
+  const wardrobeNamesLookup = new Map();
+  const wardrobeNamesArray = wardrobeItems.map(item => item.name);
+  
+  console.log('Wardrobe names for validation:', wardrobeNamesArray);
+  
+  // Create multiple lookup variations for flexible matching
+  wardrobeItems.forEach(item => {
+    const originalName = item.name;
+    const lowerName = originalName.toLowerCase();
+    const normalizedName = lowerName.replace(/[^\w\s]/g, '').replace(/\s+/g, ' ').trim();
+    
+    wardrobeNamesLookup.set(lowerName, originalName);
+    wardrobeNamesLookup.set(normalizedName, originalName);
+    wardrobeNamesLookup.set(originalName, originalName);
+  });
 
-CURRENT OUTFIT: ${itemDescriptions}
-CURRENT TIP: ${originalTips}
-OCCASION: ${occasion}
-TIME: ${timeOfDay}
-WEATHER: ${weather}
+  const validatedOutfits = [];
 
-Please rewrite the styling tip and add 1-2 specific accessory suggestions (like belts, watches, shoes, bags) that would elevate this outfit. Keep it concise and practical. Write in Turkish.
+  for (let i = 0; i < outfits.length; i++) {
+    const outfit = outfits[i];
+    
+    console.log(`\n🔍 Validating outfit ${i + 1}: "${outfit.name}"`);
+    console.log('Items:', outfit.items);
+    console.log('Outfit items to validate:', outfit.items);
+    
+    const validationErrors = [];
+    const validItems = [];
+    const validItemIds = [];
 
-Example format: "Bu kombini tamamlamak için kahverengi deri kemer ve spor ayakkabı ekleyebilirsiniz. Serin havalarda ince bir hırka da güzel bir dokunuş olacaktır."`;
+    for (const itemName of outfit.items) {
+      const lowerItemName = itemName.toLowerCase();
+      const normalizedItemName = lowerItemName.replace(/[^\w\s]/g, '').replace(/\s+/g, ' ').trim();
+      
+      // Try different matching strategies
+      let matchedName = null;
+      
+      // 1. Exact match (case insensitive)
+      if (wardrobeNamesLookup.has(lowerItemName)) {
+        matchedName = wardrobeNamesLookup.get(lowerItemName);
+      }
+      // 2. Normalized match (remove punctuation, extra spaces)
+      else if (wardrobeNamesLookup.has(normalizedItemName)) {
+        matchedName = wardrobeNamesLookup.get(normalizedItemName);
+      }
+      // 3. Partial match - check if any wardrobe item contains this item name
+      else {
+        for (const wardrobeItem of wardrobeItems) {
+          const wardrobeLower = wardrobeItem.name.toLowerCase();
+          const wardrobeNormalized = wardrobeLower.replace(/[^\w\s]/g, '').replace(/\s+/g, ' ').trim();
+          
+          if (wardrobeLower.includes(lowerItemName) || 
+              lowerItemName.includes(wardrobeLower) ||
+              wardrobeNormalized.includes(normalizedItemName) ||
+              normalizedItemName.includes(wardrobeNormalized)) {
+            matchedName = wardrobeItem.name;
+            break;
+          }
+        }
+      }
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          { role: 'system', content: 'Sen profesyonel bir stil danışmanısın. Kısa ve pratik aksesuar önerileri veriyorsun.' },
-          { role: 'user', content: enhancementPrompt }
-        ],
-        temperature: 0.7,
-        max_tokens: 200,
-      }),
-    });
-
-    if (response.ok) {
-      const data = await response.json();
-      const enhancedTips = data.choices[0].message.content.trim();
-      console.log(`✨ [DEBUG] Enhanced styling tips generated`);
-      return enhancedTips;
-    } else {
-      console.log(`⚠️  [DEBUG] Failed to enhance styling tips, using original`);
-      return originalTips;
+      if (matchedName) {
+        console.log(`✅ VALID: "${itemName}" matched to "${matchedName}"`);
+        validItems.push(matchedName);
+        
+        // Find the item ID
+        const wardrobeItem = wardrobeItems.find(item => item.name === matchedName);
+        if (wardrobeItem) {
+          validItemIds.push(wardrobeItem.id);
+        }
+      } else {
+        console.log(`✗ INVALID: "${itemName}" not found in wardrobe`);
+        console.log('Available names:', wardrobeNamesArray);
+        validationErrors.push(`INVALID: "${itemName}" not found in wardrobe`);
+      }
     }
-  } catch (error) {
-    console.log(`⚠️  [DEBUG] Error enhancing styling tips:`, error.message);
-    return originalTips;
+
+    console.log(`Validation result for outfit "${outfit.name}": ${validationErrors.length === 0 ? 'VALID' : 'INVALID'}`);
+    
+    if (validationErrors.length === 0 && validItems.length >= 2) {
+      console.log(`✅ Outfit ${i + 1} ACCEPTED`);
+      
+      // Create validated outfit with matched names
+      const validatedOutfit = {
+        ...outfit,
+        items: validItems,
+        item_ids: validItemIds,
+        confidence: Math.min(outfit.confidence || 8, 9), // Cap confidence for validated outfits
+      };
+      
+      validatedOutfits.push(validatedOutfit);
+    } else {
+      console.log(`❌ Outfit ${i + 1} REJECTED:`);
+      console.log('Invalid items:', outfit.items.filter((_, index) => 
+        !validItems.includes(outfit.items[index])
+      ));
+      console.log('Validation errors:', validationErrors);
+      
+      // Log specific rejections
+      validationErrors.forEach(error => {
+        console.log(`   - ${error}`);
+      });
+    }
   }
+
+  if (validatedOutfits.length === 0) {
+    console.log('❌ ALL AI OUTFITS REJECTED - Using wardrobe-based fallback');
+    
+    // Create simple fallback outfits using actual wardrobe items
+    const fallbackOutfits = createWardrobeBasedOutfits(wardrobeItems, occasion, timeOfDay, weather);
+    return fallbackOutfits;
+  }
+
+  console.log(`✅ ${validatedOutfits.length} outfits validated successfully`);
+  return validatedOutfits;
+};
+
+const createWardrobeBasedOutfits = (wardrobeItems: any[], occasion: string, timeOfDay: string, weather: string) => {
+  console.log('🔄 Creating wardrobe-based fallback outfits');
+  
+  const outfits = [];
+  const itemsPerOutfit = Math.min(4, Math.max(3, Math.floor(wardrobeItems.length / 3)));
+  
+  for (let i = 0; i < Math.min(3, Math.floor(wardrobeItems.length / 2)); i++) {
+    const startIndex = i * itemsPerOutfit;
+    const selectedItems = wardrobeItems.slice(startIndex, startIndex + itemsPerOutfit);
+    
+    if (selectedItems.length >= 2) {
+      const outfit = {
+        id: i + 1,
+        name: `${occasion} Kombinasyonu ${i + 1}`,
+        items: selectedItems.map(item => item.name),
+        item_ids: selectedItems.map(item => item.id),
+        confidence: 7 + Math.floor(Math.random() * 2), // 7-8 confidence for fallback
+        styling_tips: `Bu ${occasion} kombinasyonu ${selectedItems.length} parçadan oluşuyor ve ${timeOfDay} vakti için uygundur. ${weather} hava koşulları göz önünde bulundurularak seçilmiştir.`,
+        occasion: occasion,
+        color_story: 'Wardrobe-based color coordination',
+        silhouette_notes: 'Balanced proportions from your wardrobe',
+        pattern_analysis: 'Coordinated from available pieces',
+        design_coordination: 'Harmonious selection from your items'
+      };
+      
+      outfits.push(outfit);
+    }
+  }
+  
+  console.log(`✅ Generated ${outfits.length} wardrobe-based fallback outfits`);
+  return outfits;
 };
